@@ -39,6 +39,10 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
         }
 
         User user = userService.findById(userId);
+        if(!user.getActive()){
+            throw new ResourceNotFoundException(String.format(StringUtil.OBJECT_INACTIVE,StringUtil.USER));
+        }
+
         Role role = resolveAssignableRole(roleId);
 
         userRoleRepository.save(UserRole.builder()
@@ -66,6 +70,10 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
         }
 
         User user = userService.findById(userId);
+        if(!user.getActive()){
+            throw new ResourceNotFoundException(String.format(StringUtil.OBJECT_INACTIVE,StringUtil.USER));
+        }
+
         BusinessRole businessRole = bRoleService.findById(businessRoleId);
         if (Boolean.FALSE.equals(businessRole.getActive())) {
             throw new BusinessException(String.format(StringUtil.OBJECT_INACTIVE, StringUtil.BUSINESS_ROLE), HttpStatus.BAD_REQUEST);
