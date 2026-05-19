@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans:
+    "Nunito", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+:root {
+  --toastify-font-family: var(--font-sans);
+}
+
+/* Optional global baseline */
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  @apply bg-white font-sans text-slate-800 antialiased;
+}
