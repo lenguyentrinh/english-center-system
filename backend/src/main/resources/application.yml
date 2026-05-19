@@ -1,0 +1,49 @@
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${CONTEXT_PATH:/api}
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    open-in-view: false
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        highlight_sql: true
+
+  jackson:
+    time-zone: ${TIMEZONE:Asia/Ho_Chi_Minh}
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+logging:
+  level:
+    org.hibernate.tool.schema: DEBUG
+    org.hibernate.SQL: DEBUG
+
+jwt:
+  # At least 32 characters for HS256
+  secret: ${JWT_SECRET:lethinguyentrinh-english-center-ms-jwt-key-32chars}
+  # Milliseconds only (3600000 = 1 hour). Do not set seconds here.
+  expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+
+cookie:
+  secure: ${COOKIE_SECURE:false}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    with-credentials: true
+    disable-swagger-default-url: true
+    persist-authorization: true
