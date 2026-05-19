@@ -46,9 +46,9 @@ public enum ErrorCode {
             HttpStatus.INTERNAL_SERVER_ERROR,
             "Database operation failed"),
 
-    USERNAME_EXISTS(
+    ENTITY_EXISTS(
             HttpStatus.BAD_REQUEST,
-            "Username already exists"
+            "Entity already exists by"
     );
 
     private final HttpStatus status;

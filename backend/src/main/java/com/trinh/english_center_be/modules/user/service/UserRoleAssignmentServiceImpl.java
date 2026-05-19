@@ -35,7 +35,7 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
     @Transactional
     public void assignRole(Long userId, Long roleId) {
         if (userRoleRepository.existsByIdUserIdAndIdRoleId(userId, roleId)) {
-            throw new BusinessException("User already has this role", HttpStatus.CONFLICT);
+            throw new BusinessException(String.format(StringUtil.USER_ALREADY_VALUE,StringUtil.ROLE), HttpStatus.CONFLICT);
         }
 
         User user = userService.findById(userId);
@@ -53,7 +53,7 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
     public void removeRole(Long userId, Long roleId) {
         UserRoleId key = new UserRoleId(userId, roleId);
         if (!userRoleRepository.existsById(key)) {
-            throw new ResourceNotFoundException("User does not have this role");
+            throw new ResourceNotFoundException(String.format(StringUtil.USER_DOES_NOT_VALUE,StringUtil.ROLE));
         }
         userRoleRepository.deleteById(key);
     }
@@ -62,13 +62,13 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
     @Transactional
     public void assignBusinessRole(Long userId, Long businessRoleId) {
         if (userBusinessRoleRepository.existsByIdUserIdAndIdBusinessRoleId(userId, businessRoleId)) {
-            throw new BusinessException("User already has this business role", HttpStatus.CONFLICT);
+            throw new BusinessException(String.format(StringUtil.USER_ALREADY_VALUE,StringUtil.BUSINESS_ROLE), HttpStatus.CONFLICT);
         }
 
         User user = userService.findById(userId);
         BusinessRole businessRole = bRoleService.findById(businessRoleId);
         if (Boolean.FALSE.equals(businessRole.getActive())) {
-            throw new BusinessException("Business role is inactive", HttpStatus.BAD_REQUEST);
+            throw new BusinessException(String.format(StringUtil.OBJECT_INACTIVE, StringUtil.BUSINESS_ROLE), HttpStatus.BAD_REQUEST);
         }
 
         userBusinessRoleRepository.save(UserBusinessRole.builder()
@@ -83,7 +83,7 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
     public void removeBusinessRole(Long userId, Long businessRoleId) {
         UserBusinessRoleId key = new UserBusinessRoleId(userId, businessRoleId);
         if (!userBusinessRoleRepository.existsById(key)) {
-            throw new ResourceNotFoundException("User does not have this business role");
+            throw new ResourceNotFoundException(String.format(StringUtil.USER_DOES_NOT_VALUE,StringUtil.BUSINESS_ROLE));
         }
         userBusinessRoleRepository.deleteById(key);
     }
@@ -125,11 +125,9 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
         Role role = roleRepository.findById(roleId).orElseThrow(
                 () -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.ROLE, roleId))
         );
-        if (role.getCode() != null) {
-            throw new BusinessException("System roles cannot be assigned to users", HttpStatus.BAD_REQUEST);
-        }
+
         if (Boolean.FALSE.equals(role.getActive())) {
-            throw new BusinessException("Role is inactive", HttpStatus.BAD_REQUEST);
+            throw new BusinessException(String.format(StringUtil.OBJECT_INACTIVE, StringUtil.ROLE), HttpStatus.BAD_REQUEST);
         }
         return role;
     }

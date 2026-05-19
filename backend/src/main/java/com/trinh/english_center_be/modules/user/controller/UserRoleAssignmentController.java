@@ -40,7 +40,7 @@ public class UserRoleAssignmentController {
     ) {
         userRoleAssignmentService.assignRole(userId, roleId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(201, "Role assigned to user successfully", null));
+                .body(new ApiResponse<>(201, String.format(StringUtil.ASSIGN_SUCCESSFULLY, StringUtil.ROLE), null));
     }
 
     @DeleteMapping("/{roleId}")
@@ -50,7 +50,7 @@ public class UserRoleAssignmentController {
             @PathVariable Long roleId
     ) {
         userRoleAssignmentService.removeRole(userId, roleId);
-        return ResponseEntity.ok(new ApiResponse<>(200, "Role removed from user successfully", null));
+        return ResponseEntity.ok(new ApiResponse<>(200, String.format(StringUtil.REMOVE_SUCCESSFULLY, StringUtil.ROLE), null));
     }
 
     @PostMapping("/business-roles/{businessRoleId}")
@@ -61,7 +61,7 @@ public class UserRoleAssignmentController {
     ) {
         userRoleAssignmentService.assignBusinessRole(userId, businessRoleId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(201, "Business role assigned to user successfully", null));
+                .body(new ApiResponse<>(201, String.format(StringUtil.ASSIGN_SUCCESSFULLY, StringUtil.BUSINESS_ROLE), null));
     }
 
     @DeleteMapping("/business-roles/{businessRoleId}")
@@ -71,6 +71,6 @@ public class UserRoleAssignmentController {
             @PathVariable Long businessRoleId
     ) {
         userRoleAssignmentService.removeBusinessRole(userId, businessRoleId);
-        return ResponseEntity.ok(new ApiResponse<>(200, "Business role removed from user successfully", null));
+        return ResponseEntity.ok(new ApiResponse<>(200, String.format(StringUtil.REMOVE_SUCCESSFULLY, StringUtil.BUSINESS_ROLE), null));
     }
 }

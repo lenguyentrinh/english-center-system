@@ -9,10 +9,7 @@ import com.trinh.english_center_be.modules.user.service.UserService;
 import com.trinh.english_center_be.shared.config.JwtTokenProvider;
 import com.trinh.english_center_be.shared.enums.Roles;
 import com.trinh.english_center_be.shared.enums.UserStatus;
-import com.trinh.english_center_be.shared.exception.InvalidCredentialException;
-import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
-import com.trinh.english_center_be.shared.exception.UnauthorizedException;
-import com.trinh.english_center_be.shared.exception.UsernameExistsException;
+import com.trinh.english_center_be.shared.exception.*;
 import com.trinh.english_center_be.shared.util.StringUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -58,7 +55,9 @@ public class AuthServiceImpl implements AuthService{
     @Override
     public void signup(SignupRequest request) {
         if (userService.existByUserName(request.username())) {
-            throw new UsernameExistsException();
+            throw new EntityExistsException(String.format(StringUtil.ENTITY_ALREADY_EXISTS,StringUtil.USER,StringUtil.USERNAME_FIELD));
+        } else if (userService.existByEmail(request.email())) {
+            throw new EntityExistsException(String.format(StringUtil.ENTITY_ALREADY_EXISTS,StringUtil.USER,StringUtil.EMAIL_FIELD));
         }
 
         Role roleDefault = roleService.findRoleByRoleName(Roles.STUDENT).orElseThrow(

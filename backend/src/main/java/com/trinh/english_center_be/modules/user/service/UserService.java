@@ -10,4 +10,5 @@ public interface UserService {
     User findById(Long id);
     void save(User user);
     boolean isUserActive(Long id);
+    boolean existByEmail(String email);
 }

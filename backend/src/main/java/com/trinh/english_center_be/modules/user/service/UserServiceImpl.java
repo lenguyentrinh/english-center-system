@@ -46,4 +46,10 @@ public class UserServiceImpl implements UserService {
                 .map(user -> user.getStatus() == UserStatus.ACTIVE)
                 .orElse(false);
     }
+
+    @Override
+    public boolean existByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
 }
