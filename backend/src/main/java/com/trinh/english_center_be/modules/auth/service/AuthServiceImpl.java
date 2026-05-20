@@ -5,6 +5,7 @@ import com.trinh.english_center_be.modules.auth.dto.SignupRequest;
 import com.trinh.english_center_be.modules.user.entity.Role;
 import com.trinh.english_center_be.modules.user.entity.User;
 import com.trinh.english_center_be.modules.user.service.RoleService;
+import com.trinh.english_center_be.modules.user.service.UserRoleAssignmentService;
 import com.trinh.english_center_be.modules.user.service.UserService;
 import com.trinh.english_center_be.shared.config.JwtTokenProvider;
 import com.trinh.english_center_be.shared.enums.Roles;
@@ -27,6 +28,7 @@ public class AuthServiceImpl implements AuthService{
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
     private final RoleService roleService;
+    private final UserRoleAssignmentService userRoleAssignmentService;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -69,12 +71,12 @@ public class AuthServiceImpl implements AuthService{
                 .email(request.email())
                 .phone(request.phone())
                 .status(UserStatus.ACTIVE)
-                .role(roleDefault)
                 .username(request.username())
                 .fullName(request.fullName())
                 .password(encodePassword)
                 .build();
 
         userService.save(user);
+        userRoleAssignmentService.assignRole(user.getId(), roleDefault.getId());
     }
 }
