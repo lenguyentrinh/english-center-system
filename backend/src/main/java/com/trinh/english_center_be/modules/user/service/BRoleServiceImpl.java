@@ -63,6 +63,13 @@ public class BRoleServiceImpl implements BRoleService {
     }
 
     @Override
+    public BusinessRole findByIdWithRoles(Long id) {
+        return bRoleRepository.findByIdWithRoles(id).orElseThrow(
+                () -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.BUSINESS_ROLE, id))
+        );
+    }
+
+    @Override
     @Transactional
     public void save(BusinessRole businessRole) {
         bRoleRepository.save(businessRole);
