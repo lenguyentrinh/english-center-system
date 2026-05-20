@@ -8,6 +8,8 @@ import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -39,18 +41,22 @@ public class JwtTokenProvider {
 
     public String generateToken(Authentication authentication) {
         String username = authentication.getName();
-        String role = authentication.getAuthorities().stream()
-                .findFirst()
+        List<String> roles = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .orElse("");
-        return buildToken(username, role);
+                .collect(Collectors.toList());
+        String role = roles.stream().findFirst().orElse("");
+        return buildToken(username, role, roles);
     }
 
     public String refreshToken(String token) {
         Claims claims = parseClaims(token);
         String username = claims.getSubject();
         String role = claims.get("role", String.class);
-        return buildToken(username, role != null ? role : "");
+        List<String> roles = claims.get("roles", List.class);
+        if (roles == null || roles.isEmpty()) {
+            roles = role != null && !role.isBlank() ? List.of(role) : List.of();
+        }
+        return buildToken(username, role != null ? role : "", roles);
     }
 
     public boolean validateToken(String token) {
@@ -79,7 +85,7 @@ public class JwtTokenProvider {
         return parseClaims(token).get("role", String.class);
     }
 
-    private String buildToken(String username, String role) {
+    private String buildToken(String username, String role, List<String> roles) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
@@ -87,6 +93,7 @@ public class JwtTokenProvider {
                 .setSubject(username)
                 .claim("username", username)
                 .claim("role", role)
+                .claim("roles", roles)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(signingKey, SignatureAlgorithm.HS256)

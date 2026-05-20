@@ -42,10 +42,6 @@ public class User extends BaseEntity {
     @Column(name = "phone", length = 20)
     private String phone;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "role_id")
-    private Role role;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20)
     private UserStatus status;
