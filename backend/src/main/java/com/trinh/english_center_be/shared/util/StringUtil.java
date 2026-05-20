@@ -15,10 +15,11 @@ public class StringUtil {
     public static final String ENTITY_ALREADY_EXISTS = "%s already exists by %s";
     public static final String NOT_FOUND_BY_ID="%s not found by id: %d";
     public static final String USER_ALREADY_VALUE= "User already has this %s";
-    public static final String USER_DOES_NOT_VALUE= "User does not have this %s";
+    public static final String USER_DOES_NOT_VALUE= "Cannot remove because User does not have this %s";
 
     //inactive
     public static final String OBJECT_INACTIVE = "%s is inactive";
+    public static final String ENTITY_INACTIVE_CAN_NOT_ASSIGN = "Cannot assign because %s is inactive.";
 
     public static final String USER_ACCOUNT_NOT_ACTIVE = "User account is not active";
     public static final String STUDENT_ROLE_NOT_FOUND  = "Student role not found";

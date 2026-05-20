@@ -38,7 +38,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public List<RoleResponse> findAll() {
-        return roleRepository.findByActiveTrue().stream().map(this::toResponse).toList();
+        return roleRepository.findAll().stream().map(this::toResponse).toList();
     }
 
     @Override

@@ -13,5 +13,8 @@ public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> 
     @Query("SELECT ur FROM UserRole ur JOIN FETCH ur.role WHERE ur.id.userId = :userId")
     List<UserRole> findByUserIdWithRole(@Param("userId") Long userId);
 
+    @Query("SELECT ur FROM UserRole ur JOIN FETCH ur.role r LEFT JOIN FETCH r.businessRole WHERE ur.id.userId = :userId")
+    List<UserRole> findByUserIdWithRoleAndBusinessRole(@Param("userId") Long userId);
+
     boolean existsByIdUserIdAndIdRoleId(Long userId, Long roleId);
 }
