@@ -56,6 +56,14 @@ If you need to set environment variables in IntelliJ:
 2. Add or edit the `Spring Boot` run configuration for `EnglishCenterBeApplication`.
 3. Set `Environment variables` to point to your `.env` file path
 
+## API Documentation
+
+Once the backend is running, you can access the API documentation via Swagger UI:
+
+```
+http://localhost:8080/api/swagger-ui/index.html#
+```
+
 ## Run the frontend
 
 1. Open the project folder in Visual Studio Code.
