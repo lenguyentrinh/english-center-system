@@ -11,6 +11,8 @@ public interface BRoleService {
     BusinessRoleResponse findResponseById(Long id);
     BusinessRoleResponse create(BusinessRoleRequest businessRoleRequest);
     BusinessRole findById(Long id);
+
+    BusinessRole findByIdWithRoles(Long id);
     void save(BusinessRole businessRole);
     BusinessRoleResponse updateById(Long id, BusinessRoleRequest businessRoleRequest);
     void softDeleteById(Long id);

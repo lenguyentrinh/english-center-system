@@ -24,7 +24,7 @@ public class BRoleServiceImpl implements BRoleService {
 
     @Override
     public List<BusinessRoleResponse> findAll() {
-        return bRoleRepository.findByActiveTrue().stream().map(this::toBusinessRoleResponseOverview).toList();
+        return bRoleRepository.findAll().stream().map(this::toBusinessRoleResponseOverview).toList();
     }
 
     @Override
@@ -58,6 +58,13 @@ public class BRoleServiceImpl implements BRoleService {
     @Override
     public BusinessRole findById(Long id) {
         return bRoleRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.BUSINESS_ROLE, id))
+        );
+    }
+
+    @Override
+    public BusinessRole findByIdWithRoles(Long id) {
+        return bRoleRepository.findByIdWithRoles(id).orElseThrow(
                 () -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.BUSINESS_ROLE, id))
         );
     }
