@@ -11,7 +11,8 @@ import com.trinh.english_center_be.shared.config.JwtTokenProvider;
 import com.trinh.english_center_be.shared.enums.Roles;
 import com.trinh.english_center_be.shared.enums.UserStatus;
 import com.trinh.english_center_be.shared.exception.*;
-import com.trinh.english_center_be.shared.util.StringUtil;
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -40,7 +41,7 @@ public class AuthServiceImpl implements AuthService{
             throw new InvalidCredentialException("Incorrect password", "auth.password");
         }
 
-        if(user.getStatus() != UserStatus.ACTIVE) throw new UnauthorizedException(StringUtil.USER_ACCOUNT_NOT_ACTIVE);
+        if(user.getStatus() != UserStatus.ACTIVE) throw new UnauthorizedException(MessageConstant.USER_ACCOUNT_NOT_ACTIVE);
 
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -57,13 +58,13 @@ public class AuthServiceImpl implements AuthService{
     @Override
     public void signup(SignupRequest request) {
         if (userService.existByUserName(request.username())) {
-            throw new EntityExistsException(String.format(StringUtil.ENTITY_ALREADY_EXISTS,StringUtil.USER,StringUtil.USERNAME_FIELD));
+            throw new EntityExistsException(String.format(MessageConstant.ENTITY_ALREADY_EXISTS, Constant.USER, Constant.USERNAME_FIELD));
         } else if (userService.existByEmail(request.email())) {
-            throw new EntityExistsException(String.format(StringUtil.ENTITY_ALREADY_EXISTS,StringUtil.USER,StringUtil.EMAIL_FIELD));
+            throw new EntityExistsException(String.format(MessageConstant.ENTITY_ALREADY_EXISTS, Constant.USER, Constant.EMAIL_FIELD));
         }
 
         Role roleDefault = roleService.findRoleByRoleName(Roles.STUDENT).orElseThrow(
-                ()-> new ResourceNotFoundException(StringUtil.STUDENT_ROLE_NOT_FOUND ));
+                ()-> new ResourceNotFoundException(MessageConstant.STUDENT_ROLE_NOT_FOUND ));
 
         String encodePassword = passwordEncoder.encode(request.password());
 

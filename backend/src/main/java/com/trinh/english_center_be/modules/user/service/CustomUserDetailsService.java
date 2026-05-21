@@ -6,7 +6,8 @@ import com.trinh.english_center_be.modules.user.entity.Role;
 import com.trinh.english_center_be.modules.user.entity.User;
 import com.trinh.english_center_be.modules.user.entity.UserRole;
 import com.trinh.english_center_be.shared.enums.UserStatus;
-import com.trinh.english_center_be.shared.util.StringUtil;
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -28,7 +29,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException(String.format(StringUtil.ENTITY_NOT_FOUND_BY, StringUtil.USER,StringUtil.USERNAME_FIELD, username)));
+                .orElseThrow(() -> new UsernameNotFoundException(String.format(MessageConstant.ENTITY_NOT_FOUND_BY, Constant.USER, Constant.USERNAME_FIELD, username)));
 
         List<UserRole> userRoles = userRoleRepository.findByUserIdWithRole(user.getId());
         if (userRoles.isEmpty()) {

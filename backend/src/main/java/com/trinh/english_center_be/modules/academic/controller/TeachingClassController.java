@@ -4,7 +4,8 @@ import com.trinh.english_center_be.modules.academic.dto.TeachingClassRequest;
 import com.trinh.english_center_be.modules.academic.dto.TeachingClassResponse;
 import com.trinh.english_center_be.modules.academic.service.TeachingClassService;
 import com.trinh.english_center_be.shared.response.ApiResponse;
-import com.trinh.english_center_be.shared.util.StringUtil;
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class TeachingClassController {
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         200,
-                        StringUtil.LIST_SUCCESSFULLY,
+                        MessageConstant.LIST_SUCCESSFULLY,
                         teachingClassService.findAll()
                 )
         );
@@ -44,7 +45,7 @@ public class TeachingClassController {
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         200,
-                        String.format(StringUtil.RETRIEVED_SUCCESSFULLY,StringUtil.CLASS, id),
+                        String.format(MessageConstant.RETRIEVED_SUCCESSFULLY, Constant.CLASS, id),
                         teachingClassService.findById(id)
                 )
         );
@@ -58,7 +59,7 @@ public class TeachingClassController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(
                         201,
-                        String.format(StringUtil.CREATED_SUCCESSFULLY, StringUtil.CLASS),
+                        String.format(MessageConstant.CREATED_SUCCESSFULLY, Constant.CLASS),
                         teachingClassService.create(request)
                 ));
     }
@@ -72,7 +73,7 @@ public class TeachingClassController {
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         200,
-                        String.format(StringUtil.UPDATED_SUCCESSFULLY,StringUtil.CLASS,id),
+                        String.format(MessageConstant.UPDATED_SUCCESSFULLY, Constant.CLASS,id),
                         teachingClassService.update(id, request)
                 )
         );
@@ -85,7 +86,7 @@ public class TeachingClassController {
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         200,
-                        String.format(StringUtil.DELETED_SUCCESSFULLY,StringUtil.CLASS),
+                        String.format(MessageConstant.DELETED_SUCCESSFULLY, Constant.CLASS),
                         null
                 )
         );

@@ -6,7 +6,8 @@ import com.trinh.english_center_be.modules.user.dto.UserResponse;
 import com.trinh.english_center_be.modules.user.entity.User;
 import com.trinh.english_center_be.shared.enums.UserStatus;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
-import com.trinh.english_center_be.shared.util.StringUtil;
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -43,13 +43,13 @@ public class UserServiceImpl implements UserService {
     public UserResponse create(UserRequest request) {
         if (existByUserName(request.username())) {
             throw new IllegalArgumentException(
-                    String.format("Username '%s' already exists", request.username())
+                    String.format(MessageConstant.FIELD_ALREADY_VALUE, Constant.USERNAME_FIELD, request.username())
             );
         }
 
         if (existByEmail(request.email())) {
             throw new IllegalArgumentException(
-                    String.format("Email '%s' already exists", request.email())
+                    String.format(MessageConstant.FIELD_ALREADY_VALUE, Constant.EMAIL_FIELD, request.email())
             );
         }
 
@@ -74,13 +74,13 @@ public class UserServiceImpl implements UserService {
 
         if (!user.getUsername().equals(request.username()) && existByUserName(request.username())) {
             throw new IllegalArgumentException(
-                    String.format("Username '%s' already exists", request.username())
+                    String.format(MessageConstant.FIELD_ALREADY_VALUE, Constant.USERNAME_FIELD, request.username())
             );
         }
 
         if (!user.getEmail().equals(request.email()) && existByEmail(request.email())) {
             throw new IllegalArgumentException(
-                    String.format("Email '%s' already exists", request.email())
+                    String.format(MessageConstant.FIELD_ALREADY_VALUE, Constant.EMAIL_FIELD, request.email())
             );
         }
 
@@ -119,8 +119,8 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         String.format(
-                                StringUtil.NOT_FOUND_BY_ID,
-                                StringUtil.USER,
+                                MessageConstant.NOT_FOUND_BY_ID,
+                                Constant.USER,
                                 id
                         )
                 ));

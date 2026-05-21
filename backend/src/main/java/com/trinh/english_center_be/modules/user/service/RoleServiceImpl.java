@@ -8,7 +8,8 @@ import com.trinh.english_center_be.modules.user.entity.Role;
 import com.trinh.english_center_be.shared.enums.Roles;
 import com.trinh.english_center_be.shared.exception.BusinessException;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
-import com.trinh.english_center_be.shared.util.StringUtil;
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -44,10 +45,10 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public RoleResponse findById(Long id) {
         Role role = roleRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.ROLE, id))
+                () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.ROLE, id))
         );
         if (Boolean.FALSE.equals(role.getActive())) {
-            throw new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_DELETED_BY_ID, StringUtil.ROLE, id));
+            throw new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_DELETED_BY_ID, Constant.ROLE, id));
         }
         return toResponse(role);
     }
@@ -57,7 +58,7 @@ public class RoleServiceImpl implements RoleService {
     public RoleResponse create(RoleRequest roleRequest) {
         if (roleRepository.existsByCode(roleRequest.getCode())) {
             throw new BusinessException(
-                    String.format(StringUtil.ENTITY_ALREADY_EXISTS, StringUtil.ROLE, StringUtil.CODE_FIELD),
+                    String.format(MessageConstant.ENTITY_ALREADY_EXISTS, Constant.ROLE, Constant.CODE_FIELD),
                     HttpStatus.CONFLICT
             );
         }
@@ -78,7 +79,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public void softDeleteById(Long id) {
         Role role = roleRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.ROLE, id))
+                () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.ROLE, id))
         );
 
         role.setActive(false);
@@ -89,12 +90,12 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public RoleResponse updateById(Long id, RoleRequest roleRequest) {
         Role existing = roleRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.ROLE, id))
+                () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.ROLE, id))
         );
 
         if (roleRepository.existsByCodeAndIdNot(roleRequest.getCode(), id)) {
             throw new BusinessException(
-                    String.format(StringUtil.ENTITY_ALREADY_EXISTS, StringUtil.ROLE, StringUtil.CODE_FIELD),
+                    String.format(MessageConstant.ENTITY_ALREADY_EXISTS, Constant.ROLE, Constant.CODE_FIELD),
                     HttpStatus.CONFLICT
             );
         }
@@ -110,7 +111,7 @@ public class RoleServiceImpl implements RoleService {
     private BusinessRole resolveActiveBusinessRole(Long businessRoleId) {
         BusinessRole businessRole = bRoleService.findById(businessRoleId);
         if (Boolean.FALSE.equals(businessRole.getActive())) {
-            throw new BusinessException(String.format(StringUtil.OBJECT_INACTIVE, StringUtil.BUSINESS_ROLE), HttpStatus.BAD_REQUEST);
+            throw new BusinessException(String.format(MessageConstant.OBJECT_INACTIVE, Constant.BUSINESS_ROLE), HttpStatus.BAD_REQUEST);
         }
         return businessRole;
     }
