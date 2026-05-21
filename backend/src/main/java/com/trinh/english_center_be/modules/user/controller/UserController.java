@@ -41,9 +41,7 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<UserResponse>> create(
-            @Valid @RequestBody UserRequest request
-    ) {
+    public ResponseEntity<ApiResponse<UserResponse>> create(@Valid @RequestBody UserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(201, String.format(MessageConstant.CREATED_SUCCESSFULLY, Constant.USER),
                         userService.create(request)));
@@ -51,9 +49,8 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
-    public ResponseEntity<ApiResponse<UserResponse>> update(
-            @PathVariable Long id,
-            @Valid @RequestBody UserRequest request
+    public ResponseEntity<ApiResponse<UserResponse>> update(@PathVariable Long id,
+                                                            @Valid @RequestBody UserRequest request
     ) {
         return ResponseEntity.ok(
                 new ApiResponse<>(200, String.format(MessageConstant.UPDATED_SUCCESSFULLY, Constant.USER, id),

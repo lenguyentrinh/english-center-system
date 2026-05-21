@@ -10,7 +10,7 @@ public class MessageConstant {
     public static final String ASSIGN_SUCCESSFULLY = "%s assigned to user successfully";
     public static final String REMOVE_SUCCESSFULLY = "%s removed from user successfully";
 
-    // not expect
+    // business message
     public static final String ENTITY_NOT_FOUND_BY = "%s not found by %s: %s";
     public static final String ENTITY_ALREADY_EXISTS = "%s already exists by %s";
     public static final String NOT_FOUND_BY_ID="%s not found by id: %d";
@@ -30,4 +30,17 @@ public class MessageConstant {
     public static final String  LOGIN_SUCCESS= "Login successful";
     public static final String  SIGNUP_SUCCESS= "Signup successful";
     public static final String  LOGOUT_SUCCESS= "Logout successful";
+
+    //message validate field
+    public static final String USERNAME_NOT_BLANK= "Username must not be blank";
+    public static final String USERNAME_SIZE_INVALID = "Username must be between 5 and 50 characters";
+    public static final String PASSWORD_NOT_BLANK= "Password must not be blank";
+    public static final String PASSWORD_SIZE_INVALID = "Password must be between 6 and 255 characters";
+    public static final String PASSWORD_LETTER_NUMBER_REQUIRED = "Password must contain at least one letter and one number";
+    public static final String EMAIL_NOT_BLANK = "Email must not be blank";
+    public static final String EMAIL_INVALID = "Email must be valid";
+    public static final String FULL_NAME_SIZE_INVALID = "Full name must be between 5 and 100 characters";
+    public static final String PHONE_INVALID = "Phone number must be valid";
+    public static final String USER_STATUS_NOT_NULL = "Status must not be null";
+    public static final String FULL_NAME_NOT_BLANK = "Full name must not be blank";
 }

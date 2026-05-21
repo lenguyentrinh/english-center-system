@@ -5,6 +5,7 @@ import com.trinh.english_center_be.modules.user.dto.UserRequest;
 import com.trinh.english_center_be.modules.user.dto.UserResponse;
 import com.trinh.english_center_be.modules.user.entity.User;
 import com.trinh.english_center_be.shared.enums.UserStatus;
+import com.trinh.english_center_be.shared.exception.ExistByFieldException;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
 import com.trinh.english_center_be.shared.util.Constant;
 import com.trinh.english_center_be.shared.util.MessageConstant;
@@ -42,13 +43,13 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse create(UserRequest request) {
         if (existByUserName(request.username())) {
-            throw new IllegalArgumentException(
+            throw new ExistByFieldException(
                     String.format(MessageConstant.FIELD_ALREADY_VALUE, Constant.USERNAME_FIELD, request.username())
             );
         }
 
         if (existByEmail(request.email())) {
-            throw new IllegalArgumentException(
+            throw new ExistByFieldException(
                     String.format(MessageConstant.FIELD_ALREADY_VALUE, Constant.EMAIL_FIELD, request.email())
             );
         }

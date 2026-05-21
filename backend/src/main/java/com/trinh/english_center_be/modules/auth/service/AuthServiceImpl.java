@@ -41,7 +41,9 @@ public class AuthServiceImpl implements AuthService{
             throw new InvalidCredentialException("Incorrect password", "auth.password");
         }
 
-        if(user.getStatus() != UserStatus.ACTIVE) throw new UnauthorizedException(MessageConstant.USER_ACCOUNT_NOT_ACTIVE);
+        if(user.getStatus() != UserStatus.ACTIVE){
+            throw new UnauthorizedException(MessageConstant.USER_ACCOUNT_NOT_ACTIVE);
+        }
 
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -58,9 +60,11 @@ public class AuthServiceImpl implements AuthService{
     @Override
     public void signup(SignupRequest request) {
         if (userService.existByUserName(request.username())) {
-            throw new EntityExistsException(String.format(MessageConstant.ENTITY_ALREADY_EXISTS, Constant.USER, Constant.USERNAME_FIELD));
+            throw new ExistByFieldException(String.format(MessageConstant.ENTITY_ALREADY_EXISTS,
+                    Constant.USER, Constant.USERNAME_FIELD));
         } else if (userService.existByEmail(request.email())) {
-            throw new EntityExistsException(String.format(MessageConstant.ENTITY_ALREADY_EXISTS, Constant.USER, Constant.EMAIL_FIELD));
+            throw new ExistByFieldException(String.format(MessageConstant.ENTITY_ALREADY_EXISTS,
+                    Constant.USER, Constant.EMAIL_FIELD));
         }
 
         Role roleDefault = roleService.findRoleByRoleName(Roles.STUDENT).orElseThrow(
