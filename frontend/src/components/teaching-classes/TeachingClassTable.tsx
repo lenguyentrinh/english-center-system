@@ -3,15 +3,16 @@ import type { TeachingClass } from "@/features/teaching-classes/types.ts";
 interface TeachingClassTableProps {
   classes: TeachingClass[];
   loading: boolean;
+  onView?: (teachingClass: TeachingClass) => void;
   onUpdate: (teachingClass: TeachingClass) => void;
   onDelete: (id: number) => void;
   submitting?: boolean;
 }
 
 const statusColors: Record<string, { badge: string }> = {
-  OPEN: { badge: "bg-blue-100 text-blue-800" },
+  OPEN: { badge: "bg-emerald-100 text-emerald-800" },
   ACTIVE: { badge: "bg-green-100 text-green-800" },
-  CLOSED: { badge: "bg-slate-100 text-slate-800" },
+  CLOSED: { badge: "bg-rose-100 text-rose-800" },
 };
 
 function formatDate(dateString: string): string {
@@ -29,6 +30,7 @@ function formatDate(dateString: string): string {
 export default function TeachingClassTable({
   classes,
   loading,
+  onView,
   onUpdate,
   onDelete,
   submitting,
@@ -116,9 +118,19 @@ export default function TeachingClassTable({
 
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
+                    {onView ? (
+                      <button
+                        onClick={() => onView(teachingClass)}
+                        className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={submitting}
+                      >
+                        View
+                      </button>
+                    ) : null}
+
                     <button
                       onClick={() => onUpdate(teachingClass)}
-                      className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={submitting}
                     >
                       Edit
@@ -126,7 +138,7 @@ export default function TeachingClassTable({
 
                     <button
                       onClick={() => onDelete(teachingClass.id)}
-                      className="inline-flex items-center rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center rounded-md border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={submitting}
                     >
                       Delete
