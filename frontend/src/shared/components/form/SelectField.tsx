@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import BaseField from "./BaseField";
 
 type Option = {
@@ -11,15 +12,14 @@ type Props = {
   options: Option[];
 } & React.SelectHTMLAttributes<HTMLSelectElement>;
 
-export default function SelectField({
-  label,
-  error,
-  options,
-  ...props
-}: Props) {
+const SelectField = forwardRef<HTMLSelectElement, Props>(function SelectField(
+  { label, error, options, ...props },
+  ref
+) {
   return (
     <BaseField label={label} error={error}>
       <select
+        ref={ref}
         {...props}
         className="
           w-full rounded-lg border border-slate-300 px-3 py-2 text-sm
@@ -34,4 +34,6 @@ export default function SelectField({
       </select>
     </BaseField>
   );
-}
+});
+
+export default SelectField;

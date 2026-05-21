@@ -7,7 +7,7 @@ type Props = {
 export default function BaseField({ label, error, children }: Props) {
   return (
     <div className="space-y-1">
-      <label className="text-sm font-medium text-red-500">
+      <label className="text-sm font-medium text-slate-700">
         {label}
       </label>
 
