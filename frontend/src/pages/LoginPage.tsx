@@ -3,9 +3,19 @@ import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import AuthLayout from "@/shared/components/layout/AuthLayout.tsx";
-import { login } from "@/features/auth/authApi.ts";
+import { login, probeAdminAccess } from "@/features/auth/authApi.ts";
+import {
+  clearCurrentUsername,
+  setCurrentDisplayName,
+  setCurrentUsername,
+} from "@/features/auth/authIdentity.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
-import { setAuthenticated } from "@/features/auth/authSession.ts";
+import {
+  clearAdminAccessState,
+  setAdminAccessState,
+  setAuthenticated,
+} from "@/features/auth/authSession.ts";
+import { getUsers } from "@/features/admin/adminApi.ts";
 import {
   loginSchema,
   type LoginForm,
@@ -26,15 +36,38 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (values: LoginForm) => {
+    const username = values.username.trim();
+
     try {
       const res = await login({
-        username: values.username.trim(),
+        username,
         password: values.password,
       });
       toast.success(res.message);
       setAuthenticated(true);
+      setCurrentUsername(username);
+      setCurrentDisplayName(username);
+
+      const isAdmin = await probeAdminAccess();
+      setAdminAccessState(isAdmin);
+
+      if (isAdmin) {
+        try {
+          const usersRes = await getUsers();
+          const currentUser = usersRes.data.find((user) => user.username === username);
+          setCurrentDisplayName(currentUser?.fullName?.trim() || currentUser?.username || username);
+        } catch {
+          setCurrentDisplayName(username);
+        }
+      } else {
+        clearAdminAccessState();
+      }
+
       navigate("/");
     } catch (error: unknown) {
+      setAuthenticated(false);
+      clearCurrentUsername();
+      clearAdminAccessState();
       toast.error(getApiErrorMessage(error, "Login failed"));
     }
   };

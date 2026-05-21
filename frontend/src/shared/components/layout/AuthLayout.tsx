@@ -1,6 +1,8 @@
 import type { PropsWithChildren } from "react";
 import { Link, useLocation } from "react-router-dom";
 import signupLoginBg from "@/assets/images/signup_login_bg.png";
+import Header from "./Header.tsx";
+import Footer from "./Footer.tsx";
 
 const tabs = [
   { to: "/auth/login", label: "Login" },
@@ -11,20 +13,14 @@ export default function AuthLayout({ children }: PropsWithChildren) {
   const location = useLocation();
 
   return (
-    <main
-      className="relative min-h-screen bg-cover bg-contain bg-no-repeat"
-      style={{
-        backgroundImage: `url(${signupLoginBg})`,
-      }}
-    >
+    <main className="relative min-h-screen bg-cover bg-contain bg-no-repeat" style={{ backgroundImage: `url(${signupLoginBg})` }}>
+      <Header />
       <div className="absolute inset-0 bg-white/20 lg:bg-transparent" />
-      <div className="relative flex min-h-screen items-center px-4 py-8 sm:px-6">
+      <div className="relative flex min-h-[calc(100vh-64px)] items-center px-4 py-8 sm:px-6">
         <div className="w-full lg:ml-[7%]">
           <div
             className="w-full animate-fade-in rounded-2xl bg-white/85 p-8 shadow-2xl backdrop-blur-md sm:w-full md:w-[90%] lg:max-w-[460px]"
-            style={{
-              animation: "fadeInUp 0.6s ease-out",
-            }}
+            style={{ animation: "fadeInUp 0.6s ease-out" }}
           >
             <div className="mb-6 flex items-center justify-between gap-3">
               <Link to="/" className="text-sm font-semibold text-slate-700 hover:text-slate-900">
@@ -54,6 +50,8 @@ export default function AuthLayout({ children }: PropsWithChildren) {
           </div>
         </div>
       </div>
+
+      <Footer />
 
       <style>{`
         @keyframes fadeInUp {
