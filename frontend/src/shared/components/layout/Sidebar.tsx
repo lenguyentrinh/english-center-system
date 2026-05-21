@@ -10,7 +10,7 @@ import { clearCurrentUsername } from "@/features/auth/authIdentity.ts";
 
 const navItems = [
   { to: "/admin/users", label: "Manage Users" },
-  { to: "/admin/courses", label: "Course" },
+  { to: "/admin/courses", label: "Manage Course" },
   { to: "/admin/roles", label: "Manage Roles" },
   { to: "/admin/business-roles", label: "Manage Business Roles" },
 ];
