@@ -1,0 +1,369 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
+import ConfirmDialog from "@/shared/components/ConfirmDialog.tsx";
+import {
+  assignBusinessRoleToUser,
+  assignRoleToUser,
+  getBusinessRoles,
+  getRoles,
+  getUserById,
+  getUserEffectiveRoles,
+  removeBusinessRoleFromUser,
+  removeRoleFromUser,
+} from "@/features/admin/adminApi.ts";
+import type {
+  BusinessRoleResponse,
+  RoleResponse,
+  UserEffectiveRolesResponse,
+  UserSummaryResponse,
+} from "@/features/admin/types.ts";
+import { getApiErrorMessage } from "@/shared/api/error.ts";
+import { statusBadgeClass } from "@/features/admin/constants.ts";
+
+type RemovalTarget =
+  | { kind: "role"; id: number; label: string }
+  | { kind: "businessRole"; id: number; label: string }
+  | null;
+
+const formatDate = (value: string | null) => (value ? new Date(value).toLocaleString() : "-");
+
+const chipClass =
+  "inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700";
+
+export default function UserDetailPage() {
+  const { id } = useParams();
+  const userId = Number(id);
+
+  const [user, setUser] = useState<UserSummaryResponse | null>(null);
+  const [effectiveRoles, setEffectiveRoles] = useState<UserEffectiveRolesResponse | null>(null);
+  const [roles, setRoles] = useState<RoleResponse[]>([]);
+  const [businessRoles, setBusinessRoles] = useState<BusinessRoleResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedRoleId, setSelectedRoleId] = useState("");
+  const [selectedBusinessRoleId, setSelectedBusinessRoleId] = useState("");
+  const [removalTarget, setRemovalTarget] = useState<RemovalTarget>(null);
+
+  const loadDetail = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [userRes, effectiveRolesRes, rolesRes, businessRolesRes] = await Promise.all([
+        getUserById(userId),
+        getUserEffectiveRoles(userId),
+        getRoles(),
+        getBusinessRoles(),
+      ]);
+      setUser(userRes.data);
+      setEffectiveRoles(effectiveRolesRes.data);
+      setRoles(rolesRes.data);
+      setBusinessRoles(businessRolesRes.data);
+    } catch (err) {
+      const message = getApiErrorMessage(err, "Failed to load user detail");
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!Number.isFinite(userId)) {
+      setError("Invalid user id");
+      setLoading(false);
+      return;
+    }
+
+    void loadDetail();
+  }, [userId]);
+
+  const effectiveRoleIds = useMemo(
+    () => new Set(effectiveRoles?.effectiveRoles.map((role) => role.id) ?? []),
+    [effectiveRoles]
+  );
+  const assignedBusinessRoleIds = useMemo(
+    () => new Set(effectiveRoles?.businessRoles.map((businessRole) => businessRole.id) ?? []),
+    [effectiveRoles]
+  );
+
+  const availableRoles = useMemo(
+    () => roles.filter((role) => role.active && !effectiveRoleIds.has(role.id)),
+    [roles, effectiveRoleIds]
+  );
+
+  const availableBusinessRoles = useMemo(
+    () => businessRoles.filter((businessRole) => businessRole.active && !assignedBusinessRoleIds.has(businessRole.id)),
+    [businessRoles, assignedBusinessRoleIds]
+  );
+
+  const handleAssignRole = async () => {
+    if (!selectedRoleId) return;
+
+    try {
+      setSubmitting(true);
+      const res = await assignRoleToUser(userId, Number(selectedRoleId));
+      toast.success(res.message);
+      setSelectedRoleId("");
+      await loadDetail();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to assign role"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleAssignBusinessRole = async () => {
+    if (!selectedBusinessRoleId) return;
+
+    try {
+      setSubmitting(true);
+      const res = await assignBusinessRoleToUser(userId, Number(selectedBusinessRoleId));
+      toast.success(res.message);
+      setSelectedBusinessRoleId("");
+      await loadDetail();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to assign business role"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!removalTarget) return;
+
+    try {
+      setSubmitting(true);
+      if (removalTarget.kind === "role") {
+        const res = await removeRoleFromUser(userId, removalTarget.id);
+        toast.success(res.message);
+      } else {
+        const res = await removeBusinessRoleFromUser(userId, removalTarget.id);
+        toast.success(res.message);
+      }
+      setRemovalTarget(null);
+      await loadDetail();
+    } catch (err) {
+      toast.error(
+        getApiErrorMessage(
+          err,
+          removalTarget.kind === "role" ? "Failed to remove role" : "Failed to remove business role"
+        )
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!Number.isFinite(userId)) {
+    return (
+      <AdminLayout>
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700">
+          Invalid user id.
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  return (
+    <AdminLayout>
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div>
+          <Link to="/admin/users" className="text-sm font-medium text-slate-500 transition hover:text-slate-900">
+            Back to users
+          </Link>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+            User Detail
+          </h1>
+        </div>
+      </div>
+
+      {error ? (
+        <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error}
+        </div>
+      ) : null}
+
+      {loading ? (
+        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-8 text-slate-500 shadow-sm">
+          Loading user detail...
+        </div>
+      ) : user ? (
+        <div className="space-y-6">
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              ["Username", user.username],
+              ["Full name", user.fullName ?? "-"],
+              ["Email", user.email ?? "-"],
+              ["Phone", user.phone ?? "-"]
+            ].map(([label, value]) => (
+              <article key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</p>
+                <p className="mt-3 text-lg font-semibold text-slate-950">{value}</p>
+              </article>
+            ))}
+          </section>
+
+          <section className="grid gap-4 lg:grid-cols-3">
+            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-950">Assigned Roles</h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Direct roles assigned to this user.
+                  </p>
+                </div>
+                <div className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeClass[user.status ?? "ACTIVE"] ?? "bg-slate-100 text-slate-700"}`}>
+                  {user.status ?? "UNKNOWN"}
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {effectiveRoles?.directRoles.length ? (
+                  effectiveRoles.directRoles.map((role) => (
+                    <button
+                      key={role.id}
+                      type="button"
+                      onClick={() => setRemovalTarget({ kind: "role", id: role.id, label: role.code })}
+                      className={`${chipClass} cursor-pointer transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700`}
+                    >
+                      {role.code}
+                      <span className="ml-2 text-rose-500">Remove</span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500">No direct roles assigned.</p>
+                )}
+              </div>
+
+              <div className="mt-6 border-t border-slate-200 pt-5">
+                <h3 className="text-sm font-semibold text-slate-900">Assign Role</h3>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                  <select
+                    value={selectedRoleId}
+                    onChange={(event) => setSelectedRoleId(event.target.value)}
+                    className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="">Select a role</option>
+                    {availableRoles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.code} {role.description ? `- ${role.description}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleAssignRole}
+                    disabled={!selectedRoleId || submitting}
+                    className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Assign Role
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-950">Business Roles</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Assigning a business role also synchronizes the user’s effective roles.
+              </p>
+
+              <div className="mt-4 space-y-2">
+                {effectiveRoles?.businessRoles.length ? (
+                  effectiveRoles.businessRoles.map((businessRole) => (
+                    <button
+                      key={businessRole.id}
+                      type="button"
+                      onClick={() => setRemovalTarget({ kind: "businessRole", id: businessRole.id, label: businessRole.code })}
+                      className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
+                    >
+                      <span>{businessRole.code}</span>
+                      <span>Remove</span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500">No business roles assigned.</p>
+                )}
+              </div>
+
+              <div className="mt-6 border-t border-slate-200 pt-5">
+                <h3 className="text-sm font-semibold text-slate-900">Assign Business Role</h3>
+                <div className="mt-3 space-y-3">
+                  <select
+                    value={selectedBusinessRoleId}
+                    onChange={(event) => setSelectedBusinessRoleId(event.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="">Select a business role</option>
+                    {availableBusinessRoles.map((businessRole) => (
+                      <option key={businessRole.id} value={businessRole.id}>
+                        {businessRole.code}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleAssignBusinessRole}
+                    disabled={!selectedBusinessRoleId || submitting}
+                    className="w-full rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Assign Business Role
+                  </button>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-950">Effective Roles</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              These are the final roles available to this user after direct and business-role assignments.
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {effectiveRoles?.effectiveRoles.length ? (
+                effectiveRoles.effectiveRoles.map((role) => (
+                  <span key={role.id} className={chipClass}>
+                    {role.code}
+                  </span>
+                ))
+              ) : (
+                <p className="text-sm text-slate-500">No effective roles yet.</p>
+              )}
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {[
+                ["Status", user.status ?? "-"],
+                ["Created", formatDate(user.createdAt)],
+                ["Updated", formatDate(user.updatedAt)],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-xl bg-slate-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</p>
+                  <p className="mt-2 text-sm font-medium text-slate-900">{value}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      <ConfirmDialog
+        isOpen={!!removalTarget}
+        title={removalTarget?.kind === "role" ? "Remove Role" : "Remove Business Role"}
+        message={
+          removalTarget
+            ? `Are you sure you want to remove ${removalTarget.label} from this user?`
+            : "Are you sure you want to remove this assignment?"
+        }
+        onCancel={() => setRemovalTarget(null)}
+        onConfirm={handleRemove}
+        isLoading={submitting}
+        isDangerous
+      />
+    </AdminLayout>
+  );
+}

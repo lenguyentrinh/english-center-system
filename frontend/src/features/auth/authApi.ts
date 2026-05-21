@@ -16,3 +16,12 @@ export const logout = async (): Promise<ApiResponse<null>> => {
   const { data } = await apiClient.post<ApiResponse<null>>("/auth/logout");
   return data;
 };
+
+export const probeAdminAccess = async (): Promise<boolean> => {
+  try {
+    await apiClient.get("/roles");
+    return true;
+  } catch {
+    return false;
+  }
+};
