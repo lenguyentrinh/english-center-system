@@ -7,7 +7,8 @@ import com.trinh.english_center_be.modules.academic.repository.TeachingClassRepo
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
 import java.util.List;
 
-import com.trinh.english_center_be.shared.util.StringUtil;
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +32,7 @@ public class TeachingClassServiceImpl implements TeachingClassService {
     public TeachingClassResponse findById(Long id) {
         TeachingClass teachingClass = teachingClassRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.CLASS, id))
+                        new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.CLASS, id))
                 );
 
         return toResponse(teachingClass);
@@ -59,7 +60,7 @@ public class TeachingClassServiceImpl implements TeachingClassService {
 
         TeachingClass teachingClass = teachingClassRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.CLASS, id))
+                        new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.CLASS, id))
                 );
 
         teachingClass.setCode(request.code());
@@ -78,7 +79,7 @@ public class TeachingClassServiceImpl implements TeachingClassService {
 
         TeachingClass teachingClass = teachingClassRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.BUSINESS_ROLE, id))
+                        new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.BUSINESS_ROLE, id))
                 );
 
         teachingClass.setActive(false);

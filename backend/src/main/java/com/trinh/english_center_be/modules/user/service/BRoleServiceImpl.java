@@ -7,7 +7,8 @@ import com.trinh.english_center_be.modules.user.dto.RoleResponse;
 import com.trinh.english_center_be.modules.user.entity.BusinessRole;
 import com.trinh.english_center_be.shared.exception.BusinessException;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
-import com.trinh.english_center_be.shared.util.StringUtil;
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class BRoleServiceImpl implements BRoleService {
     public BusinessRoleResponse findResponseById(Long id) {
         BusinessRole businessRole = findById(id);
         if (Boolean.FALSE.equals(businessRole.getActive())) {
-            throw new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_DELETED_BY_ID, StringUtil.BUSINESS_ROLE, id));
+            throw new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_DELETED_BY_ID, Constant.BUSINESS_ROLE, id));
         }
         return toBusinessRoleResponseOverview(businessRole);
     }
@@ -41,7 +42,7 @@ public class BRoleServiceImpl implements BRoleService {
     public BusinessRoleResponse create(BusinessRoleRequest businessRoleRequest) {
         if (bRoleRepository.existsByCode(businessRoleRequest.getCode())) {
             throw new BusinessException(
-                    String.format(StringUtil.ENTITY_ALREADY_EXISTS, StringUtil.BUSINESS_ROLE, StringUtil.CODE_FIELD),
+                    String.format(MessageConstant.ENTITY_ALREADY_EXISTS, Constant.BUSINESS_ROLE, Constant.CODE_FIELD),
                     HttpStatus.CONFLICT
             );
         }
@@ -58,14 +59,14 @@ public class BRoleServiceImpl implements BRoleService {
     @Override
     public BusinessRole findById(Long id) {
         return bRoleRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.BUSINESS_ROLE, id))
+                () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.BUSINESS_ROLE, id))
         );
     }
 
     @Override
     public BusinessRole findByIdWithRoles(Long id) {
         return bRoleRepository.findByIdWithRoles(id).orElseThrow(
-                () -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.BUSINESS_ROLE, id))
+                () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.BUSINESS_ROLE, id))
         );
     }
 
@@ -82,7 +83,7 @@ public class BRoleServiceImpl implements BRoleService {
 
         if (bRoleRepository.existsByCodeAndIdNot(businessRoleRequest.getCode(), id)) {
             throw new BusinessException(
-                    String.format(StringUtil.ENTITY_ALREADY_EXISTS, StringUtil.BUSINESS_ROLE, StringUtil.CODE_FIELD),
+                    String.format(MessageConstant.ENTITY_ALREADY_EXISTS, Constant.BUSINESS_ROLE, Constant.CODE_FIELD),
                     HttpStatus.CONFLICT
             );
         }

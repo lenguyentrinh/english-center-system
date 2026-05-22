@@ -1,29 +1,34 @@
 package com.trinh.english_center_be.modules.user.dto;
 
 import com.trinh.english_center_be.shared.enums.UserStatus;
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import jakarta.validation.constraints.*;
 
 public record UserRequest(
-        @NotBlank(message = "Username must not be blank")
-        @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+        @NotBlank(message = MessageConstant.USERNAME_NOT_BLANK)
+        @Size(min = Constant.USERNAME_MIN_LENGTH, max = Constant.USERNAME_MAX_LENGTH,
+                message = MessageConstant.USERNAME_SIZE_INVALID)
         String username,
 
-        @NotBlank(message = "Password must not be blank")
-        @Size(min = 6, max = 255, message = "Password must be between 6 and 255 characters")
+        @NotBlank(message = MessageConstant.PASSWORD_NOT_BLANK)
+        @Size(min = Constant.PASSWORD_MIN_LENGTH, max = Constant.PASSWORD_MAX_LENGTH,
+                message = MessageConstant.PASSWORD_SIZE_INVALID)
+        @Pattern(regexp = Constant.PASSWORD_PATTERN, message = MessageConstant.PASSWORD_LETTER_NUMBER_REQUIRED)
         String password,
 
-        @NotBlank(message = "Email must not be blank")
-        @Email(message = "Email must be valid")
+        @NotBlank(message = MessageConstant.EMAIL_NOT_BLANK)
+        @Email(message = MessageConstant.EMAIL_INVALID)
         String email,
 
-        @Size(max = 100, message = "Full name must be at most 100 characters")
+        @Size(min = Constant.FULL_NAME_MIN_LENGTH, max = Constant.FULL_NAME_MAX_LENGTH,
+                message = MessageConstant.FULL_NAME_SIZE_INVALID)
         String fullName,
 
-        @Pattern(regexp = "^[0-9+\\-\\s()]*$", message = "Phone number must be valid")
-        @Size(max = 20, message = "Phone must be at most 20 characters")
+        @Pattern(regexp = Constant.PHONE_PATTERN, message = MessageConstant.PHONE_INVALID)
         String phone,
 
-        @NotNull(message = "Status must not be null")
+        @NotNull(message = MessageConstant.USER_STATUS_NOT_NULL)
         UserStatus status
 ) {
 }

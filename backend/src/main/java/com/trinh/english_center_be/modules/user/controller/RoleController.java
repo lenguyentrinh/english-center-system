@@ -4,7 +4,8 @@ import com.trinh.english_center_be.modules.user.dto.RoleRequest;
 import com.trinh.english_center_be.modules.user.dto.RoleResponse;
 import com.trinh.english_center_be.modules.user.service.RoleService;
 import com.trinh.english_center_be.shared.response.ApiResponse;
-import com.trinh.english_center_be.shared.util.StringUtil;
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class RoleController {
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         200,
-                        String.format(StringUtil.LIST_SUCCESSFULLY, StringUtil.ROLE),
+                        String.format(MessageConstant.LIST_SUCCESSFULLY, Constant.ROLE),
                         roleService.findAll()
                 )
         );
@@ -45,7 +46,7 @@ public class RoleController {
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         200,
-                        String.format(StringUtil.RETRIEVED_SUCCESSFULLY, StringUtil.ROLE, id),
+                        String.format(MessageConstant.RETRIEVED_SUCCESSFULLY, Constant.ROLE, id),
                         roleService.findById(id)
                 )
         );
@@ -57,7 +58,7 @@ public class RoleController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(
                         201,
-                        String.format(StringUtil.CREATED_SUCCESSFULLY, StringUtil.ROLE),
+                        String.format(MessageConstant.CREATED_SUCCESSFULLY, Constant.ROLE),
                         roleService.create(request)
                 ));
     }
@@ -71,7 +72,7 @@ public class RoleController {
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         200,
-                        String.format(StringUtil.UPDATED_SUCCESSFULLY, StringUtil.ROLE, id),
+                        String.format(MessageConstant.UPDATED_SUCCESSFULLY, Constant.ROLE, id),
                         roleService.updateById(id, request)
                 )
         );
@@ -84,7 +85,7 @@ public class RoleController {
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         200,
-                        String.format(StringUtil.DELETED_SUCCESSFULLY, StringUtil.ROLE),
+                        String.format(MessageConstant.DELETED_SUCCESSFULLY, Constant.ROLE),
                         null
                 )
         );
