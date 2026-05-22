@@ -17,10 +17,16 @@ public class Constant {
     public static final String PHONE_PATTERN = "^(0\\d{9})$";
 
     //min-max length
+    //user
     public static final int USERNAME_MIN_LENGTH = 5;
     public static final int USERNAME_MAX_LENGTH = 50;
     public static final int PASSWORD_MAX_LENGTH = 255;
     public static final int PASSWORD_MIN_LENGTH = 6;
     public static final int FULL_NAME_MIN_LENGTH = 5;
     public static final int FULL_NAME_MAX_LENGTH = 50;
+
+    //course
+    public static final int CODE_MAX_LENGTH = 50;
+    public static final int NAME_MAX_LENGTH = 255;
+    public static final int MIN_STUDENT = 1;
 }
