@@ -34,26 +34,31 @@ public class MessageConstant {
     //message validate field
     //user
     public static final String USERNAME_NOT_BLANK= "Username must not be blank";
-    public static final String USERNAME_SIZE_INVALID = "Username must be between 5 and 50 characters";
+    public static final String USERNAME_SIZE_INVALID = "Username must be between {min} and {max} characters";
     public static final String PASSWORD_NOT_BLANK= "Password must not be blank";
-    public static final String PASSWORD_SIZE_INVALID = "Password must be between 6 and 255 characters";
+    public static final String PASSWORD_SIZE_INVALID = "Password must be between {min} and {max} characters";
     public static final String PASSWORD_LETTER_NUMBER_REQUIRED = "Password must contain at least one letter and one number";
     public static final String EMAIL_NOT_BLANK = "Email must not be blank";
     public static final String EMAIL_INVALID = "Email must be valid";
-    public static final String FULL_NAME_SIZE_INVALID = "Full name must be between 5 and 100 characters";
+    public static final String FULL_NAME_SIZE_INVALID = "Full name must be between {min} and {max} characters";
     public static final String PHONE_INVALID = "Phone number must be valid";
     public static final String USER_STATUS_NOT_NULL = "Status must not be null";
     public static final String FULL_NAME_NOT_BLANK = "Full name must not be blank";
 
     //course
     public static final String CODE_NOT_BLANK = "Code must not be blank";
-    public static final String CODE_MAX_LENGTH = "Code must be at most 50 characters";
+    public static final String CODE_MAX_LENGTH = "Code must be at most {max} characters";
     public static final String NAME_NOT_BLANK = "Name must not be blank";
-    public static final String NAME_MAX_LENGTH = "Name must be at most 255 characters";
+    public static final String NAME_MAX_LENGTH = "Name must be at most {max} characters";
     public static final String START_DATE_NOT_NULL = "Start date must not be null";
     public static final String START_DATE_FUTURE_OR_PRESENT = "Start date must be in the present or future";
     public static final String END_DATE_NOT_NULL = "End date must not be null";
     public static final String MAX_STUDENT_NOT_NULL = "Max student must not be null";
-    public static final String MAX_STUDENT_MIN = "Max student must be at least 1";
+    public static final String MAX_STUDENT_MIN = "Max student must be at least {min}";
     public static final String STATUS_NOT_NULL = "Status must not be null";
+
+    // brole & role
+    public static final String CODE_NOT_NULL = "Code must not be null";
+    public static final String DESCRIPTION_MAX_LENGTH = "Description must be at most {max} characters";
+    public static final String ACTIVE_NOT_NULL = "Active must not be null";
 }

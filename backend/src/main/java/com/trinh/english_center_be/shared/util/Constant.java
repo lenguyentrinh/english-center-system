@@ -29,4 +29,7 @@ public class Constant {
     public static final int CODE_MAX_LENGTH = 50;
     public static final int NAME_MAX_LENGTH = 255;
     public static final int MIN_STUDENT = 1;
+
+    //brole & role
+    public static final int DESCRIPTION_MAX_LENGTH = 500;
 }
