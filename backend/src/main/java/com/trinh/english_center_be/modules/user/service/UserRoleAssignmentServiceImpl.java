@@ -207,25 +207,25 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
     }
 
     private RoleResponse toRoleResponse(Role role) {
-        return RoleResponse.builder()
-                .id(role.getId())
-                .code(role.getCode())
-                .description(role.getDescription())
-                .active(role.getActive())
-                .businessRoleId(role.getBusinessRole() != null ? role.getBusinessRole().getId() : null)
-                .businessRoleCode(role.getBusinessRole() != null ?role.getBusinessRole().getCode() : null)
-                .build();
+        return new RoleResponse(
+            role.getId(),
+            role.getCode(),
+            role.getDescription(),
+            role.getActive(),
+            role.getBusinessRole() != null ? role.getBusinessRole().getId() : null,
+            role.getBusinessRole() != null ? role.getBusinessRole().getCode() : null
+        );
     }
 
     private BusinessRoleResponse toBusinessRoleResponse(BusinessRole businessRole, Set<RoleResponse> assignedRoles) {
-        return BusinessRoleResponse.builder()
-                .id(businessRole.getId())
-                .code(businessRole.getCode())
-                .description(businessRole.getDescription())
-                .active(businessRole.getActive())
-                .roles(assignedRoles.stream().toList())
-                .createdAt(businessRole.getCreatedAt())
-                .updateAt(businessRole.getUpdateAt())
-                .build();
+        return new BusinessRoleResponse(
+               businessRole.getId()
+               ,businessRole.getCode()
+               ,businessRole.getDescription()
+               ,businessRole.getActive()
+               ,businessRole.getCreatedAt()
+               ,businessRole.getUpdateAt()
+                ,assignedRoles.stream().toList()
+        );
     }
 }

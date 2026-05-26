@@ -7,13 +7,6 @@ import { getTeachingClasses } from "@/features/teaching-classes/teachingClassesA
 import type { TeachingClass } from "@/features/teaching-classes/types.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
 
-const statItems = [
-  { label: "Small classes", value: "12-20 students" },
-  { label: "Learning tracks", value: "IELTS, TOEIC, Communication" },
-  { label: "Flexible schedules", value: "Morning, afternoon, evening" },
-  { label: "Support", value: "Placement and progress checks" },
-];
-
 export default function CoursesPage() {
   const [courses, setCourses] = useState<TeachingClass[]>([]);
   const [loading, setLoading] = useState(true);
