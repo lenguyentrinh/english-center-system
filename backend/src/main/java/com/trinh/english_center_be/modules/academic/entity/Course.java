@@ -2,6 +2,7 @@ package com.trinh.english_center_be.modules.academic.entity;
 
 import com.trinh.english_center_be.shared.BaseEntity;
 import com.trinh.english_center_be.shared.enums.CourseStatus;
+import com.trinh.english_center_be.shared.enums.Roles;
 import jakarta.persistence.*;
 import com.trinh.english_center_be.modules.teacher.entity.Teacher;
 import jakarta.persistence.FetchType;
@@ -59,4 +60,8 @@ public class Course extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id")
     private Teacher teacher;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "available_role_teacher", length = 50)
+    private Roles availableRoleTeacher;
 }
