@@ -1,6 +1,6 @@
 package com.trinh.english_center_be.modules.attendance.entity;
 
-import com.trinh.english_center_be.modules.academic.entity.ClassSession;
+import com.trinh.english_center_be.modules.academic.entity.CourseSession;
 import com.trinh.english_center_be.modules.student.entity.Student;
 import com.trinh.english_center_be.shared.BaseEntity;
 import jakarta.persistence.Column;
@@ -36,7 +36,7 @@ public class Attendance extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "session_id", nullable = false)
-    private ClassSession session;
+    private CourseSession session;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "student_id", nullable = false)

@@ -1,6 +1,5 @@
 package com.trinh.english_center_be.modules.academic.entity;
 
-import com.trinh.english_center_be.modules.teacher.entity.Teacher;
 import com.trinh.english_center_be.shared.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,20 +13,19 @@ import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 @Entity
-@Table(name = "class_sessions")
+@Table(name = "course_sessions")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class ClassSession extends BaseEntity {
+public class CourseSession extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,9 +35,7 @@ public class ClassSession extends BaseEntity {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "teacher_id")
-    private Teacher teacher;
+    // Teacher assignment moved to Course entity (one teacher per course).
 
     @Column(name = "session_no")
     private Integer sessionNo;
