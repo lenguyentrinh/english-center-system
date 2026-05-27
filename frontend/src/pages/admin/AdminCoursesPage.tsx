@@ -102,7 +102,7 @@ export default function AdminCoursesPage() {
       <CourseTable
         courses={courses}
         loading={loadingList}
-        onView={(item) => navigate(`/courses/${item.id}`)}
+        onView={(item) => navigate(`/admin/courses/${item.id}`)}
         onUpdate={(item) => {
             setEditingCourse(item);
             setIsEditModalOpen(true);

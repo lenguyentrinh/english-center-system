@@ -6,6 +6,7 @@ import CoursesPage from "@/pages/CoursesPage.tsx";
 import CourseDetailPage from "@/pages/CourseDetailPage.tsx";
 import AccountPage from "@/pages/AccountPage.tsx";
 import AdminCoursesPage from "@/pages/admin/AdminCoursesPage.tsx";
+import AdminCourseDetail from "@/pages/admin/AdminCourseDetail.tsx";
 import ManageRolesPage from "@/pages/admin/ManageRolesPage.tsx";
 import ManageBusinessRolesPage from "@/pages/admin/ManageBusinessRolesPage.tsx";
 import ManageUsersPage from "@/pages/admin/ManageUsersPage.tsx";
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
   { path: "/admin/users", element: <RequireAdmin><ManageUsersPage /></RequireAdmin> },
   { path: "/admin/users/:id", element: <RequireAdmin><UserDetailPage /></RequireAdmin> },
   { path: "/admin/courses", element: <RequireAdmin><AdminCoursesPage /></RequireAdmin> },
+  { path: "/admin/courses/:id", element: <RequireAdmin><AdminCourseDetail /></RequireAdmin> },
   { path: "/admin/roles", element: <RequireAdmin><ManageRolesPage /></RequireAdmin> },
   { path: "/admin/business-roles", element: <RequireAdmin><ManageBusinessRolesPage /></RequireAdmin> },
   { path: "/contact", element: <Placeholder title="Contact page (todo)" /> },
