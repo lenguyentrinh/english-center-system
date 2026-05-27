@@ -97,7 +97,7 @@ export default function ManageUsersPage() {
                         to={`/admin/users/${user.id}`}
                         className="inline-flex rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
                       >
-                        View detail
+                        View
                       </Link>
                     </td>
                   </tr>

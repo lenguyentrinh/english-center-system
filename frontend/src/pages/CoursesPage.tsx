@@ -45,7 +45,7 @@ export default function CoursesPage() {
               Available courses
             </p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-              All classes in one place
+              All courses in one place
             </h2>
           </div>
 

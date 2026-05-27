@@ -68,6 +68,11 @@ export default function CourseCard({ course, className = "", showDetailButton = 
         </div>
       </div>
 
+      <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+        <div>Teacher: {course.teacher?.fullName ?? "—"}</div>
+        <div>Min age: {course.minimumAge ?? "—"}</div>
+      </div>
+
       {showDetailButton ? (
         <Link
           to={`/courses/${course.id}`}

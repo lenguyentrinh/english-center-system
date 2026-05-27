@@ -64,7 +64,7 @@ export default function CourseTable({ courses, loading, onView, onUpdate, onDele
                     {onView ? (
                       <button
                         onClick={() => onView(course)}
-                        className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
                         disabled={submitting}
                       >
                         View

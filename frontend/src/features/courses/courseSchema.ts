@@ -8,6 +8,19 @@ export const courseSchema = z
     endDate: z.string().min(1, "End date is required"),
     maxStudent: z.number().min(1),
     status: z.enum(["OPEN", "ACTIVE", "CLOSED"]),
+    minimumAge: z.number().min(0, "Minimum age must be 0 or greater"),
+    requiredEntryLevel: z.string().min(1, "Required entry level is required"),
+    prerequisitesRequired: z.boolean(),
+    teacherId: z.number().optional(),
+    availableRoleTeacher: z.enum([
+      "TEACHER",
+      "TEACHER_IELTS_6",
+      "TEACHER_IELTS_7",
+      "TEACHER_IELTS_8",
+      "TEACHER_TOEIC_650",
+      "TEACHER_TOEIC_750",
+      "TEACHER_TOEIC_850",
+    ]),
   })
   .refine((data) => {
     const start = new Date(data.startDate);

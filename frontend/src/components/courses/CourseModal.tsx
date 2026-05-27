@@ -1,8 +1,11 @@
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Course } from "@/features/courses/types.ts";
 import { courseSchema, type CourseForm } from "@/features/courses/courseSchema.ts";
+import { getTeachers, type TeacherItem } from "@/features/teachers/teachersApi";
+import { getRoles } from "@/features/admin/adminApi";
+import type { RoleResponse } from "@/features/admin/types.ts";
 
 interface Props {
   isOpen: boolean;
@@ -19,10 +22,15 @@ const defaultValues: CourseForm = {
   endDate: "",
   maxStudent: 25,
   status: "OPEN",
+  minimumAge: 0,
+  requiredEntryLevel: "",
+  prerequisitesRequired: false,
+  availableRoleTeacher: "TEACHER",
+  teacherId: undefined,
 };
 
 export default function CourseModal({ isOpen, onClose, onSubmit, submitting, editingCourse }: Props) {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<CourseForm>({
+  const { register, control, handleSubmit, reset, formState: { errors } } = useForm<CourseForm>({
     resolver: zodResolver(courseSchema),
     defaultValues,
   });
@@ -30,6 +38,16 @@ export default function CourseModal({ isOpen, onClose, onSubmit, submitting, edi
 
   useEffect(() => {
     if (!isOpen) return;
+    void Promise.all([getTeachers(), getRoles()])
+      .then(([tRes, rRes]) => {
+        setTeachers(tRes.data ?? []);
+        const teacherRoles: RoleResponse[] = (rRes.data ?? []).filter((r: RoleResponse) => r.code.startsWith("TEACHER"));
+        setTeacherRoles(teacherRoles);
+      })
+      .catch(() => {
+        setTeachers([]);
+        setTeacherRoles([]);
+      });
     if (editingCourse) {
       reset({
         code: editingCourse.code,
@@ -38,11 +56,19 @@ export default function CourseModal({ isOpen, onClose, onSubmit, submitting, edi
         endDate: editingCourse.endDate,
         maxStudent: editingCourse.maxStudent,
         status: editingCourse.status,
+        minimumAge: editingCourse.minimumAge ?? 0,
+        requiredEntryLevel: editingCourse.requiredEntryLevel ?? "",
+        prerequisitesRequired: editingCourse.prerequisitesRequired ?? false,
+        teacherId: editingCourse.teacher?.id ?? undefined,
+        availableRoleTeacher: editingCourse.availableRoleTeacher ?? "TEACHER",
       });
     } else {
-      reset(defaultValues);
+      reset({ ...defaultValues, minimumAge: 0, requiredEntryLevel: "", prerequisitesRequired: false, availableRoleTeacher: "TEACHER" });
     }
   }, [isOpen, editingCourse, reset]);
+
+  const [teachers, setTeachers] = useState<TeacherItem[]>([]);
+  const [teacherRoles, setTeacherRoles] = useState<RoleResponse[]>([]);
 
   if (!isOpen) return null;
 
@@ -76,6 +102,64 @@ export default function CourseModal({ isOpen, onClose, onSubmit, submitting, edi
               <input type="date" {...register("endDate")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
               <p className="text-xs text-red-500">{errors.endDate?.message}</p>
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium text-slate-700">Minimum age</label>
+              <input type="number" {...register("minimumAge", { valueAsNumber: true })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+              <p className="text-xs text-red-500">{errors.minimumAge?.message}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700">Entry level</label>
+              <input {...register("requiredEntryLevel")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+              <p className="text-xs text-red-500">{errors.requiredEntryLevel?.message}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-3">
+              <input type="checkbox" {...register("prerequisitesRequired")} className="h-4 w-4" />
+              <label className="text-sm font-medium text-slate-700">Prerequisites required</label>
+            </div>
+            <div>
+                <label className="text-sm font-medium text-slate-700">Available teacher role</label>
+                <select {...register("availableRoleTeacher")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                  {teacherRoles.length === 0 ? (
+                    <>
+                      <option value="TEACHER">Teacher</option>
+                      <option value="TEACHER_IELTS_6">IELTS 6.0</option>
+                      <option value="TEACHER_IELTS_7">IELTS 7.0</option>
+                      <option value="TEACHER_IELTS_8">IELTS 8.0</option>
+                      <option value="TEACHER_TOEIC_650">TOEIC 650+</option>
+                      <option value="TEACHER_TOEIC_750">TOEIC 750+</option>
+                      <option value="TEACHER_TOEIC_850">TOEIC 850+</option>
+                    </>
+                  ) : (
+                    teacherRoles.map((r) => (
+                      <option key={r.id} value={r.code}>{r.description ?? r.code}</option>
+                    ))
+                  )}
+                </select>
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-slate-700">Teacher</label>
+            <Controller
+              control={control}
+              name="teacherId"
+              render={({ field }) => (
+                <select
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                >
+                  <option value="">— None —</option>
+                  {teachers.map((t) => (
+                    <option key={t.id} value={t.id}>{t.fullName ?? `#${t.id}`}</option>
+                  ))}
+                </select>
+              )}
+            />
+            <p className="text-xs text-red-500">{errors.teacherId?.message}</p>
           </div>
           <div>
             <label className="text-sm font-medium text-slate-700">Max Students</label>

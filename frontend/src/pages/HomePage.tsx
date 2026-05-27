@@ -183,7 +183,7 @@ export default function HomePage() {
               Featured Courses
             </p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-              Latest classes from the catalog
+              Latest courses from the catalog
             </h2>
           </div>
           <Link

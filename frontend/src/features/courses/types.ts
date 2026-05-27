@@ -8,8 +8,11 @@ export type Course = {
   endDate: string;
   maxStudent: number;
   status: CourseStatus;
+  minimumAge?: number | null;
+  requiredEntryLevel?: string | null;
+  prerequisitesRequired?: boolean | null;
   teacher?: { id: number; username?: string; fullName?: string } | null;
-  availableTeacherRole?:
+  availableRoleTeacher?:
     | "TEACHER"
     | "TEACHER_IELTS_6"
     | "TEACHER_IELTS_7"
@@ -28,5 +31,5 @@ export type UpsertCoursePayload = {
   maxStudent: number;
   status: CourseStatus;
   teacherId?: number | null;
-  availableTeacherRole?: string | null;
+  availableRoleTeacher?: string | null;
 };

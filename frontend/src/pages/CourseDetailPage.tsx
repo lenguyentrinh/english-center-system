@@ -111,8 +111,10 @@ export default function CourseDetailPage() {
                   ["Schedule", `${formatDate(course.startDate)} - ${formatDate(course.endDate)}`],
                   ["Duration", durationLabel],
                   ["Capacity", `${course.maxStudent} students`],
-                  ["Teacher", "Not provided by current API"],
-                  ["Description", "Not provided by current API"],
+                  ["Teacher", course.teacher?.fullName ?? "—"],
+                  ["Minimum age", course.minimumAge ?? "—"],
+                  ["Entry level", course.requiredEntryLevel ?? "—"],
+                  ["Prerequisites", course.prerequisitesRequired ? "Yes" : "No"],
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-2xl bg-slate-50 px-4 py-4">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-400">

@@ -19,7 +19,7 @@ export default function AdminCourseDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const statusBadgeClass: Record<string, string> = {
+  const statusBadgeClass: { [key: string]: string } = {
     OPEN: "rounded-full px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800",
     ACTIVE: "rounded-full px-3 py-1 text-xs font-semibold bg-green-100 text-green-800",
     CLOSED: "rounded-full px-3 py-1 text-xs font-semibold bg-rose-100 text-rose-800",
@@ -59,7 +59,10 @@ export default function AdminCourseDetail() {
                 <div className="flex justify-between py-1"><dt>End</dt><dd>{course.endDate}</dd></div>
                 <div className="flex justify-between py-1"><dt>Max students</dt><dd>{course.maxStudent}</dd></div>
                 <div className="flex justify-between py-1"><dt>Teacher</dt><dd>{course.teacher?.fullName ?? "—"}</dd></div>
-                <div className="flex justify-between py-1"><dt>Allowed role</dt><dd>{course.availableTeacherRole ?? "—"}</dd></div>
+                <div className="flex justify-between py-1"><dt>Allowed role</dt><dd>{course.availableRoleTeacher ?? "—"}</dd></div>
+                <data className="flex justify-between py-1"><dt>Min age</dt><dd>{course.minimumAge ?? "—"}</dd></data>
+                <div className="flex justify-between py-1"><dt>Entry level</dt><dd>{course.requiredEntryLevel ?? "—"}</dd></div>
+                <div className="flex justify-between py-1"><dt>Prerequisites</dt><dd>{course.prerequisitesRequired ? "Yes" : "No"}</dd></div>  
               </dl>
             </article>
 
@@ -80,7 +83,7 @@ export default function AdminCourseDetail() {
                     <button
                       key={t.key}
                       onClick={() => setActiveTab(t.key)}
-                      className={`rounded-md px-3 py-1 text-sm font-medium transition ${activeTab === t.key ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"}`}
+                      className={`rounded-md px-3 py-1 text-sm font-medium transition hover:bg-slate-200 hover:text-green-800 ${activeTab === t.key ? "bg-slate-900 text-white" : "text-slate-600"}`}
                     >
                       {t.label}
                     </button>
