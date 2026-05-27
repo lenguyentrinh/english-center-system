@@ -7,10 +7,6 @@ import com.trinh.english_center_be.modules.teacher.entity.Teacher;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import com.trinh.english_center_be.modules.teacher.entity.Teacher;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
