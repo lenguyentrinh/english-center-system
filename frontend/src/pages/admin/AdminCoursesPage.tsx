@@ -3,18 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
 import ConfirmDialog from "@/shared/components/ConfirmDialog.tsx";
-import TeachingClassTable from "@/components/teaching-classes/TeachingClassTable";
-import TeachingClassModal from "@/components/teaching-classes/TeachingClassModal";
+import CourseTable from "@/components/courses/CourseTable";
+import CourseModal from "@/components/courses/CourseModal";
 import { useAppDispatch, useAppSelector } from "@/app/hooks.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
-import type { TeachingClass, UpsertTeachingClassPayload } from "@/features/teaching-classes/types.ts";
+import type { Course, UpsertCoursePayload } from "@/features/courses/types.ts";
 import type { ApiResponse } from "@/shared/types/api-response.type";
 import {
   createTeachingClassThunk,
   deleteTeachingClassThunk,
   fetchTeachingClasses,
   updateTeachingClassThunk,
-} from "@/features/teaching-classes/teachingClassesThunks.ts";
+} from "@/features/courses/courseThunks.ts";
 
 export default function AdminCoursesPage() {
   const dispatch = useAppDispatch();
@@ -28,16 +28,16 @@ export default function AdminCoursesPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
-  const [editingClass, setEditingClass] = useState<TeachingClass | null>(null);
+  const [editingClass, setEditingClass] = useState<Course | null>(null);
   const [deletingClassId, setDeletingClassId] = useState<number | null>(null);
 
   useEffect(() => {
     void dispatch(fetchTeachingClasses());
   }, [dispatch]);
 
-  const handleCreateSubmit = async (payload: UpsertTeachingClassPayload) => {
+  const handleCreateSubmit = async (payload: UpsertCoursePayload) => {
     try {
-      const res: ApiResponse<TeachingClass> = await dispatch(createTeachingClassThunk(payload)).unwrap();
+      const res: ApiResponse<Course> = await dispatch(createTeachingClassThunk(payload)).unwrap();
       toast.success(res.message);
       setIsCreateModalOpen(false);
     } catch (err: unknown) {
@@ -45,11 +45,11 @@ export default function AdminCoursesPage() {
     }
   };
 
-  const handleUpdateSubmit = async (payload: UpsertTeachingClassPayload) => {
+  const handleUpdateSubmit = async (payload: UpsertCoursePayload) => {
     if (!editingClass) return;
 
     try {
-      const res: ApiResponse<TeachingClass> = await dispatch(
+      const res: ApiResponse<Course> = await dispatch(
         updateTeachingClassThunk({ id: editingClass.id, payload })
       ).unwrap();
       toast.success(res.message);
@@ -84,7 +84,7 @@ export default function AdminCoursesPage() {
             Manage Courses
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            Create, edit, and remove teaching classes.
+            Create, edit, and remove courses.
           </p>
         </div>
 
@@ -99,7 +99,7 @@ export default function AdminCoursesPage() {
 
       {listError ? <div className="mb-6 text-red-600">{listError}</div> : null}
 
-      <TeachingClassTable
+      <CourseTable
         classes={classes}
         loading={loadingList}
         onView={(item) => navigate(`/courses/${item.id}`)}
@@ -114,7 +114,7 @@ export default function AdminCoursesPage() {
         submitting={submitting}
       />
 
-      <TeachingClassModal
+      <CourseModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateSubmit}
@@ -122,7 +122,7 @@ export default function AdminCoursesPage() {
         editingClass={null}
       />
 
-      <TeachingClassModal
+      <CourseModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onSubmit={handleUpdateSubmit}

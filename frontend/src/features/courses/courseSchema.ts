@@ -1,10 +1,9 @@
 import { z } from "zod";
 
-export const teachingClassSchema = z
+export const courseSchema = z
   .object({
     code: z.string().min(1, "Code is required"),
     name: z.string().min(3, "Name must be at least 3 characters"),
-    courseId: z.number().min(1),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
     maxStudent: z.number().min(1),
@@ -32,4 +31,4 @@ export const teachingClassSchema = z
     path: ["endDate"],
   });
 
-export type TeachingClassForm = z.infer<typeof teachingClassSchema>;
+export type CourseForm = z.infer<typeof courseSchema>;

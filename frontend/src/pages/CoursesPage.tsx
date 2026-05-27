@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import PublicLayout from "@/shared/components/layout/PublicLayout.tsx";
 import CourseCard from "@/shared/components/CourseCard.tsx";
-import { getTeachingClasses } from "@/features/teaching-classes/teachingClassesApi.ts";
-import type { TeachingClass } from "@/features/teaching-classes/types.ts";
+import { getCourses } from "@/features/courses/courseApi.ts";
+import type { Course } from "@/features/courses/types.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
 
 const statItems = [
@@ -15,7 +15,7 @@ const statItems = [
 ];
 
 export default function CoursesPage() {
-  const [courses, setCourses] = useState<TeachingClass[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +23,7 @@ export default function CoursesPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await getTeachingClasses();
+      const res = await getCourses();
       setCourses(res.data);
     } catch (err) {
       const message = getApiErrorMessage(err, "Failed to load courses");

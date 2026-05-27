@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import PublicLayout from "@/shared/components/layout/PublicLayout.tsx";
-import { getTeachingClassById } from "@/features/teaching-classes/teachingClassesApi.ts";
-import type { TeachingClass } from "@/features/teaching-classes/types.ts";
+import { getCourseById } from "@/features/courses/courseApi.ts";
+import type { Course } from "@/features/courses/types.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
 import { isAuthenticated } from "@/features/auth/authSession.ts";
 
@@ -30,7 +30,7 @@ export default function CourseDetailPage() {
   const navigate = useNavigate();
   const courseId = Number(id);
 
-  const [course, setCourse] = useState<TeachingClass | null>(null);
+  const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,7 +45,7 @@ export default function CourseDetailPage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await getTeachingClassById(courseId);
+        const res = await getCourseById(courseId);
         setCourse(res.data);
       } catch (err) {
         const message = getApiErrorMessage(err, "Failed to load course detail");
@@ -99,7 +99,7 @@ export default function CourseDetailPage() {
                   {course.name}
                 </h1>
                 <p className="mt-3 max-w-2xl text-slate-300">
-                  This class card is based on the existing teaching-class API, so only the backend-provided fields are shown here.
+                  This course card is based on the backend-provided fields, so only the API data is shown here.
                 </p>
               </div>
 
@@ -107,7 +107,6 @@ export default function CourseDetailPage() {
                 {[
                   ["Course name", course.name],
                   ["Course code", course.code],
-                  ["Linked course ID", String(course.courseId)],
                   ["Status", course.status],
                   ["Schedule", `${formatDate(course.startDate)} - ${formatDate(course.endDate)}`],
                   ["Duration", durationLabel],
@@ -151,7 +150,7 @@ export default function CourseDetailPage() {
                   Need help?
                 </p>
                 <p className="mt-3 text-sm leading-6 text-slate-600">
-                  Visit the home page for featured classes or contact the team for recommendations.
+                  Visit the home page for featured courses or contact the team for recommendations.
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
                   <Link
