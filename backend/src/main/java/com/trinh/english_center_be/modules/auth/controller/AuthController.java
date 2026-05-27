@@ -5,7 +5,7 @@ import com.trinh.english_center_be.modules.auth.dto.SignupRequest;
 import com.trinh.english_center_be.modules.auth.service.AuthService;
 import com.trinh.english_center_be.shared.config.AuthCookieHelper;
 import com.trinh.english_center_be.shared.response.ApiResponse;
-import com.trinh.english_center_be.shared.util.StringUtil;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -27,7 +27,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> signup(@RequestBody @Valid SignupRequest request) {
         authService.signup(request);
         return ResponseEntity.ok()
-                .body(new ApiResponse<>(200,  StringUtil.SIGNUP_SUCCESS, null));
+                .body(new ApiResponse<>(200,  MessageConstant.SIGNUP_SUCCESS, null));
     }
 
     @PostMapping("/login")
@@ -36,13 +36,13 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, authCookieHelper.createAuthCookie(token).toString())
-                .body(new ApiResponse<>(200, StringUtil.LOGIN_SUCCESS, null));
+                .body(new ApiResponse<>(200, MessageConstant.LOGIN_SUCCESS, null));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout() {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, authCookieHelper.clearAuthCookie().toString())
-                .body(new ApiResponse<>(200, StringUtil.LOGOUT_SUCCESS, null));
+                .body(new ApiResponse<>(200, MessageConstant.LOGOUT_SUCCESS, null));
     }
 }

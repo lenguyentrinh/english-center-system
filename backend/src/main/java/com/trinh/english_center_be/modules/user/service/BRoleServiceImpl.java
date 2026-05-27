@@ -7,7 +7,8 @@ import com.trinh.english_center_be.modules.user.dto.RoleResponse;
 import com.trinh.english_center_be.modules.user.entity.BusinessRole;
 import com.trinh.english_center_be.shared.exception.BusinessException;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
-import com.trinh.english_center_be.shared.util.StringUtil;
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class BRoleServiceImpl implements BRoleService {
     public BusinessRoleResponse findResponseById(Long id) {
         BusinessRole businessRole = findById(id);
         if (Boolean.FALSE.equals(businessRole.getActive())) {
-            throw new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_DELETED_BY_ID, StringUtil.BUSINESS_ROLE, id));
+            throw new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_DELETED_BY_ID, Constant.BUSINESS_ROLE, id));
         }
         return toBusinessRoleResponseOverview(businessRole);
     }
@@ -39,17 +40,17 @@ public class BRoleServiceImpl implements BRoleService {
     @Override
     @Transactional
     public BusinessRoleResponse create(BusinessRoleRequest businessRoleRequest) {
-        if (bRoleRepository.existsByCode(businessRoleRequest.getCode())) {
+        if (bRoleRepository.existsByCode(businessRoleRequest.code())) {
             throw new BusinessException(
-                    String.format(StringUtil.ENTITY_ALREADY_EXISTS, StringUtil.BUSINESS_ROLE, StringUtil.CODE_FIELD),
+                    String.format(MessageConstant.ENTITY_ALREADY_EXISTS, Constant.BUSINESS_ROLE, Constant.CODE_FIELD),
                     HttpStatus.CONFLICT
             );
         }
 
         BusinessRole businessRole = BusinessRole.builder()
-                .code(businessRoleRequest.getCode())
-                .description(businessRoleRequest.getDescription())
-                .active(businessRoleRequest.getActive() != null ? businessRoleRequest.getActive() : true)
+                .code(businessRoleRequest.code())
+                .description(businessRoleRequest.description())
+                .active(businessRoleRequest.active() != null ? businessRoleRequest.active() : true)
                 .build();
 
         return toResponse(bRoleRepository.save(businessRole));
@@ -58,14 +59,14 @@ public class BRoleServiceImpl implements BRoleService {
     @Override
     public BusinessRole findById(Long id) {
         return bRoleRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.BUSINESS_ROLE, id))
+                () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.BUSINESS_ROLE, id))
         );
     }
 
     @Override
     public BusinessRole findByIdWithRoles(Long id) {
         return bRoleRepository.findByIdWithRoles(id).orElseThrow(
-                () -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.BUSINESS_ROLE, id))
+                () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.BUSINESS_ROLE, id))
         );
     }
 
@@ -80,16 +81,16 @@ public class BRoleServiceImpl implements BRoleService {
     public BusinessRoleResponse updateById(Long id, BusinessRoleRequest businessRoleRequest) {
         BusinessRole existing = findById(id);
 
-        if (bRoleRepository.existsByCodeAndIdNot(businessRoleRequest.getCode(), id)) {
+        if (bRoleRepository.existsByCodeAndIdNot(businessRoleRequest.code(), id)) {
             throw new BusinessException(
-                    String.format(StringUtil.ENTITY_ALREADY_EXISTS, StringUtil.BUSINESS_ROLE, StringUtil.CODE_FIELD),
+                    String.format(MessageConstant.ENTITY_ALREADY_EXISTS, Constant.BUSINESS_ROLE, Constant.CODE_FIELD),
                     HttpStatus.CONFLICT
             );
         }
 
-        existing.setCode(businessRoleRequest.getCode());
-        existing.setActive(businessRoleRequest.getActive());
-        existing.setDescription(businessRoleRequest.getDescription());
+        existing.setCode(businessRoleRequest.code());
+        existing.setActive(businessRoleRequest.active());
+        existing.setDescription(businessRoleRequest.description());
 
         return toResponse(bRoleRepository.save(existing));
     }
@@ -106,34 +107,36 @@ public class BRoleServiceImpl implements BRoleService {
         List<RoleResponse> roles = businessRole.getRoles() == null ? List.of() :
                 businessRole.getRoles().stream()
                         .filter(r -> Boolean.TRUE.equals(r.getActive()))
-                        .map(r -> RoleResponse.builder()
-                                .id(r.getId())
-                                .code(r.getCode())
-                                .description(r.getDescription())
-                                .active(r.getActive())
-                                .businessRoleId(businessRole.getId())
-                                .build())
-                        .toList();
+                        .map(r -> new RoleResponse(
+                                r.getId()
+                                ,r.getCode()
+                                ,r.getDescription()
+                                ,r.getActive()
+                                ,businessRole.getId()
+                                ,businessRole.getCode()))
+                                .toList();
 
-        return BusinessRoleResponse.builder()
-                .id(businessRole.getId())
-                .code(businessRole.getCode())
-                .description(businessRole.getDescription())
-                .active(businessRole.getActive())
-                .roles(roles)
-                .createdAt(businessRole.getCreatedAt())
-                .updateAt(businessRole.getUpdateAt())
-                .build();
+        return new BusinessRoleResponse(
+                businessRole.getId()
+                ,businessRole.getCode()
+                ,businessRole.getDescription()
+                ,businessRole.getActive()
+                ,businessRole.getCreatedAt()
+                ,businessRole.getUpdateAt()
+                ,roles);
+
     }
 
     private BusinessRoleResponse toBusinessRoleResponseOverview(BusinessRole businessRole) {
-        return BusinessRoleResponse.builder()
-                .id(businessRole.getId())
-                .code(businessRole.getCode())
-                .description(businessRole.getDescription())
-                .active(businessRole.getActive())
-                .createdAt(businessRole.getCreatedAt())
-                .updateAt(businessRole.getUpdateAt())
-                .build();
+        return new BusinessRoleResponse(
+                businessRole.getId()
+               ,businessRole.getCode()
+               ,businessRole.getDescription()
+               ,businessRole.getActive()
+               ,businessRole.getCreatedAt()
+               ,businessRole.getUpdateAt()
+               , List.of()
+        );
     }
 }
+

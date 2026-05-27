@@ -10,34 +10,34 @@ import { getApiErrorMessage } from "@/shared/api/error.ts";
 import type { Course, UpsertCoursePayload } from "@/features/courses/types.ts";
 import type { ApiResponse } from "@/shared/types/api-response.type";
 import {
-  createTeachingClassThunk,
-  deleteTeachingClassThunk,
-  fetchTeachingClasses,
-  updateTeachingClassThunk,
+  createCourseThunk,
+  deleteCourseThunk,
+  fetchCourses,
+  updateCourseThunk,
 } from "@/features/courses/courseThunks.ts";
 
 export default function AdminCoursesPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const { classes, loadingList, submitting, listError } = useAppSelector(
-    (state) => state.teachingClasses
+  const { courses, loadingList, submitting, listError } = useAppSelector(
+    (state) => state.courses
   );
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
-  const [editingClass, setEditingClass] = useState<Course | null>(null);
-  const [deletingClassId, setDeletingClassId] = useState<number | null>(null);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [deletingCourseId, setDeletingCourseId] = useState<number | null>(null);
 
   useEffect(() => {
-    void dispatch(fetchTeachingClasses());
+    void dispatch(fetchCourses());
   }, [dispatch]);
 
   const handleCreateSubmit = async (payload: UpsertCoursePayload) => {
     try {
-      const res: ApiResponse<Course> = await dispatch(createTeachingClassThunk(payload)).unwrap();
+      const res: ApiResponse<Course> = await dispatch(createCourseThunk(payload)).unwrap();
       toast.success(res.message);
       setIsCreateModalOpen(false);
     } catch (err: unknown) {
@@ -46,28 +46,28 @@ export default function AdminCoursesPage() {
   };
 
   const handleUpdateSubmit = async (payload: UpsertCoursePayload) => {
-    if (!editingClass) return;
+    if (!editingCourse) return;
 
     try {
       const res: ApiResponse<Course> = await dispatch(
-        updateTeachingClassThunk({ id: editingClass.id, payload })
+        updateCourseThunk({ id: editingCourse.id, payload })
       ).unwrap();
       toast.success(res.message);
       setIsEditModalOpen(false);
-      setEditingClass(null);
+      setEditingCourse(null);
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, "Update failed"));
     }
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deletingClassId) return;
+    if (!deletingCourseId) return;
 
     try {
-      const res: ApiResponse<null> = await dispatch(deleteTeachingClassThunk(deletingClassId)).unwrap();
+      const res: ApiResponse<null> = await dispatch(deleteCourseThunk(deletingCourseId)).unwrap();
       toast.success(res.message);
       setIsDeleteConfirmOpen(false);
-      setDeletingClassId(null);
+      setDeletingCourseId(null);
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, "Delete failed"));
     }
@@ -100,17 +100,17 @@ export default function AdminCoursesPage() {
       {listError ? <div className="mb-6 text-red-600">{listError}</div> : null}
 
       <CourseTable
-        classes={classes}
+        courses={courses}
         loading={loadingList}
         onView={(item) => navigate(`/courses/${item.id}`)}
         onUpdate={(item) => {
-          setEditingClass(item);
-          setIsEditModalOpen(true);
-        }}
-        onDelete={(id) => {
-          setDeletingClassId(id);
-          setIsDeleteConfirmOpen(true);
-        }}
+            setEditingCourse(item);
+            setIsEditModalOpen(true);
+          }}
+          onDelete={(id) => {
+            setDeletingCourseId(id);
+            setIsDeleteConfirmOpen(true);
+          }}
         submitting={submitting}
       />
 
@@ -119,7 +119,7 @@ export default function AdminCoursesPage() {
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateSubmit}
         submitting={submitting}
-        editingClass={null}
+        editingCourse={null}
       />
 
       <CourseModal
@@ -127,13 +127,13 @@ export default function AdminCoursesPage() {
         onClose={() => setIsEditModalOpen(false)}
         onSubmit={handleUpdateSubmit}
         submitting={submitting}
-        editingClass={editingClass}
+        editingCourse={editingCourse}
       />
 
       <ConfirmDialog
         isOpen={isDeleteConfirmOpen}
-        title="Delete Class"
-        message="Are you sure you want to delete this class?"
+        title="Delete Course"
+        message="Are you sure you want to delete this course?"
         onCancel={() => setIsDeleteConfirmOpen(false)}
         onConfirm={handleDeleteConfirm}
         isLoading={submitting}

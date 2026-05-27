@@ -9,8 +9,8 @@ import {
 import type { Course } from "./types.ts";
 
 type CoursesState = {
-  classes: Course[];
-  selectedClass: Course | null;
+  courses: Course[];
+  selectedCourse: Course | null;
   loadingList: boolean;
   loadingDetail: boolean;
   submitting: boolean;
@@ -20,8 +20,8 @@ type CoursesState = {
 };
 
 const initialState: CoursesState = {
-  classes: [],
-  selectedClass: null,
+  courses: [],
+  selectedCourse: null,
   loadingList: false,
   loadingDetail: false,
   submitting: false,
@@ -40,7 +40,7 @@ const courseSlice = createSlice({
       state.mutationError = null;
     },
     clearSelectedCourse(state) {
-      state.selectedClass = null;
+      state.selectedCourse = null;
     },
   },
   extraReducers: (builder) => {
@@ -51,7 +51,7 @@ const courseSlice = createSlice({
       })
       .addCase(fetchCourses.fulfilled, (state, action) => {
         state.loadingList = false;
-        state.classes = action.payload.data;
+        state.courses = action.payload.data;
       })
       .addCase(fetchCourses.rejected, (state, action) => {
         state.loadingList = false;
@@ -63,7 +63,7 @@ const courseSlice = createSlice({
       })
       .addCase(fetchCourseById.fulfilled, (state, action) => {
         state.loadingDetail = false;
-        state.selectedClass = action.payload.data;
+        state.selectedCourse = action.payload.data;
       })
       .addCase(fetchCourseById.rejected, (state, action) => {
         state.loadingDetail = false;
@@ -75,7 +75,7 @@ const courseSlice = createSlice({
       })
       .addCase(createCourseThunk.fulfilled, (state, action) => {
         state.submitting = false;
-        state.classes = [action.payload.data, ...state.classes];
+        state.courses = [action.payload.data, ...state.courses];
       })
       .addCase(createCourseThunk.rejected, (state, action) => {
         state.submitting = false;
@@ -88,9 +88,9 @@ const courseSlice = createSlice({
       .addCase(updateCourseThunk.fulfilled, (state, action) => {
         state.submitting = false;
         const updated = action.payload.data;
-        state.classes = state.classes.map((item) => (item.id === updated.id ? updated : item));
-        if (state.selectedClass?.id === updated.id) {
-          state.selectedClass = updated;
+        state.courses = state.courses.map((item) => (item.id === updated.id ? updated : item));
+        if (state.selectedCourse?.id === updated.id) {
+          state.selectedCourse = updated;
         }
       })
       .addCase(updateCourseThunk.rejected, (state, action) => {
@@ -104,9 +104,9 @@ const courseSlice = createSlice({
       .addCase(deleteCourseThunk.fulfilled, (state, action) => {
         state.submitting = false;
         const deletedId = action.meta.arg;
-        state.classes = state.classes.filter((item) => item.id !== deletedId);
-        if (state.selectedClass?.id === deletedId) {
-          state.selectedClass = null;
+        state.courses = state.courses.filter((item) => item.id !== deletedId);
+        if (state.selectedCourse?.id === deletedId) {
+          state.selectedCourse = null;
         }
       })
       .addCase(deleteCourseThunk.rejected, (state, action) => {

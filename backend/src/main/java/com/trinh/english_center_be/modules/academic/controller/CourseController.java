@@ -4,7 +4,8 @@ import com.trinh.english_center_be.modules.academic.dto.CourseRequest;
 import com.trinh.english_center_be.modules.academic.dto.CourseResponse;
 import com.trinh.english_center_be.modules.academic.service.CourseService;
 import com.trinh.english_center_be.shared.response.ApiResponse;
-import com.trinh.english_center_be.shared.util.StringUtil;
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -29,15 +30,14 @@ public class CourseController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<CourseResponse>>> getAll() {
-        return ResponseEntity.ok(new ApiResponse<>(200, StringUtil.LIST_SUCCESSFULLY, courseService.findAll()));
+        return ResponseEntity.ok(new ApiResponse<>(200, MessageConstant.LIST_SUCCESSFULLY, courseService.findAll()));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("permitAll()")
     public ResponseEntity<ApiResponse<CourseResponse>> getById(@PathVariable Long id) {
         return ResponseEntity.ok(new ApiResponse<>(
                 200,
-                String.format(StringUtil.RETRIEVED_SUCCESSFULLY, StringUtil.COURSE, id),
+                String.format(MessageConstant.RETRIEVED_SUCCESSFULLY, Constant.COURSE, id),
                 courseService.findById(id)
         ));
     }
@@ -46,7 +46,7 @@ public class CourseController {
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<CourseResponse>> create(@Valid @RequestBody CourseRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(201, String.format(StringUtil.CREATED_SUCCESSFULLY, StringUtil.COURSE), courseService.create(request)));
+                .body(new ApiResponse<>(201, String.format(MessageConstant.CREATED_SUCCESSFULLY, Constant.COURSE), courseService.create(request)));
     }
 
     @PutMapping("/{id}")
@@ -54,7 +54,7 @@ public class CourseController {
     public ResponseEntity<ApiResponse<CourseResponse>> update(@PathVariable Long id, @Valid @RequestBody CourseRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(
                 200,
-                String.format(StringUtil.UPDATED_SUCCESSFULLY, StringUtil.COURSE, id),
+                String.format(MessageConstant.UPDATED_SUCCESSFULLY, Constant.COURSE, id),
                 courseService.update(id, request)
         ));
     }
@@ -63,6 +63,6 @@ public class CourseController {
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         courseService.softDeleteById(id);
-        return ResponseEntity.ok(new ApiResponse<>(200, String.format(StringUtil.DELETED_SUCCESSFULLY, StringUtil.COURSE), null));
+        return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.DELETED_SUCCESSFULLY, Constant.COURSE), null));
     }
 }

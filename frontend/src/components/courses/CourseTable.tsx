@@ -1,7 +1,7 @@
 import type { Course } from "@/features/courses/types.ts";
 
 interface CourseTableProps {
-  classes: Course[];
+  courses: Course[];
   loading: boolean;
   onView?: (course: Course) => void;
   onUpdate: (course: Course) => void;
@@ -27,7 +27,7 @@ function formatDate(dateString: string): string {
   }
 }
 
-export default function CourseTable({ classes, loading, onView, onUpdate, onDelete, submitting }: CourseTableProps) {
+export default function CourseTable({ courses, loading, onView, onUpdate, onDelete, submitting }: CourseTableProps) {
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
       <table className="w-full">
@@ -44,7 +44,7 @@ export default function CourseTable({ classes, loading, onView, onUpdate, onDele
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200">
-          {classes.map((course) => {
+          {courses.map((course) => {
             const colors = statusColors[course.status] || statusColors.OPEN;
             return (
               <tr key={course.id} className="hover:bg-slate-50 transition-colors">
@@ -91,7 +91,7 @@ export default function CourseTable({ classes, loading, onView, onUpdate, onDele
           })}
         </tbody>
       </table>
-      {!loading && classes.length === 0 && (
+      {!loading && courses.length === 0 && (
         <div className="flex items-center justify-center py-12">
           <p className="text-sm text-slate-500">No courses found. Create one to get started.</p>
         </div>

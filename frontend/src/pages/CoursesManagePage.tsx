@@ -19,15 +19,15 @@ import type { ApiResponse } from "@/shared/types/api-response.type";
 export default function CoursesManagePage() {
   const dispatch = useAppDispatch();
 
-  const { classes, loadingList, submitting, listError } = useAppSelector(
-    (state) => state.teachingClasses
+  const { courses, loadingList, submitting, listError } = useAppSelector(
+    (state) => state.courses
   );
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [editingClass, setEditingClass] = useState<Course | null>(null);
-  const [deletingClassId, setDeletingClassId] = useState<number | null>(null);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [deletingCourseId, setDeletingCourseId] = useState<number | null>(null);
 
   useEffect(() => {
     void dispatch(fetchCourses());
@@ -44,28 +44,28 @@ export default function CoursesManagePage() {
   };
 
   const handleUpdateSubmit = async (payload: UpsertCoursePayload) => {
-    if (!editingClass) return;
+    if (!editingCourse) return;
 
     try {
       const res: ApiResponse<Course> = await dispatch(
-        updateCourseThunk({ id: editingClass.id, payload })
+        updateCourseThunk({ id: editingCourse.id, payload })
       ).unwrap();
       toast.success(res.message);
       setIsEditModalOpen(false);
-      setEditingClass(null);
+      setEditingCourse(null);
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, "Update failed"));
     }
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deletingClassId) return;
+    if (!deletingCourseId) return;
 
     try {
-      const res: ApiResponse<null> = await dispatch(deleteCourseThunk(deletingClassId)).unwrap();
+      const res: ApiResponse<null> = await dispatch(deleteCourseThunk(deletingCourseId)).unwrap();
       toast.success(res.message);
       setIsDeleteConfirmOpen(false);
-      setDeletingClassId(null);
+      setDeletingCourseId(null);
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, "Delete failed"));
     }
@@ -92,16 +92,16 @@ export default function CoursesManagePage() {
           {listError && <div className="mb-6 text-red-600">{listError}</div>}
 
           <CourseTable
-            classes={classes}
+            courses={courses}
             loading={loadingList}
             onUpdate={(item) => {
-              setEditingClass(item);
-              setIsEditModalOpen(true);
-            }}
-            onDelete={(id) => {
-              setDeletingClassId(id);
-              setIsDeleteConfirmOpen(true);
-            }}
+                setEditingCourse(item);
+                setIsEditModalOpen(true);
+              }}
+              onDelete={(id) => {
+                setDeletingCourseId(id);
+                setIsDeleteConfirmOpen(true);
+              }}
             submitting={submitting}
           />
         </div>
@@ -112,7 +112,7 @@ export default function CoursesManagePage() {
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateSubmit}
         submitting={submitting}
-        editingClass={null}
+        editingCourse={null}
       />
 
       <CourseModal
@@ -120,7 +120,7 @@ export default function CoursesManagePage() {
         onClose={() => setIsEditModalOpen(false)}
         onSubmit={handleUpdateSubmit}
         submitting={submitting}
-        editingClass={editingClass}
+        editingCourse={editingCourse}
       />
 
       <ConfirmDialog

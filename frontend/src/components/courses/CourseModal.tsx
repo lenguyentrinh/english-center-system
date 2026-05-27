@@ -9,7 +9,7 @@ interface Props {
   onClose: () => void;
   onSubmit: (data: CourseForm) => void;
   submitting: boolean;
-  editingClass?: Course | null;
+  editingCourse?: Course | null;
 }
 
 const defaultValues: CourseForm = {
@@ -21,29 +21,28 @@ const defaultValues: CourseForm = {
   status: "OPEN",
 };
 
-export default function CourseModal({ isOpen, onClose, onSubmit, submitting, editingClass }: Props) {
+export default function CourseModal({ isOpen, onClose, onSubmit, submitting, editingCourse }: Props) {
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CourseForm>({
     resolver: zodResolver(courseSchema),
     defaultValues,
   });
-
-  const isEditing = !!editingClass;
+  const isEditing = !!editingCourse;
 
   useEffect(() => {
     if (!isOpen) return;
-    if (editingClass) {
+    if (editingCourse) {
       reset({
-        code: editingClass.code,
-        name: editingClass.name,
-        startDate: editingClass.startDate,
-        endDate: editingClass.endDate,
-        maxStudent: editingClass.maxStudent,
-        status: editingClass.status,
+        code: editingCourse.code,
+        name: editingCourse.name,
+        startDate: editingCourse.startDate,
+        endDate: editingCourse.endDate,
+        maxStudent: editingCourse.maxStudent,
+        status: editingCourse.status,
       });
     } else {
       reset(defaultValues);
     }
-  }, [isOpen, editingClass, reset]);
+  }, [isOpen, editingCourse, reset]);
 
   if (!isOpen) return null;
 

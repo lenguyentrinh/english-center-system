@@ -1,6 +1,7 @@
 package com.trinh.english_center_be.modules.academic.dto;
 
-import com.trinh.english_center_be.shared.enums.ClassStatus;
+import com.trinh.english_center_be.shared.enums.CourseStatus;
+
 import java.time.LocalDate;
 
 public record CourseResponse(
@@ -10,6 +11,6 @@ public record CourseResponse(
         LocalDate startDate,
         LocalDate endDate,
         Integer maxStudent,
-        ClassStatus status
+        CourseStatus status
 ) {
 }

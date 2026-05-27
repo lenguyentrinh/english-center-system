@@ -7,13 +7,6 @@ import { getCourses } from "@/features/courses/courseApi.ts";
 import type { Course } from "@/features/courses/types.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
 
-const statItems = [
-  { label: "Small classes", value: "12-20 students" },
-  { label: "Learning tracks", value: "IELTS, TOEIC, Communication" },
-  { label: "Flexible schedules", value: "Morning, afternoon, evening" },
-  { label: "Support", value: "Placement and progress checks" },
-];
-
 export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,31 +38,6 @@ export default function CoursesPage() {
 
   return (
     <PublicLayout>
-      <section className="bg-slate-950 text-white">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
-              Course catalog
-            </p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-              Explore available classes and pick the right learning track.
-            </h1>
-            <p className="mt-5 text-lg leading-8 text-slate-300">
-              Browse active courses, compare schedules, and open a detail page for the full class overview.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {statItems.map((item) => (
-              <article key={item.label} className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">{item.label}</p>
-                <p className="mt-3 text-lg font-semibold text-white">{item.value}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>

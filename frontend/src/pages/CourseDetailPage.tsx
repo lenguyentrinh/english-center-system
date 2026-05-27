@@ -130,7 +130,7 @@ export default function CourseDetailPage() {
                   Enrollment
                 </p>
                 <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
-                  Join this class when you are ready.
+                  Join this course when you are ready.
                 </h2>
                 <p className="mt-3 text-sm leading-6 text-slate-600">
                   The UI is ready for enrollment. Once the backend exposes an enrollment endpoint, this button can be wired without changing the page structure.

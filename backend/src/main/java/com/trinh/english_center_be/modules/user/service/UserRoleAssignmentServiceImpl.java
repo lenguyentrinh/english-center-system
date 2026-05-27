@@ -9,7 +9,8 @@ import com.trinh.english_center_be.modules.user.dto.UserEffectiveRolesResponse;
 import com.trinh.english_center_be.modules.user.entity.*;
 import com.trinh.english_center_be.shared.exception.BusinessException;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
-import com.trinh.english_center_be.shared.util.StringUtil;
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,12 +34,12 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
     @Transactional
     public void assignRole(Long userId, Long roleId) {
         if (userRoleRepository.existsByIdUserIdAndIdRoleId(userId, roleId)) {
-            throw new BusinessException(String.format(StringUtil.USER_ALREADY_VALUE, StringUtil.ROLE), HttpStatus.CONFLICT);
+            throw new BusinessException(String.format(MessageConstant.USER_ALREADY_VALUE, Constant.ROLE), HttpStatus.CONFLICT);
         }
 
         User user = userService.findById(userId);
         if (!user.getActive()) {
-            throw new ResourceNotFoundException(String.format(StringUtil.ENTITY_INACTIVE_CAN_NOT_ASSIGN, StringUtil.USER));
+            throw new ResourceNotFoundException(String.format(MessageConstant.ENTITY_INACTIVE_CAN_NOT_ASSIGN, Constant.USER));
         }
 
         Role role = resolveAssignableRole(roleId);
@@ -55,7 +56,7 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
     public void removeRole(Long userId, Long roleId) {
         UserRoleId key = new UserRoleId(userId, roleId);
         if (!userRoleRepository.existsById(key)) {
-            throw new ResourceNotFoundException(String.format(StringUtil.USER_DOES_NOT_VALUE, StringUtil.ROLE));
+            throw new ResourceNotFoundException(String.format(MessageConstant.USER_DOES_NOT_VALUE, Constant.ROLE));
         }
         userRoleRepository.deleteById(key);
     }
@@ -65,19 +66,19 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
     public void assignBusinessRole(Long userId, Long businessRoleId) {
         if (userBusinessRoleRepository.existsByIdUserIdAndIdBusinessRoleId(userId, businessRoleId)) {
             throw new BusinessException(
-                    String.format(StringUtil.USER_ALREADY_VALUE, StringUtil.BUSINESS_ROLE),
+                    String.format(MessageConstant.USER_ALREADY_VALUE, Constant.BUSINESS_ROLE),
                     HttpStatus.CONFLICT
             );
         }
 
         User user = userService.findById(userId);
         if (!user.getActive()) {
-            throw new ResourceNotFoundException(String.format(StringUtil.ENTITY_INACTIVE_CAN_NOT_ASSIGN, StringUtil.USER));
+            throw new ResourceNotFoundException(String.format(MessageConstant.ENTITY_INACTIVE_CAN_NOT_ASSIGN, Constant.USER));
         }
 
         BusinessRole businessRole = bRoleService.findByIdWithRoles(businessRoleId);
         if (Boolean.FALSE.equals(businessRole.getActive())) {
-            throw new BusinessException(String.format(StringUtil.ENTITY_INACTIVE_CAN_NOT_ASSIGN, StringUtil.BUSINESS_ROLE), HttpStatus.BAD_REQUEST);
+            throw new BusinessException(String.format(MessageConstant.ENTITY_INACTIVE_CAN_NOT_ASSIGN, Constant.BUSINESS_ROLE), HttpStatus.BAD_REQUEST);
         }
 
         userBusinessRoleRepository.save(UserBusinessRole.builder()
@@ -94,7 +95,7 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
     public void removeBusinessRole(Long userId, Long businessRoleId) {
         UserBusinessRoleId key = new UserBusinessRoleId(userId, businessRoleId);
         if (!userBusinessRoleRepository.existsById(key)) {
-            throw new ResourceNotFoundException(String.format(StringUtil.USER_DOES_NOT_VALUE, StringUtil.BUSINESS_ROLE));
+            throw new ResourceNotFoundException(String.format(MessageConstant.USER_DOES_NOT_VALUE, Constant.BUSINESS_ROLE));
         }
 
         BusinessRole businessRole = bRoleService.findByIdWithRoles(businessRoleId);
@@ -196,35 +197,35 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
 
     private Role resolveAssignableRole(Long roleId) {
         Role role = roleRepository.findById(roleId).orElseThrow(
-                () -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.ROLE, roleId))
+                () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.ROLE, roleId))
         );
 
         if (Boolean.FALSE.equals(role.getActive())) {
-            throw new BusinessException(String.format(StringUtil.ENTITY_INACTIVE_CAN_NOT_ASSIGN, StringUtil.ROLE), HttpStatus.BAD_REQUEST);
+            throw new BusinessException(String.format(MessageConstant.ENTITY_INACTIVE_CAN_NOT_ASSIGN, Constant.ROLE), HttpStatus.BAD_REQUEST);
         }
         return role;
     }
 
     private RoleResponse toRoleResponse(Role role) {
-        return RoleResponse.builder()
-                .id(role.getId())
-                .code(role.getCode())
-                .description(role.getDescription())
-                .active(role.getActive())
-                .businessRoleId(role.getBusinessRole() != null ? role.getBusinessRole().getId() : null)
-                .businessRoleCode(role.getBusinessRole() != null ?role.getBusinessRole().getCode() : null)
-                .build();
+        return new RoleResponse(
+            role.getId(),
+            role.getCode(),
+            role.getDescription(),
+            role.getActive(),
+            role.getBusinessRole() != null ? role.getBusinessRole().getId() : null,
+            role.getBusinessRole() != null ? role.getBusinessRole().getCode() : null
+        );
     }
 
     private BusinessRoleResponse toBusinessRoleResponse(BusinessRole businessRole, Set<RoleResponse> assignedRoles) {
-        return BusinessRoleResponse.builder()
-                .id(businessRole.getId())
-                .code(businessRole.getCode())
-                .description(businessRole.getDescription())
-                .active(businessRole.getActive())
-                .roles(assignedRoles.stream().toList())
-                .createdAt(businessRole.getCreatedAt())
-                .updateAt(businessRole.getUpdateAt())
-                .build();
+        return new BusinessRoleResponse(
+               businessRole.getId()
+               ,businessRole.getCode()
+               ,businessRole.getDescription()
+               ,businessRole.getActive()
+               ,businessRole.getCreatedAt()
+               ,businessRole.getUpdateAt()
+                ,assignedRoles.stream().toList()
+        );
     }
 }

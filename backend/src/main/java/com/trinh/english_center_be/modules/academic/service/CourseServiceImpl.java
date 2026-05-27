@@ -5,8 +5,11 @@ import com.trinh.english_center_be.modules.academic.dto.CourseResponse;
 import com.trinh.english_center_be.modules.academic.entity.Course;
 import com.trinh.english_center_be.modules.academic.repository.CourseRepository;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
-import com.trinh.english_center_be.shared.util.StringUtil;
+
 import java.util.List;
+
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +29,7 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public CourseResponse findById(Long id) {
         Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.COURSE, id)));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.COURSE, id)));
 
         return toResponse(course);
     }
@@ -50,7 +53,7 @@ public class CourseServiceImpl implements CourseService {
     @Transactional
     public CourseResponse update(Long id, CourseRequest request) {
         Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.COURSE, id)));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.COURSE, id)));
 
         course.setCode(request.code());
         course.setName(request.name());
@@ -66,7 +69,7 @@ public class CourseServiceImpl implements CourseService {
     @Transactional
     public void softDeleteById(Long id) {
         Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format(StringUtil.NOT_FOUND_BY_ID, StringUtil.COURSE, id)));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.COURSE, id)));
 
         course.setActive(false);
         courseRepository.save(course);

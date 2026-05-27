@@ -1,13 +1,9 @@
 package com.trinh.english_center_be.modules.academic.entity;
 
 import com.trinh.english_center_be.shared.BaseEntity;
-import com.trinh.english_center_be.shared.enums.ClassStatus;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.trinh.english_center_be.shared.enums.CourseStatus;
+import jakarta.persistence.*;
+
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -44,7 +40,8 @@ public class Course extends BaseEntity {
     private Integer maxStudent;
 
     @Column(name = "status", length = 20)
-    private ClassStatus status;
+    @Enumerated(EnumType.STRING)
+    private CourseStatus status;
 
     @Column(name = "minimum_age")
     private Integer minimumAge;

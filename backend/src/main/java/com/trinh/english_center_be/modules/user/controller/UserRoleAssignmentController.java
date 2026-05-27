@@ -3,7 +3,8 @@ package com.trinh.english_center_be.modules.user.controller;
 import com.trinh.english_center_be.modules.user.dto.UserEffectiveRolesResponse;
 import com.trinh.english_center_be.modules.user.service.UserRoleAssignmentService;
 import com.trinh.english_center_be.shared.response.ApiResponse;
-import com.trinh.english_center_be.shared.util.StringUtil;
+import com.trinh.english_center_be.shared.util.Constant;
+import com.trinh.english_center_be.shared.util.MessageConstant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,7 @@ public class UserRoleAssignmentController {
     public ResponseEntity<ApiResponse<UserEffectiveRolesResponse>> getEffectiveRoles(@PathVariable Long userId) {
         return ResponseEntity.ok(new ApiResponse<>(
                 200,
-                String.format(StringUtil.RETRIEVED_SUCCESSFULLY, StringUtil.USER, userId),
+                String.format(MessageConstant.RETRIEVED_SUCCESSFULLY, Constant.USER, userId),
                 userRoleAssignmentService.getEffectiveRoles(userId)
         ));
     }
@@ -40,7 +41,7 @@ public class UserRoleAssignmentController {
     ) {
         userRoleAssignmentService.assignRole(userId, roleId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(201, String.format(StringUtil.ASSIGN_SUCCESSFULLY, StringUtil.ROLE), null));
+                .body(new ApiResponse<>(201, String.format(MessageConstant.ASSIGN_SUCCESSFULLY, Constant.ROLE), null));
     }
 
     @DeleteMapping("/{roleId}")
@@ -50,7 +51,7 @@ public class UserRoleAssignmentController {
             @PathVariable Long roleId
     ) {
         userRoleAssignmentService.removeRole(userId, roleId);
-        return ResponseEntity.ok(new ApiResponse<>(200, String.format(StringUtil.REMOVE_SUCCESSFULLY, StringUtil.ROLE), null));
+        return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.REMOVE_SUCCESSFULLY, Constant.ROLE), null));
     }
 
     @PostMapping("/business-roles/{businessRoleId}")
@@ -61,7 +62,7 @@ public class UserRoleAssignmentController {
     ) {
         userRoleAssignmentService.assignBusinessRole(userId, businessRoleId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(201, String.format(StringUtil.ASSIGN_SUCCESSFULLY, StringUtil.BUSINESS_ROLE), null));
+                .body(new ApiResponse<>(201, String.format(MessageConstant.ASSIGN_SUCCESSFULLY, Constant.BUSINESS_ROLE), null));
     }
 
     @DeleteMapping("/business-roles/{businessRoleId}")
@@ -71,6 +72,6 @@ public class UserRoleAssignmentController {
             @PathVariable Long businessRoleId
     ) {
         userRoleAssignmentService.removeBusinessRole(userId, businessRoleId);
-        return ResponseEntity.ok(new ApiResponse<>(200, String.format(StringUtil.REMOVE_SUCCESSFULLY, StringUtil.BUSINESS_ROLE), null));
+        return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.REMOVE_SUCCESSFULLY, Constant.BUSINESS_ROLE), null));
     }
 }

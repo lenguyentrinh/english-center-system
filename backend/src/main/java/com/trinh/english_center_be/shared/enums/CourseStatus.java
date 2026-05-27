@@ -1,14 +1,15 @@
 package com.trinh.english_center_be.shared.enums;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
-public enum ClassStatus {
+@AllArgsConstructor
+public enum CourseStatus {
     OPEN("Open"),
     CLOSE("Close"),
     ACTIVE("Active");
 
-    private final String lable;
+    private final String label;
 }
