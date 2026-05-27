@@ -33,6 +33,7 @@ public class StringUtil {
     public static final String USER="User";
     public static final String BUSINESS_ROLE="Business role";
     public static final String CLASS="Class";
+    public static final String COURSE="Course";
 
     //field
     public static final String CODE_FIELD = "role";

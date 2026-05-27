@@ -1,13 +1,14 @@
 package com.trinh.english_center_be.modules.academic.dto;
 
 import com.trinh.english_center_be.shared.enums.ClassStatus;
-import jakarta.persistence.Column;
-import jakarta.validation.constraints.*;
-import lombok.Builder;
-
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
-public record TeachingClassRequest(
+public record CourseRequest(
 
         @NotBlank(message = "Code must not be blank")
         @Size(max = 50, message = "Code must be at most 50 characters")
@@ -28,7 +29,7 @@ public record TeachingClassRequest(
         @Min(value = 1, message = "Max student must be at least 1")
         Integer maxStudent,
 
-        @NotBlank(message = "Status must not be blank")
+        @NotNull(message = "Status must not be null")
         ClassStatus status
 ) {
 }

@@ -38,8 +38,8 @@ public class Enrollment extends BaseEntity {
     private Student student;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "class_id", nullable = false)
-    private TeachingClass teachingClass;
+    @JoinColumn(name = "course_id", nullable = false)
+    private Course course;
 
     @Column(name = "enroll_date")
     private LocalDate enrollDate;

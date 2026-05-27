@@ -10,20 +10,19 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 @Entity
-@Table(name = "classes")
+@Table(name = "courses")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class TeachingClass extends BaseEntity {
+public class Course extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,9 +33,6 @@ public class TeachingClass extends BaseEntity {
 
     @Column(name = "name", length = 100)
     private String name;
-
-    @Column(name = "course_id", nullable = false)
-    private Long courseId;
 
     @Column(name = "start_date")
     private LocalDate startDate;
