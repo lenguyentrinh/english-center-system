@@ -5,6 +5,8 @@ import com.trinh.english_center_be.modules.academic.dto.CourseResponse;
 import com.trinh.english_center_be.modules.academic.entity.Course;
 import com.trinh.english_center_be.modules.academic.repository.CourseRepository;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
+import com.trinh.english_center_be.modules.teacher.repository.TeacherRepository;
+import com.trinh.english_center_be.modules.teacher.entity.Teacher;
 
 import java.util.List;
 
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CourseServiceImpl implements CourseService {
 
     private final CourseRepository courseRepository;
+    private final TeacherRepository teacherRepository;
 
     @Override
     public List<CourseResponse> findAll() {
@@ -44,7 +47,17 @@ public class CourseServiceImpl implements CourseService {
                 .endDate(request.endDate())
                 .maxStudent(request.maxStudent())
                 .status(request.status())
+                .minimumAge(request.minimumAge())
+                .requiredEntryLevel(request.requiredEntryLevel())
+                .prerequisitesRequired(request.prerequisitesRequired())
+                .availableRoleTeacher(request.availableRoleTeacher())
                 .build();
+
+        if (request.teacherId() != null) {
+            Teacher teacher = teacherRepository.findById(request.teacherId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Teacher not found: " + request.teacherId()));
+            course.setTeacher(teacher);
+        }
 
         return toResponse(courseRepository.save(course));
     }
@@ -61,6 +74,18 @@ public class CourseServiceImpl implements CourseService {
         course.setEndDate(request.endDate());
         course.setMaxStudent(request.maxStudent());
         course.setStatus(request.status());
+        course.setMinimumAge(request.minimumAge());
+        course.setRequiredEntryLevel(request.requiredEntryLevel());
+        course.setPrerequisitesRequired(request.prerequisitesRequired());
+        course.setAvailableRoleTeacher(request.availableRoleTeacher());
+
+        if (request.teacherId() != null) {
+            Teacher teacher = teacherRepository.findById(request.teacherId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Teacher not found: " + request.teacherId()));
+            course.setTeacher(teacher);
+        } else {
+            course.setTeacher(null);
+        }
 
         return toResponse(courseRepository.save(course));
     }
@@ -83,7 +108,13 @@ public class CourseServiceImpl implements CourseService {
                 course.getStartDate(),
                 course.getEndDate(),
                 course.getMaxStudent(),
-                course.getStatus()
+                course.getStatus(),
+                course.getMinimumAge(),
+                course.getRequiredEntryLevel(),
+                course.getPrerequisitesRequired(),
+                course.getTeacher() != null ? course.getTeacher().getId() : null,
+                course.getTeacher() != null && course.getTeacher().getUser() != null ? course.getTeacher().getUser().getFullName() : null,
+                course.getAvailableRoleTeacher()
         );
     }
 }
