@@ -30,7 +30,7 @@ const defaultValues: CourseForm = {
 };
 
 export default function CourseModal({ isOpen, onClose, onSubmit, submitting, editingCourse }: Props) {
-  const { register, control, handleSubmit, reset, formState: { errors } } = useForm<CourseForm>({
+  const { register, control, handleSubmit, reset, watch, formState: { errors } } = useForm<CourseForm>({
     resolver: zodResolver(courseSchema),
     defaultValues,
   });
@@ -41,6 +41,7 @@ export default function CourseModal({ isOpen, onClose, onSubmit, submitting, edi
     void Promise.all([getTeachers(), getRoles()])
       .then(([tRes, rRes]) => {
         setTeachers(tRes.data ?? []);
+        // fetch teacher roles (roles with code starts with "TEACHER")
         const teacherRoles: RoleResponse[] = (rRes.data ?? []).filter((r: RoleResponse) => r.code.startsWith("TEACHER"));
         setTeacherRoles(teacherRoles);
       })
@@ -68,7 +69,21 @@ export default function CourseModal({ isOpen, onClose, onSubmit, submitting, edi
   }, [isOpen, editingCourse, reset]);
 
   const [teachers, setTeachers] = useState<TeacherItem[]>([]);
+  const [suggestedTeachers, setSuggestedTeachers] = useState<TeacherItem[]>([]);
   const [teacherRoles, setTeacherRoles] = useState<RoleResponse[]>([]);
+
+  const availableRole = watch("availableRoleTeacher");
+
+  // fetch suggested teachers when availableRole changes
+  useEffect(() => {
+    if (!availableRole) {
+      setSuggestedTeachers([]);
+      return;
+    }
+    void getTeachers(availableRole)
+      .then((res) => setSuggestedTeachers(res.data ?? []))
+      .catch(() => setSuggestedTeachers([]));
+  }, [availableRole]);
 
   if (!isOpen) return null;
 
@@ -153,9 +168,18 @@ export default function CourseModal({ isOpen, onClose, onSubmit, submitting, edi
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 >
                   <option value="">— None —</option>
-                  {teachers.map((t) => (
-                    <option key={t.id} value={t.id}>{t.fullName ?? `#${t.id}`}</option>
-                  ))}
+                  {suggestedTeachers.length > 0 && (
+                    <optgroup label="Suggested">
+                      {suggestedTeachers.map((t) => (
+                        <option key={`s-${t.id}`} value={t.id}>{t.fullName ?? `#${t.id}`}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  <optgroup label="All teachers">
+                    {teachers.filter(t => !suggestedTeachers.some(s => s.id === t.id)).map((t) => (
+                      <option key={t.id} value={t.id}>{t.fullName ?? `#${t.id}`}</option>
+                    ))}
+                  </optgroup>
                 </select>
               )}
             />
