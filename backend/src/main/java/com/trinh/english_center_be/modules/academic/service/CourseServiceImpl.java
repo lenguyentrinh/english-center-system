@@ -100,6 +100,19 @@ public class CourseServiceImpl implements CourseService {
         courseRepository.save(course);
     }
 
+        @Override
+        @Transactional
+        public CourseResponse assignTeacher(Long courseId, Long teacherId) {
+        Course course = courseRepository.findById(courseId)
+            .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.COURSE, courseId)));
+
+        Teacher teacher = teacherRepository.findById(teacherId)
+            .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.TEACHER, teacherId)));
+
+        course.setTeacher(teacher);
+        return toResponse(courseRepository.save(course));
+        }
+
     private CourseResponse toResponse(Course course) {
         return new CourseResponse(
                 course.getId(),

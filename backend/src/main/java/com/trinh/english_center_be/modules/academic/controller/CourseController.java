@@ -65,4 +65,11 @@ public class CourseController {
         courseService.softDeleteById(id);
         return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.DELETED_SUCCESSFULLY, Constant.COURSE), null));
     }
+
+    @PostMapping("/{id}/assign-teacher/{teacherId}")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<CourseResponse>> assignTeacher(@PathVariable Long id, @PathVariable Long teacherId) {
+        CourseResponse res = courseService.assignTeacher(id, teacherId);
+        return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.ASSIGN_SUCCESSFULLY, "Teacher"), res));
+    }
 }

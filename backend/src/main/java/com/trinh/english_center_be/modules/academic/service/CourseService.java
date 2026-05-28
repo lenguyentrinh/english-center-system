@@ -10,4 +10,5 @@ public interface CourseService {
     CourseResponse create(CourseRequest request);
     CourseResponse update(Long id, CourseRequest request);
     void softDeleteById(Long id);
+    CourseResponse assignTeacher(Long courseId, Long teacherId);
 }
