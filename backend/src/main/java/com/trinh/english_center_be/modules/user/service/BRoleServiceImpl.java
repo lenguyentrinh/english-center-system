@@ -9,6 +9,7 @@ import com.trinh.english_center_be.shared.exception.BusinessException;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
 import com.trinh.english_center_be.shared.util.Constant;
 import com.trinh.english_center_be.shared.util.MessageConstant;
+import com.trinh.english_center_be.modules.user.mapper.RoleMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -105,16 +106,10 @@ public class BRoleServiceImpl implements BRoleService {
 
     private BusinessRoleResponse toResponse(BusinessRole businessRole) {
         List<RoleResponse> roles = businessRole.getRoles() == null ? List.of() :
-                businessRole.getRoles().stream()
-                        .filter(r -> Boolean.TRUE.equals(r.getActive()))
-                        .map(r -> new RoleResponse(
-                                r.getId()
-                                ,r.getCode()
-                                ,r.getDescription()
-                                ,r.getActive()
-                                ,businessRole.getId()
-                                ,businessRole.getCode()))
-                                .toList();
+            businessRole.getRoles().stream()
+                .filter(r -> Boolean.TRUE.equals(r.getActive()))
+                .map(RoleMapper::toResponse)
+                .toList();
 
         return new BusinessRoleResponse(
                 businessRole.getId()

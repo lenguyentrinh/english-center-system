@@ -191,57 +191,41 @@ export default function UserDetailPage() {
   };
 
   const openRemovalConfirm = async (kind: "role" | "businessRole", id: number, label: string) => {
-    // default: no extra courses
     try {
-      // if direct role and it's a teacher role, check assigned courses
-      if (kind === "role" && label?.startsWith("TEACHER")) {
-        const teacherRes = await getTeacherByUserId(userId);
-        const teacher = teacherRes.data;
-        if (teacher && teacher.id) {
-          // compute remaining role codes after removing this direct role
-          const remainingDirect = (effectiveRoles?.directRoles ?? []).filter(r => r.id !== id).map(r => r.code);
-          const remainingFromBusiness = (effectiveRoles?.businessRoles ?? []).flatMap(br => br.roles?.map((r:any) => r.code) ?? []);
-          const remainingSet = new Set([...remainingDirect, ...remainingFromBusiness]);
+      const teacherRes = await getTeacherByUserId(userId);
+      const teacher = teacherRes.data;
 
-          const removed = label && label.startsWith("TEACHER") && !remainingSet.has(label) ? [label] : [];
-
-          const coursesRes = await getCoursesByTeacherUserId(userId, removed.length ? removed : undefined);
-          const courses = coursesRes.data ?? [];
-          setRemovalTarget({ kind, id, label, courses });
-          return;
-        }
+      // if no teacher record, nothing to unassign
+      if (!teacher || !teacher.id) {
+        setRemovalTarget({ kind, id, label });
+        return;
       }
 
-      // if business role, fetch its roles to see if it contains teacher roles
+      // handle direct role removal
+      if (kind === "role" && typeof label === "string" && label.startsWith("TEACHER")) {
+        const courses = (await getCoursesByTeacherUserId(userId, [label])).data ?? [];
+        setRemovalTarget({ kind, id, label, courses });
+        return;
+      }
+
+      // handle business role removal
       if (kind === "businessRole") {
         const br = await getBusinessRoleById(id);
-        const roles = br.data?.roles ?? [];
-        const hasTeacher = roles.some((r: any) => r.code?.startsWith("TEACHER"));
-        if (hasTeacher) {
-          const teacherRes = await getTeacherByUserId(userId);
-          const teacher = teacherRes.data;
-          if (teacher && teacher.id) {
-            // compute which teacher role codes are actually removed by removing this business role
-            const brRoles: string[] = roles.map((r: any) => r.code).filter(Boolean);
-
-            const remainingDirect = (effectiveRoles?.directRoles ?? []).map(r => r.code);
-            const remainingFromOtherBusiness = (effectiveRoles?.businessRoles ?? [])
-              .filter(brItem => brItem.id !== id)
-              .flatMap(brItem => brItem.roles?.map((r:any) => r.code) ?? []);
-
-            const remainingSet = new Set([...remainingDirect, ...remainingFromOtherBusiness]);
-
-            const removed = brRoles.filter(code => code.startsWith("TEACHER") && !remainingSet.has(code));
-
-            const coursesRes = await getCoursesByTeacherUserId(userId, removed.length ? removed : undefined);
-            const courses = coursesRes.data ?? [];
-            setRemovalTarget({ kind, id, label, courses });
-            return;
-          }
+        const brRoles = br.data?.roles ?? [];
+        const teacherCodes = brRoles.map((r:any) => r.code).filter(Boolean).filter((c:string) => c.startsWith("TEACHER"));
+        if (!teacherCodes.length) {
+          setRemovalTarget({ kind, id, label });
+          return;
         }
+
+        const courses = (await getCoursesByTeacherUserId(userId, teacherCodes)).data ?? [];
+        setRemovalTarget({ kind, id, label, courses });
+        return;
       }
     } catch (err) {
-      // ignore errors and fallback to simple confirmation
+      // fallback to simple confirm on error — log for diagnostics
+      // eslint-disable-next-line no-console
+      console.error("openRemovalConfirm error:", err);
     }
 
     setRemovalTarget({ kind, id, label });

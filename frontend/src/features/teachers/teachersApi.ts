@@ -1,4 +1,5 @@
 import { apiClient } from "@/shared/api/client.ts";
+import { buildRolesQuery } from "@/shared/utils/role";
 import type { ApiResponse } from "@/shared/types/api-response.type";
 
 export type TeacherItem = { id: number; fullName?: string | null; salary?: number | null };
@@ -29,7 +30,7 @@ export const putTeacherByUserId = async (userId: number, payload: { salary?: num
 };
 
 export const getCoursesByTeacherUserId = async (userId: number, roles?: string[]): Promise<ApiResponse<any[]>> => {
-  const qs = roles && roles.length > 0 ? `?availableRoles=${encodeURIComponent(roles.join(","))}` : "";
+  const qs = buildRolesQuery(roles);
   const { data } = await apiClient.get<ApiResponse<any[]>>(`/teachers/by-user/${userId}/courses${qs}`);
   return data as ApiResponse<any[]>;
 };
