@@ -72,6 +72,12 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
             throw new ResourceNotFoundException(String.format(MessageConstant.USER_DOES_NOT_VALUE, Constant.ROLE));
         }
         userRoleRepository.deleteById(key);
+        // If removed role is a teacher role and user no longer has any teacher roles, delete teacher record
+        roleRepository.findById(roleId).ifPresent(role -> {
+            if (role.getCode() != null && role.getCode().name().startsWith("TEACHER")) {
+                deleteTeacherIfNoTeacherRoles(userId, role.getCode());
+            }
+        });
     }
 
     @Override
@@ -149,6 +155,16 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
         BusinessRole businessRole = bRoleService.findByIdWithRoles(businessRoleId);
         userBusinessRoleRepository.deleteById(key);
         removeUserRolesExclusiveToBusinessRole(userId, businessRoleId, businessRole);
+        // After removing business role and related roles, if user no longer has any teacher roles remove Teacher
+        // collect removed teacher role codes from this business role
+        Roles[] removedRoleCodes = Optional.ofNullable(businessRole.getRoles()).orElse(Collections.emptySet()).stream()
+            .filter(Objects::nonNull)
+            .map(Role::getCode)
+            .filter(Objects::nonNull)
+            .filter(rc -> rc.name().startsWith("TEACHER"))
+            .toArray(Roles[]::new);
+
+        deleteTeacherIfNoTeacherRoles(userId, removedRoleCodes);
     }
 
     @Override
@@ -283,5 +299,73 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
         if (teacherRepository.findByUserId(user.getId()).isPresent()) return;
         Teacher t = Teacher.builder().user(user).build();
         teacherRepository.save(t);
+    }
+
+    private void deleteTeacherIfNoTeacherRoles(Long userId, Roles... removedRoleCodes) {
+        // Check remaining direct roles
+        List<UserRole> remainingUserRoles = userRoleRepository.findByUserIdWithRoleAndBusinessRole(userId);
+        boolean hasTeacherDirect = remainingUserRoles.stream()
+                .map(UserRole::getRole)
+                .filter(Objects::nonNull)
+                .map(Role::getCode)
+                .filter(Objects::nonNull)
+                .anyMatch(rc -> rc.name().startsWith("TEACHER"));
+
+        // Do not return here; even if user still has direct teacher roles,
+        // we may need to unassign courses related to the removed role(s).
+
+        // Check roles coming from assigned business roles
+        List<UserBusinessRole> assignedBusinessRoles = userBusinessRoleRepository.findByUserIdWithBusinessRoleAndRoles(userId);
+        boolean hasTeacherViaBusiness = assignedBusinessRoles.stream()
+        // flatMap to get all roles from all assigned business roles
+        // output example: if user has 2 business roles, each with 3 roles, we get a stream of 6 roles to check
+        // output example continued: if among those 6 roles, 1 has code "TEACHER_ENGLISH", the anyMatch will return true and we won't delete the teacher record
+        // example stream flatMap: [BR1->RoleA, RoleB, RoleC], [BR2->RoleD, RoleE, RoleF]  --> flatMap --> RoleA, RoleB, RoleC, RoleD, RoleE, RoleF
+                .flatMap(ubr -> ubr.getBusinessRole().getRoles().stream())
+                .filter(Objects::nonNull)
+                .map(Role::getCode)
+                .filter(Objects::nonNull)
+                .anyMatch(rc -> rc.name().startsWith("TEACHER"));
+
+        // Don't return here either; we'll decide below whether to delete the teacher
+        // or only unassign matching courses based on remaining roles.
+
+        // If some teacher roles were removed but user still has other teacher roles, only unassign courses
+        // that require the removed role(s). If no teacher roles remain at all, unassign all courses and delete the teacher.
+        teacherRepository.findByUserId(userId).ifPresent(teacher -> {
+            List<Course> assignedCourses = courseRepository.findByTeacherUserId(userId);
+            if (assignedCourses == null || assignedCourses.isEmpty()) {
+                // If there are no assigned courses, delete the teacher only when no teacher roles remain.
+                if (!hasTeacherDirect && !hasTeacherViaBusiness) {
+                    teacherRepository.delete(teacher);
+                }
+                return;
+            }
+            // Only unassign courses whose availableRoleTeacher matches one of the removedRoleCodes
+            if (removedRoleCodes != null && removedRoleCodes.length > 0) {
+                List<Roles> removedList = Arrays.asList(removedRoleCodes);
+                List<Course> toUnassign = assignedCourses.stream()
+                        .filter(c -> c.getAvailableRoleTeacher() != null && removedList.contains(c.getAvailableRoleTeacher()))
+                        .toList();
+                if (!toUnassign.isEmpty()) {
+                    for (Course c : toUnassign) {
+                        c.setTeacher(null);
+                    }
+                    courseRepository.saveAll(toUnassign);
+                }
+            }
+
+            // If user still has any teacher roles, do not delete the teacher
+            if (hasTeacherDirect || hasTeacherViaBusiness) {
+                return;
+            }
+
+            // No teacher roles remain at all: unassign all assigned courses and delete teacher
+            for (Course c : assignedCourses) {
+                c.setTeacher(null);
+            }
+            courseRepository.saveAll(assignedCourses);
+            teacherRepository.delete(teacher);
+        });
     }
 }

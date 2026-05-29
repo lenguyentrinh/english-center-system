@@ -13,8 +13,10 @@ import {
   getUserEffectiveRoles,
   removeBusinessRoleFromUser,
   removeRoleFromUser,
+  getBusinessRoleById,
 } from "@/features/admin/adminApi.ts";
 import { getTeacherByUserId } from "@/features/teachers/teachersApi";
+import { getCoursesByTeacherUserId } from "@/features/teachers/teachersApi";
 import type {
   BusinessRoleResponse,
   RoleResponse,
@@ -25,8 +27,8 @@ import { getApiErrorMessage } from "@/shared/api/error.ts";
 import { statusBadgeClass } from "@/features/admin/constants.ts";
 
 type RemovalTarget =
-  | { kind: "role"; id: number; label: string }
-  | { kind: "businessRole"; id: number; label: string }
+  | { kind: "role"; id: number; label: string; courses?: any[] }
+  | { kind: "businessRole"; id: number; label: string; courses?: any[] }
   | null;
 
 const formatDate = (value: string | null) => (value ? new Date(value).toLocaleString() : "-");
@@ -188,6 +190,63 @@ export default function UserDetailPage() {
     }
   };
 
+  const openRemovalConfirm = async (kind: "role" | "businessRole", id: number, label: string) => {
+    // default: no extra courses
+    try {
+      // if direct role and it's a teacher role, check assigned courses
+      if (kind === "role" && label?.startsWith("TEACHER")) {
+        const teacherRes = await getTeacherByUserId(userId);
+        const teacher = teacherRes.data;
+        if (teacher && teacher.id) {
+          // compute remaining role codes after removing this direct role
+          const remainingDirect = (effectiveRoles?.directRoles ?? []).filter(r => r.id !== id).map(r => r.code);
+          const remainingFromBusiness = (effectiveRoles?.businessRoles ?? []).flatMap(br => br.roles?.map((r:any) => r.code) ?? []);
+          const remainingSet = new Set([...remainingDirect, ...remainingFromBusiness]);
+
+          const removed = label && label.startsWith("TEACHER") && !remainingSet.has(label) ? [label] : [];
+
+          const coursesRes = await getCoursesByTeacherUserId(userId, removed.length ? removed : undefined);
+          const courses = coursesRes.data ?? [];
+          setRemovalTarget({ kind, id, label, courses });
+          return;
+        }
+      }
+
+      // if business role, fetch its roles to see if it contains teacher roles
+      if (kind === "businessRole") {
+        const br = await getBusinessRoleById(id);
+        const roles = br.data?.roles ?? [];
+        const hasTeacher = roles.some((r: any) => r.code?.startsWith("TEACHER"));
+        if (hasTeacher) {
+          const teacherRes = await getTeacherByUserId(userId);
+          const teacher = teacherRes.data;
+          if (teacher && teacher.id) {
+            // compute which teacher role codes are actually removed by removing this business role
+            const brRoles: string[] = roles.map((r: any) => r.code).filter(Boolean);
+
+            const remainingDirect = (effectiveRoles?.directRoles ?? []).map(r => r.code);
+            const remainingFromOtherBusiness = (effectiveRoles?.businessRoles ?? [])
+              .filter(brItem => brItem.id !== id)
+              .flatMap(brItem => brItem.roles?.map((r:any) => r.code) ?? []);
+
+            const remainingSet = new Set([...remainingDirect, ...remainingFromOtherBusiness]);
+
+            const removed = brRoles.filter(code => code.startsWith("TEACHER") && !remainingSet.has(code));
+
+            const coursesRes = await getCoursesByTeacherUserId(userId, removed.length ? removed : undefined);
+            const courses = coursesRes.data ?? [];
+            setRemovalTarget({ kind, id, label, courses });
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      // ignore errors and fallback to simple confirmation
+    }
+
+    setRemovalTarget({ kind, id, label });
+  };
+
   const handleRemove = async () => {
     if (!removalTarget) return;
 
@@ -277,12 +336,12 @@ export default function UserDetailPage() {
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                {effectiveRoles?.directRoles.length ? (
+                  {effectiveRoles?.directRoles.length ? (
                   effectiveRoles.directRoles.map((role) => (
                     <button
                       key={role.id}
                       type="button"
-                      onClick={() => setRemovalTarget({ kind: "role", id: role.id, label: role.code })}
+                      onClick={() => void openRemovalConfirm("role", role.id, role.code)}
                       className={`${chipClass} cursor-pointer transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700`}
                     >
                       {role.code}
@@ -333,7 +392,7 @@ export default function UserDetailPage() {
                     <button
                       key={businessRole.id}
                       type="button"
-                      onClick={() => setRemovalTarget({ kind: "businessRole", id: businessRole.id, label: businessRole.code })}
+                      onClick={() => void openRemovalConfirm("businessRole", businessRole.id, businessRole.code)}
                       className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
                     >
                       <span>{businessRole.code}</span>
@@ -411,9 +470,28 @@ export default function UserDetailPage() {
         isOpen={!!removalTarget}
         title={removalTarget?.kind === "role" ? "Remove Role" : "Remove Business Role"}
         message={
-          removalTarget
-            ? `Are you sure you want to remove ${removalTarget.label} from this user?`
-            : "Are you sure you want to remove this assignment?"
+          removalTarget ? (
+            removalTarget.courses && removalTarget.courses.length > 0 ? (
+              <div>
+                <p>Are you sure you want to remove <strong>{removalTarget.label}</strong> from this user?</p>
+                <p className="mt-2 font-semibold">Assigned courses:</p>
+                <ul className="list-disc pl-5 mt-1">
+                  {removalTarget.courses.map((c: any) => (
+                    <li key={c.id} className="text-sm text-slate-700">{c.code} — {c.name}</li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-sm text-slate-600">Removing this role may affect course assignments.</p>
+              </div>
+            ) : (
+              <div>
+                <p>Are you sure you want to remove <strong>{removalTarget.label}</strong> from this user?</p>
+              </div>
+            )
+          ) : (
+            <div>
+              <p>Are you sure you want to remove this assignment?</p>
+            </div>
+          )
         }
         onCancel={() => setRemovalTarget(null)}
         onConfirm={handleRemove}

@@ -27,3 +27,9 @@ export const putTeacherByUserId = async (userId: number, payload: { salary?: num
   const { data } = await apiClient.put<ApiResponse<any>>(`/teachers/by-user/${userId}`, body);
   return data;
 };
+
+export const getCoursesByTeacherUserId = async (userId: number, roles?: string[]): Promise<ApiResponse<any[]>> => {
+  const qs = roles && roles.length > 0 ? `?availableRoles=${encodeURIComponent(roles.join(","))}` : "";
+  const { data } = await apiClient.get<ApiResponse<any[]>>(`/teachers/by-user/${userId}/courses${qs}`);
+  return data as ApiResponse<any[]>;
+};

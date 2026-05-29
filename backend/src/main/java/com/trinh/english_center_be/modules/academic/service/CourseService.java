@@ -11,4 +11,7 @@ public interface CourseService {
     CourseResponse update(Long id, CourseRequest request);
     void softDeleteById(Long id);
     CourseResponse assignTeacher(Long courseId, Long teacherId);
+    List<CourseResponse> findByTeacherUserId(Long userId);
+    List<CourseResponse> findByTeacherUserIdAndAvailableRoles(Long userId, List<Roles> roles);
+    List<CourseResponse> findAvailableByRoles(Roles> roles);
 }

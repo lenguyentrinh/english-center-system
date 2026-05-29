@@ -30,11 +30,11 @@ public class BRoleServiceImpl implements BRoleService {
 
     @Override
     public BusinessRoleResponse findResponseById(Long id) {
-        BusinessRole businessRole = findById(id);
+        BusinessRole businessRole = findByIdWithRoles(id);
         if (Boolean.FALSE.equals(businessRole.getActive())) {
             throw new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_DELETED_BY_ID, Constant.BUSINESS_ROLE, id));
         }
-        return toBusinessRoleResponseOverview(businessRole);
+        return toResponse(businessRole);
     }
 
     @Override

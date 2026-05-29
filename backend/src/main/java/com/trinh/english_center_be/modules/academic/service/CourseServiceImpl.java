@@ -113,6 +113,26 @@ public class CourseServiceImpl implements CourseService {
         return toResponse(courseRepository.save(course));
         }
 
+    @Override
+    public List<CourseResponse> findByTeacherUserId(Long userId) {
+        List<Course> courses = courseRepository.findByTeacherUserId(userId);
+        return courses.stream().map(this::toResponse).toList();
+    }
+
+    @Override
+    public List<CourseResponse> findByTeacherUserIdAndAvailableRoles(Long userId, List<com.trinh.english_center_be.shared.enums.Roles> roles) {
+        if (roles == null || roles.isEmpty()) return List.of();
+        List<Course> courses = courseRepository.findByTeacherUserIdAndAvailableRoleTeacherIn(userId, roles);
+        return courses.stream().map(this::toResponse).toList();
+    }
+
+    @Override
+    public List<CourseResponse> findAvailableByRoles(List<com.trinh.english_center_be.shared.enums.Roles> roles) {
+        if (roles == null || roles.isEmpty()) return List.of();
+        List<Course> courses = courseRepository.findByAvailableRoleTeacherInAndTeacherIsNull(roles);
+        return courses.stream().map(this::toResponse).toList();
+    }
+
     private CourseResponse toResponse(Course course) {
         return new CourseResponse(
                 course.getId(),
