@@ -1,5 +1,8 @@
 package com.trinh.english_center_be.modules.user.service;
 
+import com.trinh.english_center_be.modules.academic.dto.CourseSuggestionResponse;
+import com.trinh.english_center_be.modules.academic.entity.Course;
+import com.trinh.english_center_be.modules.academic.repository.CourseRepository;
 import com.trinh.english_center_be.modules.user.Repository.RoleRepository;
 import com.trinh.english_center_be.modules.user.Repository.UserBusinessRoleRepository;
 import com.trinh.english_center_be.modules.user.Repository.UserRoleRepository;
@@ -7,6 +10,9 @@ import com.trinh.english_center_be.modules.user.dto.BusinessRoleResponse;
 import com.trinh.english_center_be.modules.user.dto.RoleResponse;
 import com.trinh.english_center_be.modules.user.dto.UserEffectiveRolesResponse;
 import com.trinh.english_center_be.modules.user.entity.*;
+import com.trinh.english_center_be.modules.teacher.entity.Teacher;
+import com.trinh.english_center_be.modules.teacher.repository.TeacherRepository;
+import com.trinh.english_center_be.shared.enums.Roles;
 import com.trinh.english_center_be.shared.exception.BusinessException;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
 import com.trinh.english_center_be.shared.util.Constant;
@@ -29,6 +35,8 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
     private final RoleRepository roleRepository;
     private final BRoleService bRoleService;
     private final UserService userService;
+    private final CourseRepository courseRepository;
+    private final TeacherRepository teacherRepository;
 
     @Override
     @Transactional
@@ -45,10 +53,15 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
         Role role = resolveAssignableRole(roleId);
 
         userRoleRepository.save(UserRole.builder()
-                .id(new UserRoleId(userId, roleId))
+                .id(new UserRoleId(user.getId(), roleId))
                 .user(user)
                 .role(role)
                 .build());
+
+        // If assigned role is a teacher role, ensure Teacher entity exists
+        if (role.getCode() != null && role.getCode().name().startsWith("TEACHER")) {
+            createTeacherIfNotExists(user);
+        }
     }
 
     @Override
@@ -63,7 +76,7 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
 
     @Override
     @Transactional
-    public void assignBusinessRole(Long userId, Long businessRoleId) {
+    public List<CourseSuggestionResponse> assignBusinessRole(Long userId, Long businessRoleId) {
         if (userBusinessRoleRepository.existsByIdUserIdAndIdBusinessRoleId(userId, businessRoleId)) {
             throw new BusinessException(
                     String.format(MessageConstant.USER_ALREADY_VALUE, Constant.BUSINESS_ROLE),
@@ -81,13 +94,48 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
             throw new BusinessException(String.format(MessageConstant.ENTITY_INACTIVE_CAN_NOT_ASSIGN, Constant.BUSINESS_ROLE), HttpStatus.BAD_REQUEST);
         }
 
+        // Assign the business role to user
         userBusinessRoleRepository.save(UserBusinessRole.builder()
                 .id(new UserBusinessRoleId(userId, businessRoleId))
                 .user(user)
                 .businessRole(businessRole)
                 .build());
-
         ensureUserRolesForBusinessRole(user, businessRole);
+
+        // If any of the roles in the business role is a teacher role, ensure Teacher entity exists
+        if (businessRole.getRoles() != null) {
+            boolean hasTeacher = businessRole.getRoles().stream()
+                    .filter(Objects::nonNull)
+                    .map(Role::getCode)
+                    .filter(Objects::nonNull)
+                    .anyMatch(rc -> rc.name().startsWith("TEACHER"));
+            if (hasTeacher) {
+                createTeacherIfNotExists(user);
+            }
+        }
+
+        // After assigning roles, suggest matching courses (courses with matching availableRoleTeacher and no teacher assigned)
+        List<CourseSuggestionResponse> suggestions = new ArrayList<>();
+        if (businessRole.getRoles() != null && !businessRole.getRoles().isEmpty()) {
+            List<Roles> roleCodes = businessRole.getRoles().stream()
+                    .filter(Objects::nonNull)
+                    .map(Role::getCode)
+                    .filter(Objects::nonNull)
+                    .toList();
+
+            if (!roleCodes.isEmpty()) {
+                List<Course> courses =
+                        courseRepository.findByAvailableRoleTeacherInAndTeacherIsNull(roleCodes);
+
+                for (Course c : courses) {
+                    suggestions.add(new CourseSuggestionResponse(
+                            c.getId(), c.getCode(), c.getName(), c.getAvailableRoleTeacher()
+                    ));
+                }
+            }
+        }
+
+        return suggestions;
     }
 
     @Override
@@ -150,11 +198,13 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
                 .build();
     }
 
+    // Helper methods
     private void ensureUserRolesForBusinessRole(User user, BusinessRole businessRole) {
         if (businessRole.getRoles() == null) {
             return;
         }
 
+        // For each role in the business role, if user doesn't have it yet, assign it
         for (Role role : businessRole.getRoles()) {
             if (!Boolean.TRUE.equals(role.getActive())) {
                 continue;
@@ -208,24 +258,30 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
 
     private RoleResponse toRoleResponse(Role role) {
         return new RoleResponse(
-            role.getId(),
-            role.getCode(),
-            role.getDescription(),
-            role.getActive(),
-            role.getBusinessRole() != null ? role.getBusinessRole().getId() : null,
-            role.getBusinessRole() != null ? role.getBusinessRole().getCode() : null
+                role.getId(),
+                role.getCode(),
+                role.getDescription(),
+                role.getActive(),
+                role.getBusinessRole() != null ? role.getBusinessRole().getId() : null,
+                role.getBusinessRole() != null ? role.getBusinessRole().getCode() : null
         );
     }
 
     private BusinessRoleResponse toBusinessRoleResponse(BusinessRole businessRole, Set<RoleResponse> assignedRoles) {
         return new BusinessRoleResponse(
-               businessRole.getId()
-               ,businessRole.getCode()
-               ,businessRole.getDescription()
-               ,businessRole.getActive()
-               ,businessRole.getCreatedAt()
-               ,businessRole.getUpdateAt()
+                businessRole.getId()
+                ,businessRole.getCode()
+                ,businessRole.getDescription()
+                ,businessRole.getActive()
+                ,businessRole.getCreatedAt()
+                ,businessRole.getUpdateAt()
                 ,assignedRoles.stream().toList()
         );
+    }
+
+    private void createTeacherIfNotExists(User user) {
+        if (teacherRepository.findByUserId(user.getId()).isPresent()) return;
+        Teacher t = Teacher.builder().user(user).build();
+        teacherRepository.save(t);
     }
 }

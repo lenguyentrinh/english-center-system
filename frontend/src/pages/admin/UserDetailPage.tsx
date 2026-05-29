@@ -5,6 +5,7 @@ import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
 import ConfirmDialog from "@/shared/components/ConfirmDialog.tsx";
 import {
   assignBusinessRoleToUser,
+  assignTeacherToCourse,
   assignRoleToUser,
   getBusinessRoles,
   getRoles,
@@ -13,6 +14,7 @@ import {
   removeBusinessRoleFromUser,
   removeRoleFromUser,
 } from "@/features/admin/adminApi.ts";
+import { getTeacherByUserId } from "@/features/teachers/teachersApi";
 import type {
   BusinessRoleResponse,
   RoleResponse,
@@ -46,6 +48,9 @@ export default function UserDetailPage() {
   const [selectedRoleId, setSelectedRoleId] = useState("");
   const [selectedBusinessRoleId, setSelectedBusinessRoleId] = useState("");
   const [removalTarget, setRemovalTarget] = useState<RemovalTarget>(null);
+  const [suggestedModalOpen, setSuggestedModalOpen] = useState(false);
+  const [suggestedCourses, setSuggestedCourses] = useState<any[]>([]);
+  const [selectedSuggestedCourseIds, setSelectedSuggestedCourseIds] = useState<number[]>([]);
 
   const loadDetail = async () => {
     try {
@@ -67,6 +72,49 @@ export default function UserDetailPage() {
       toast.error(message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleSuggestedCourse = (courseId: number) => {
+    setSelectedSuggestedCourseIds((prev) => {
+      // remove if already selected, add if not selected
+      if (prev.includes(courseId)) return prev.filter((id) => id !== courseId);
+      
+      // add to selection
+      return [...prev, courseId];
+    });
+  };
+
+  //
+  const handleConfirmAssignSuggested = async () => {
+    if (selectedSuggestedCourseIds.length === 0) {
+      setSuggestedModalOpen(false);
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const teacherRes = await getTeacherByUserId(userId);
+      const teacher = teacherRes.data;
+      if (!teacher || !teacher.id) {
+        toast.error("This user is not a teacher yet. Cannot assign to courses.");
+        setSuggestedModalOpen(false);
+        return;
+      }
+
+      for (const courseId of selectedSuggestedCourseIds) {
+        try {
+          await assignTeacherToCourse(courseId, teacher.id);
+        } catch (err) {
+          toast.error(getApiErrorMessage(err, `Failed to assign teacher to course ${courseId}`));
+        }
+      }
+      toast.success("Assigned teacher to selected courses.");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to assign suggested courses"));
+    } finally {
+      setSubmitting(false);
+      setSuggestedModalOpen(false);
     }
   };
 
@@ -123,6 +171,15 @@ export default function UserDetailPage() {
       const res = await assignBusinessRoleToUser(userId, Number(selectedBusinessRoleId));
       toast.success(res.message);
       setSelectedBusinessRoleId("");
+
+      const suggestions = res.data ?? [];
+      if (Array.isArray(suggestions) && suggestions.length > 0) {
+        setSuggestedCourses(suggestions);
+        setSelectedSuggestedCourseIds(suggestions.map((s: any) => s.id));
+        setSuggestedModalOpen(true);
+      }
+
+      // we only create the teacher server-side; do not open teacher-details modal
       await loadDetail();
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to assign business role"));
@@ -156,7 +213,6 @@ export default function UserDetailPage() {
       setSubmitting(false);
     }
   };
-
   if (!Number.isFinite(userId)) {
     return (
       <AdminLayout>
@@ -364,6 +420,39 @@ export default function UserDetailPage() {
         isLoading={submitting}
         isDangerous
       />
+
+      {suggestedModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-xl bg-white shadow-xl">
+            <div className="border-b border-slate-200 px-6 py-4">
+              <h2 className="text-lg font-semibold text-slate-900">Assign Teacher to Matching Courses</h2>
+            </div>
+            <div className="px-6 py-4">
+              <p className="text-sm text-slate-600">These courses match the newly added teacher roles. Select which courses to assign this teacher to.</p>
+              <div className="mt-4 max-h-64 overflow-auto">
+                {suggestedCourses.map((s) => (
+                  <label key={s.id} className="flex items-center gap-3 border-b border-slate-100 px-2 py-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedSuggestedCourseIds.includes(s.id)}
+                      onChange={() => toggleSuggestedCourse(s.id)}
+                      className="h-4 w-4"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-slate-900">{s.code} — {s.name}</div>
+                      <div className="text-xs text-slate-500">Required teacher role: {s.availableRoleTeacher}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
+              <button onClick={() => setSuggestedModalOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg">Cancel</button>
+              <button onClick={handleConfirmAssignSuggested} disabled={submitting} className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50">{submitting ? 'Assigning...' : 'Assign Selected'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }
