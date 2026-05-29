@@ -7,9 +7,7 @@ import com.trinh.english_center_be.modules.academic.repository.CourseRepository;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
 import com.trinh.english_center_be.modules.teacher.repository.TeacherRepository;
 import com.trinh.english_center_be.modules.teacher.entity.Teacher;
-
 import java.util.List;
-
 import com.trinh.english_center_be.shared.util.Constant;
 import com.trinh.english_center_be.shared.util.MessageConstant;
 import lombok.RequiredArgsConstructor;
@@ -100,18 +98,18 @@ public class CourseServiceImpl implements CourseService {
         courseRepository.save(course);
     }
 
-        @Override
-        @Transactional
-        public CourseResponse assignTeacher(Long courseId, Long teacherId) {
+    @Override
+    @Transactional
+    public CourseResponse assignTeacher(Long courseId, Long teacherId) {
         Course course = courseRepository.findById(courseId)
-            .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.COURSE, courseId)));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.COURSE, courseId)));
 
         Teacher teacher = teacherRepository.findById(teacherId)
-            .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.TEACHER, teacherId)));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.TEACHER, teacherId)));
 
         course.setTeacher(teacher);
         return toResponse(courseRepository.save(course));
-        }
+    }
 
     @Override
     public List<CourseResponse> findByTeacherUserId(Long userId) {
@@ -123,13 +121,6 @@ public class CourseServiceImpl implements CourseService {
     public List<CourseResponse> findByTeacherUserIdAndAvailableRoles(Long userId, List<com.trinh.english_center_be.shared.enums.Roles> roles) {
         if (roles == null || roles.isEmpty()) return List.of();
         List<Course> courses = courseRepository.findByTeacherUserIdAndAvailableRoleTeacherIn(userId, roles);
-        return courses.stream().map(this::toResponse).toList();
-    }
-
-    @Override
-    public List<CourseResponse> findAvailableByRoles(List<com.trinh.english_center_be.shared.enums.Roles> roles) {
-        if (roles == null || roles.isEmpty()) return List.of();
-        List<Course> courses = courseRepository.findByAvailableRoleTeacherInAndTeacherIsNull(roles);
         return courses.stream().map(this::toResponse).toList();
     }
 

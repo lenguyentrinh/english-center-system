@@ -3,8 +3,6 @@ package com.trinh.english_center_be.modules.user.controller;
 import com.trinh.english_center_be.modules.user.dto.BusinessRoleRequest;
 import com.trinh.english_center_be.modules.user.dto.BusinessRoleResponse;
 import com.trinh.english_center_be.modules.user.service.BRoleService;
-import com.trinh.english_center_be.modules.academic.service.CourseService;
-import com.trinh.english_center_be.shared.enums.Roles;
 import com.trinh.english_center_be.shared.response.ApiResponse;
 import com.trinh.english_center_be.shared.util.Constant;
 import com.trinh.english_center_be.shared.util.MessageConstant;
@@ -29,30 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class BusinessRoleController {
 
         private final BRoleService bRoleService;
-        private final CourseService courseService;
-
-        @GetMapping("/{id}/roles")
-        @PreAuthorize("hasRole('ADMIN')")
-        public ResponseEntity<ApiResponse<List<Roles>>> getRolesForBusinessRole(@PathVariable Long id) {
-                var br = bRoleService.findByIdWithRoles(id);
-                List<Roles> roles = br.getRoles() == null ? List.of() : br.getRoles().stream()
-                                .filter(r -> Boolean.TRUE.equals(r.getActive()))
-                                .map(r -> r.getCode())
-                                .toList();
-                return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.LIST_SUCCESSFULLY, "Roles"), roles));
-        }
-
-        @GetMapping("/{id}/suggested-courses")
-        @PreAuthorize("hasRole('ADMIN')")
-        public ResponseEntity<ApiResponse<List<com.trinh.english_center_be.modules.academic.dto.CourseResponse>>> getSuggestedCourses(@PathVariable Long id) {
-                var br = bRoleService.findByIdWithRoles(id);
-                List<Roles> roles = br.getRoles() == null ? List.of() : br.getRoles().stream()
-                                .filter(r -> Boolean.TRUE.equals(r.getActive()))
-                                .map(r -> r.getCode())
-                                .toList();
-                var courses = courseService.findAvailableByRoles(roles);
-                return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.LIST_SUCCESSFULLY, Constant.COURSE), courses));
-        }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")

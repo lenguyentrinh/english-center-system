@@ -12,6 +12,5 @@ public interface CourseService {
     void softDeleteById(Long id);
     CourseResponse assignTeacher(Long courseId, Long teacherId);
     List<CourseResponse> findByTeacherUserId(Long userId);
-    List<CourseResponse> findByTeacherUserIdAndAvailableRoles(Long userId, List<Roles> roles);
-    List<CourseResponse> findAvailableByRoles(Roles> roles);
+    List<CourseResponse> findByTeacherUserIdAndAvailableRoles(Long userId, List<com.trinh.english_center_be.shared.enums.Roles> roles);
 }
