@@ -1,29 +1,29 @@
 package com.trinh.english_center_be.modules.academic.entity;
 
 import com.trinh.english_center_be.shared.BaseEntity;
-import com.trinh.english_center_be.shared.enums.ClassStatus;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.trinh.english_center_be.shared.enums.CourseStatus;
+import com.trinh.english_center_be.shared.enums.Roles;
+import jakarta.persistence.*;
+import com.trinh.english_center_be.modules.teacher.entity.Teacher;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 @Entity
-@Table(name = "classes")
+@Table(name = "courses")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class TeachingClass extends BaseEntity {
+public class Course extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,9 +35,6 @@ public class TeachingClass extends BaseEntity {
     @Column(name = "name", length = 100)
     private String name;
 
-    @Column(name = "course_id", nullable = false)
-    private Long courseId;
-
     @Column(name = "start_date")
     private LocalDate startDate;
 
@@ -48,7 +45,8 @@ public class TeachingClass extends BaseEntity {
     private Integer maxStudent;
 
     @Column(name = "status", length = 20)
-    private ClassStatus status;
+    @Enumerated(EnumType.STRING)
+    private CourseStatus status;
 
     @Column(name = "minimum_age")
     private Integer minimumAge;
@@ -58,4 +56,12 @@ public class TeachingClass extends BaseEntity {
 
     @Column(name = "prerequisites_required", columnDefinition = "TINYINT DEFAULT 0")
     private Boolean prerequisitesRequired;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "teacher_id")
+    private Teacher teacher;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "available_role_teacher", length = 50)
+    private Roles availableRoleTeacher;
 }

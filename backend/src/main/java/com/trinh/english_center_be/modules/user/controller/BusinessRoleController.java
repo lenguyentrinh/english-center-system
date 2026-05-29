@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class BusinessRoleController {
 
-    private final BRoleService bRoleService;
+        private final BRoleService bRoleService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")

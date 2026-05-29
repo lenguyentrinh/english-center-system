@@ -57,6 +57,12 @@ public class MessageConstant {
     public static final String MAX_STUDENT_MIN = "Max student must be at least {min}";
     public static final String STATUS_NOT_NULL = "Status must not be null";
 
+    // course additional fields
+    public static final String MINIMUM_AGE_NOT_NULL = "Minimum age must not be null";
+    public static final String REQUIRED_ENTRY_LEVEL_NOT_BLANK = "Required entry level must not be blank";
+    public static final String PREREQUISITES_REQUIRED_NOT_NULL = "Prerequisites required flag must not be null";
+    public static final String AVAILABLE_ROLE_TEACHER_NOT_NULL = "Available teacher role must not be null";
+
     // brole & role
     public static final String CODE_NOT_NULL = "Code must not be null";
     public static final String DESCRIPTION_MAX_LENGTH = "Description must be at most {max} characters";

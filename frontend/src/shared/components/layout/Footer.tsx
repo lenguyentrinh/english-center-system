@@ -34,7 +34,7 @@ export default function Footer() {
         <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-slate-300">
           <p className="font-semibold text-white">Need help choosing a course?</p>
           <p className="mt-2 leading-6 text-slate-400">
-            Browse the latest classes or open your account area to continue where you left off.
+            Browse the latest courses or open your account area to continue where you left off.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Link

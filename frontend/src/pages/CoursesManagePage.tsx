@@ -1,24 +1,23 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
-import ConfirmDialog from "@/shared/components/ConfirmDialog.tsx";
+import Header from "@/shared/components/layout/Header.tsx";
+import Footer from "@/shared/components/layout/Footer.tsx";
 import CourseTable from "@/components/courses/CourseTable";
 import CourseModal from "@/components/courses/CourseModal";
+import ConfirmDialog from "@/shared/components/ConfirmDialog";
 import { useAppDispatch, useAppSelector } from "@/app/hooks.ts";
+import { toast } from "react-toastify";
+import {
+  fetchCourses,
+  createCourseThunk,
+  updateCourseThunk,
+  deleteCourseThunk,
+} from "@/features/courses/courseThunks.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
 import type { Course, UpsertCoursePayload } from "@/features/courses/types.ts";
 import type { ApiResponse } from "@/shared/types/api-response.type";
-import {
-  createCourseThunk,
-  deleteCourseThunk,
-  fetchCourses,
-  updateCourseThunk,
-} from "@/features/courses/courseThunks.ts";
 
-export default function AdminCoursesPage() {
+export default function CoursesManagePage() {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
 
   const { courses, loadingList, submitting, listError } = useAppSelector(
     (state) => state.courses
@@ -27,7 +26,6 @@ export default function AdminCoursesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [deletingCourseId, setDeletingCourseId] = useState<number | null>(null);
 
@@ -74,45 +72,40 @@ export default function AdminCoursesPage() {
   };
 
   return (
-    <AdminLayout>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">
-            Administration
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-            Manage Courses
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            Create, edit, and remove courses.
-          </p>
+    <>
+      <Header />
+      <main className="min-h-screen bg-slate-50">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">Courses</h1>
+              <p className="mt-1 text-sm text-slate-600">Manage all your courses in one place</p>
+            </div>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700"
+            >
+              Add Course
+            </button>
+          </div>
+
+          {listError && <div className="mb-6 text-red-600">{listError}</div>}
+
+          <CourseTable
+            courses={courses}
+            loading={loadingList}
+            onUpdate={(item) => {
+                setEditingCourse(item);
+                setIsEditModalOpen(true);
+              }}
+              onDelete={(id) => {
+                setDeletingCourseId(id);
+                setIsDeleteConfirmOpen(true);
+              }}
+            submitting={submitting}
+          />
         </div>
-
-        <button
-          type="button"
-          onClick={() => setIsCreateModalOpen(true)}
-          className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-        >
-          Add Course
-        </button>
-      </div>
-
-      {listError ? <div className="mb-6 text-red-600">{listError}</div> : null}
-
-      <CourseTable
-        courses={courses}
-        loading={loadingList}
-        onView={(item) => navigate(`/admin/courses/${item.id}`)}
-        onUpdate={(item) => {
-            setEditingCourse(item);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={(id) => {
-            setDeletingCourseId(id);
-            setIsDeleteConfirmOpen(true);
-          }}
-        submitting={submitting}
-      />
+      </main>
 
       <CourseModal
         isOpen={isCreateModalOpen}
@@ -139,6 +132,8 @@ export default function AdminCoursesPage() {
         isLoading={submitting}
         isDangerous
       />
-    </AdminLayout>
+
+      <Footer />
+    </>
   );
 }

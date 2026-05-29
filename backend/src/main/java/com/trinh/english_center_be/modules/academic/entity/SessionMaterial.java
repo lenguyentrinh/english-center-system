@@ -34,7 +34,7 @@ public class SessionMaterial extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "session_id", nullable = false)
-    private ClassSession session;
+    private CourseSession session;
 
     @Column(name = "file_name", length = 255)
     private String fileName;

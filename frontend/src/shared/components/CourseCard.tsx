@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
-import type { TeachingClass } from "@/features/teaching-classes/types.ts";
+import type { Course } from "@/features/courses/types.ts";
 
 type Props = {
-  course: TeachingClass;
+  course: Course;
   className?: string;
   showDetailButton?: boolean;
 };
 
-const statusClasses: Record<TeachingClass["status"], string> = {
+const statusClasses: Record<Course["status"], string> = {
   OPEN: "bg-emerald-100 text-emerald-800",
   ACTIVE: "bg-indigo-100 text-indigo-800",
   CLOSED: "bg-slate-200 text-slate-700",
@@ -41,7 +41,7 @@ export default function CourseCard({ course, className = "", showDetailButton = 
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
-            Course {course.courseId}
+            Course #{course.id}
           </p>
           <h3 className="mt-2 text-xl font-semibold tracking-tight text-slate-950">
             {course.name}
@@ -66,6 +66,11 @@ export default function CourseCard({ course, className = "", showDetailButton = 
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Duration</p>
           <p className="mt-2 font-semibold text-slate-950">{getDurationLabel(course.startDate, course.endDate)}</p>
         </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+        <div>Teacher: {course.teacher?.fullName ?? "—"}</div>
+        <div>Min age: {course.minimumAge ?? "—"}</div>
       </div>
 
       {showDetailButton ? (

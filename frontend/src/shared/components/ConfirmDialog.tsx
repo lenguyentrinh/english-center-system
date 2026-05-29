@@ -1,7 +1,9 @@
+import React from "react";
+
 interface ConfirmDialogProps {
   isOpen: boolean;
   title: string;
-  message: string;
+  message: React.ReactNode;
   onCancel: () => void;
   onConfirm: () => void;
   isLoading?: boolean;
@@ -33,7 +35,7 @@ export default function ConfirmDialog({
 
         {/* Message */}
         <div className="px-6 py-4">
-          <p className="text-sm text-slate-600">{message}</p>
+          <div className="text-sm text-slate-600">{message}</div>
         </div>
 
         {/* Footer */}

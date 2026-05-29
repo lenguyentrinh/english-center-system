@@ -3,14 +3,14 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import PublicLayout from "@/shared/components/layout/PublicLayout.tsx";
 import CourseCard from "@/shared/components/CourseCard.tsx";
-import { getTeachingClasses } from "@/features/teaching-classes/teachingClassesApi.ts";
-import type { TeachingClass } from "@/features/teaching-classes/types.ts";
+import { getCourses } from "@/features/courses/courseApi.ts";
+import type { Course } from "@/features/courses/types.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
 
 const whyChooseUs = [
   "Native and Vietnamese teachers working together",
   "IELTS, TOEIC, and communication tracks",
-  "Small classes, consistent feedback, and checkpoints",
+  "Small courses, consistent feedback, and checkpoints",
   "Supportive placement guidance for new learners",
 ];
 
@@ -23,14 +23,14 @@ const testimonials = [
   },
   {
     quote:
-      "The speaking practice and class rhythm gave me confidence for interviews and exams.",
+              "The speaking practice and course rhythm gave me confidence for interviews and exams.",
     name: "Hoang Nam",
     role: "TOEIC learner",
   },
 ];
 
 export default function HomePage() {
-  const [courses, setCourses] = useState<TeachingClass[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +38,7 @@ export default function HomePage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await getTeachingClasses();
+      const res = await getCourses();
       setCourses(res.data);
     } catch (err) {
       const message = getApiErrorMessage(err, "Failed to load featured courses");
@@ -71,7 +71,7 @@ export default function HomePage() {
               Learn English with structure, momentum, and visible progress.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-              Explore live classes, compare schedules, and find the learning track that fits your goals.
+              Explore live courses, compare schedules, and find the learning track that fits your goals.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -119,7 +119,7 @@ export default function HomePage() {
               A focused center for exam prep and practical communication.
             </h2>
             <p className="mt-4 text-base leading-7 text-slate-600">
-              We keep the learning journey clear: choose a class, review the schedule, and progress with regular checkpoints.
+              We keep the learning journey clear: choose a course, review the schedule, and progress with regular checkpoints.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
@@ -140,8 +140,8 @@ export default function HomePage() {
           <div className="grid gap-4 sm:grid-cols-2">
             {[
               ["Expert guidance", "Teachers who focus on speaking, strategy, and test structure."],
-              ["Practical pace", "Classes designed for consistency rather than overload."],
-              ["Clear goals", "Track progress with visible milestones and class schedules."],
+              ["Practical pace", "Courses designed for consistency rather than overload."],
+              ["Clear goals", "Track progress with visible milestones and course schedules."],
               ["Supportive environment", "Learn in a setting that keeps you moving forward."],
             ].map(([title, description]) => (
               <article key={title} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -183,7 +183,7 @@ export default function HomePage() {
               Featured Courses
             </p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-              Latest classes from the catalog
+              Latest courses from the catalog
             </h2>
           </div>
           <Link
