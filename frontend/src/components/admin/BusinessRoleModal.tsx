@@ -51,6 +51,7 @@ export default function BusinessRoleModal({
   } = useForm<BusinessRoleForm>({
     resolver: zodResolver(businessRoleSchema),
     defaultValues,
+    mode: "onBlur",
   });
 
   const isEditing = !!editingBusinessRole;
