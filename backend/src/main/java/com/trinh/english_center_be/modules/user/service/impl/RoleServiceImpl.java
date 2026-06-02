@@ -4,7 +4,10 @@ import com.trinh.english_center_be.modules.user.Repository.RoleRepository;
 import com.trinh.english_center_be.modules.user.dto.RoleRequest;
 import com.trinh.english_center_be.modules.user.dto.RoleResponse;
 import com.trinh.english_center_be.modules.user.entity.BusinessRole;
+import com.trinh.english_center_be.modules.user.mapper.RoleMapper;
 import com.trinh.english_center_be.modules.user.entity.Role;
+import com.trinh.english_center_be.modules.user.service.BRoleService;
+import com.trinh.english_center_be.modules.user.service.RoleService;
 import com.trinh.english_center_be.shared.enums.Roles;
 import com.trinh.english_center_be.shared.exception.BusinessException;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
@@ -39,7 +42,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public List<RoleResponse> findAll() {
-        return roleRepository.findAll().stream().map(this::toResponse).toList();
+        return roleRepository.findAll().stream().map(RoleMapper::toResponse).toList();
     }
 
     @Override
@@ -50,7 +53,7 @@ public class RoleServiceImpl implements RoleService {
         if (Boolean.FALSE.equals(role.getActive())) {
             throw new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_DELETED_BY_ID, Constant.ROLE, id));
         }
-        return toResponse(role);
+        return RoleMapper.toResponse(role);
     }
 
     @Override
@@ -72,7 +75,7 @@ public class RoleServiceImpl implements RoleService {
             role.setBusinessRole(resolveActiveBusinessRole(roleRequest.businessRoleId()));
         }
 
-        return toResponse(roleRepository.save(role));
+        return RoleMapper.toResponse(roleRepository.save(role));
     }
 
     @Override
@@ -105,7 +108,7 @@ public class RoleServiceImpl implements RoleService {
         BusinessRole businessRole = resolveActiveBusinessRole(roleRequest.businessRoleId());
         existing.setBusinessRole(businessRole);
 
-        return toResponse(roleRepository.save(existing));
+        return RoleMapper.toResponse(roleRepository.save(existing));
     }
 
     private BusinessRole resolveActiveBusinessRole(Long businessRoleId) {
@@ -116,13 +119,5 @@ public class RoleServiceImpl implements RoleService {
         return businessRole;
     }
 
-    private RoleResponse toResponse(Role role) {
-        return new RoleResponse(
-                role.getId()
-                , role.getCode()
-                , role.getDescription()
-                , role.getActive()
-                , role.getBusinessRole() != null ? role.getBusinessRole().getId() : null
-                , role.getBusinessRole() != null ? role.getBusinessRole().getCode() : null);
-    }
+    
 }
