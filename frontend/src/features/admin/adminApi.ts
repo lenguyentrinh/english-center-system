@@ -107,10 +107,18 @@ export const removeRoleFromUser = async (
 export const assignBusinessRoleToUser = async (
   userId: number,
   businessRoleId: number
-): Promise<ApiResponse<null>> => {
-  const { data } = await apiClient.post<ApiResponse<null>>(
+): Promise<ApiResponse<any[]>> => {
+  const { data } = await apiClient.post<ApiResponse<any[]>>(
     `/users/${userId}/roles/business-roles/${businessRoleId}`
   );
+  return data;
+};
+
+export const assignTeacherToCourse = async (
+  courseId: number,
+  teacherId: number
+): Promise<ApiResponse<any>> => {
+  const { data } = await apiClient.post<ApiResponse<any>>(`/courses/${courseId}/assign-teacher/${teacherId}`);
   return data;
 };
 

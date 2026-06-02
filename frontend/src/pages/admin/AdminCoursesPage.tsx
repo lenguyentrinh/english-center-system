@@ -3,41 +3,41 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
 import ConfirmDialog from "@/shared/components/ConfirmDialog.tsx";
-import TeachingClassTable from "@/components/teaching-classes/TeachingClassTable";
-import TeachingClassModal from "@/components/teaching-classes/TeachingClassModal";
+import CourseTable from "@/components/courses/CourseTable";
+import CourseModal from "@/components/courses/CourseModal";
 import { useAppDispatch, useAppSelector } from "@/app/hooks.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
-import type { TeachingClass, UpsertTeachingClassPayload } from "@/features/teaching-classes/types.ts";
+import type { Course, UpsertCoursePayload } from "@/features/courses/types.ts";
 import type { ApiResponse } from "@/shared/types/api-response.type";
 import {
-  createTeachingClassThunk,
-  deleteTeachingClassThunk,
-  fetchTeachingClasses,
-  updateTeachingClassThunk,
-} from "@/features/teaching-classes/teachingClassesThunks.ts";
+  createCourseThunk,
+  deleteCourseThunk,
+  fetchCourses,
+  updateCourseThunk,
+} from "@/features/courses/courseThunks.ts";
 
 export default function AdminCoursesPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const { classes, loadingList, submitting, listError } = useAppSelector(
-    (state) => state.teachingClasses
+  const { courses, loadingList, submitting, listError } = useAppSelector(
+    (state) => state.courses
   );
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
-  const [editingClass, setEditingClass] = useState<TeachingClass | null>(null);
-  const [deletingClassId, setDeletingClassId] = useState<number | null>(null);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [deletingCourseId, setDeletingCourseId] = useState<number | null>(null);
 
   useEffect(() => {
-    void dispatch(fetchTeachingClasses());
+    void dispatch(fetchCourses());
   }, [dispatch]);
 
-  const handleCreateSubmit = async (payload: UpsertTeachingClassPayload) => {
+  const handleCreateSubmit = async (payload: UpsertCoursePayload) => {
     try {
-      const res: ApiResponse<TeachingClass> = await dispatch(createTeachingClassThunk(payload)).unwrap();
+      const res: ApiResponse<Course> = await dispatch(createCourseThunk(payload)).unwrap();
       toast.success(res.message);
       setIsCreateModalOpen(false);
     } catch (err: unknown) {
@@ -45,29 +45,29 @@ export default function AdminCoursesPage() {
     }
   };
 
-  const handleUpdateSubmit = async (payload: UpsertTeachingClassPayload) => {
-    if (!editingClass) return;
+  const handleUpdateSubmit = async (payload: UpsertCoursePayload) => {
+    if (!editingCourse) return;
 
     try {
-      const res: ApiResponse<TeachingClass> = await dispatch(
-        updateTeachingClassThunk({ id: editingClass.id, payload })
+      const res: ApiResponse<Course> = await dispatch(
+        updateCourseThunk({ id: editingCourse.id, payload })
       ).unwrap();
       toast.success(res.message);
       setIsEditModalOpen(false);
-      setEditingClass(null);
+      setEditingCourse(null);
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, "Update failed"));
     }
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deletingClassId) return;
+    if (!deletingCourseId) return;
 
     try {
-      const res: ApiResponse<null> = await dispatch(deleteTeachingClassThunk(deletingClassId)).unwrap();
+      const res: ApiResponse<null> = await dispatch(deleteCourseThunk(deletingCourseId)).unwrap();
       toast.success(res.message);
       setIsDeleteConfirmOpen(false);
-      setDeletingClassId(null);
+      setDeletingCourseId(null);
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, "Delete failed"));
     }
@@ -84,7 +84,7 @@ export default function AdminCoursesPage() {
             Manage Courses
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            Create, edit, and remove teaching classes.
+            Create, edit, and remove courses.
           </p>
         </div>
 
@@ -99,41 +99,41 @@ export default function AdminCoursesPage() {
 
       {listError ? <div className="mb-6 text-red-600">{listError}</div> : null}
 
-      <TeachingClassTable
-        classes={classes}
+      <CourseTable
+        courses={courses}
         loading={loadingList}
-        onView={(item) => navigate(`/courses/${item.id}`)}
+        onView={(item) => navigate(`/admin/courses/${item.id}`)}
         onUpdate={(item) => {
-          setEditingClass(item);
-          setIsEditModalOpen(true);
-        }}
-        onDelete={(id) => {
-          setDeletingClassId(id);
-          setIsDeleteConfirmOpen(true);
-        }}
+            setEditingCourse(item);
+            setIsEditModalOpen(true);
+          }}
+          onDelete={(id) => {
+            setDeletingCourseId(id);
+            setIsDeleteConfirmOpen(true);
+          }}
         submitting={submitting}
       />
 
-      <TeachingClassModal
+      <CourseModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateSubmit}
         submitting={submitting}
-        editingClass={null}
+        editingCourse={null}
       />
 
-      <TeachingClassModal
+      <CourseModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onSubmit={handleUpdateSubmit}
         submitting={submitting}
-        editingClass={editingClass}
+        editingCourse={editingCourse}
       />
 
       <ConfirmDialog
         isOpen={isDeleteConfirmOpen}
-        title="Delete Class"
-        message="Are you sure you want to delete this class?"
+        title="Delete Course"
+        message="Are you sure you want to delete this course?"
         onCancel={() => setIsDeleteConfirmOpen(false)}
         onConfirm={handleDeleteConfirm}
         isLoading={submitting}

@@ -12,5 +12,5 @@ public enum BusinessRoles {
     IELTS_TEACHING_ADVANCED("Ielts Teaching Advanced"),
     ENGLISH_COMMUNICATION_BASIC("English Communication Basic"),
     ENGLISH_COMMUNICATION_ADVANCED("English Communication Advanced");
-    private final String lable;
+    private final String label;
 }

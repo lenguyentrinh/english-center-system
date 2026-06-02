@@ -27,8 +27,8 @@ public class BusinessRole extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "code", unique = true)
+    @Enumerated(EnumType.STRING)
     private BusinessRoles code;
 
     @Column(name = "description")

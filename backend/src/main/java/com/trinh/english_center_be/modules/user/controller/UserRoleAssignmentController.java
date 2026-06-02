@@ -1,5 +1,6 @@
 package com.trinh.english_center_be.modules.user.controller;
 
+import com.trinh.english_center_be.modules.academic.dto.CourseSuggestionResponse;
 import com.trinh.english_center_be.modules.user.dto.UserEffectiveRolesResponse;
 import com.trinh.english_center_be.modules.user.service.UserRoleAssignmentService;
 import com.trinh.english_center_be.shared.response.ApiResponse;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/users/{userId}/roles")
@@ -56,13 +59,14 @@ public class UserRoleAssignmentController {
 
     @PostMapping("/business-roles/{businessRoleId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> assignBusinessRole(
+    public ResponseEntity<ApiResponse<List<CourseSuggestionResponse>>> assignBusinessRole(
             @PathVariable Long userId,
             @PathVariable Long businessRoleId
     ) {
-        userRoleAssignmentService.assignBusinessRole(userId, businessRoleId);
+        List <CourseSuggestionResponse> suggestions =
+                userRoleAssignmentService.assignBusinessRole(userId, businessRoleId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(201, String.format(MessageConstant.ASSIGN_SUCCESSFULLY, Constant.BUSINESS_ROLE), null));
+                .body(new ApiResponse<>(201, String.format(MessageConstant.ASSIGN_SUCCESSFULLY, Constant.BUSINESS_ROLE), suggestions));
     }
 
     @DeleteMapping("/business-roles/{businessRoleId}")
