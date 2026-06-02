@@ -4,14 +4,19 @@ import BaseField from "./BaseField";
 type Props = {
   label: string;
   error?: string;
-} & React.InputHTMLAttributes<HTMLInputElement>;
+} 
 
-const InputField = forwardRef<HTMLInputElement, Props>(function InputField(
+// This allows the component to accept all standard input attributes, such as `type`, `placeholder`, `value`, `id`, etc. 
+& React.InputHTMLAttributes<HTMLInputElement>;
+
+const InputField = 
+//  `forwardRef` is used to forward the ref to the underlying input element, allowing parent components to directly access it if needed (e.g., for focusing).
+forwardRef<HTMLInputElement, Props>(function InputField(
   { label, error, ...props },
   ref
 ) {
   return (
-    <BaseField label={label} error={error}>
+    <BaseField label={label} error={error} id={props.id}>
       <input
         ref={ref}
         {...props}

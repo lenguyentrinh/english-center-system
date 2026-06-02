@@ -11,7 +11,7 @@ export default function DateField({
   ...props
 }: Props) {
   return (
-    <BaseField label={label} error={error}>
+    <BaseField label={label} error={error} id={props.id}>
       <input
         type="date"
         {...props}
