@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import com.trinh.english_center_be.modules.user.mapper.UserMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -29,15 +30,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserResponse> findAll() {
         return userRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+            .stream()
+            .map(UserMapper::toResponse)
+            .toList();
     }
 
     @Override
     public UserResponse findByIdResponse(Long id) {
         User user = findById(id);
-        return toResponse(user);
+        return UserMapper.toResponse(user);
     }
 
     @Override
@@ -66,7 +67,7 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         User savedUser = userRepository.save(user);
-        return toResponse(savedUser);
+        return UserMapper.toResponse(savedUser);
     }
 
     @Override
@@ -94,7 +95,7 @@ public class UserServiceImpl implements UserService {
         user.setStatus(request.status());
 
         User updatedUser = userRepository.save(user);
-        return toResponse(updatedUser);
+        return UserMapper.toResponse(updatedUser);
     }
 
     @Override
@@ -144,19 +145,5 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean existByEmail(String email) {
         return userRepository.existsByEmail(email);
-    }
-
-    // Mapping helper method
-    private UserResponse toResponse(User user) {
-        return new UserResponse(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getFullName(),
-                user.getPhone(),
-                user.getStatus(),
-                user.getCreatedAt(),
-                user.getUpdateAt()
-        );
     }
 }
