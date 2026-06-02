@@ -42,4 +42,17 @@ public final class BusinessRoleMapper {
                 List.of()
         );
     }
+
+    public static BusinessRoleResponse toResponseWithAssignedRoles(BusinessRole businessRole, Set<RoleResponse> assignedRoles) {
+        if (businessRole == null) return null;
+        return new BusinessRoleResponse(
+                businessRole.getId(),
+                businessRole.getCode(),
+                businessRole.getDescription(),
+                businessRole.getActive(),
+                businessRole.getCreatedAt(),
+                businessRole.getUpdateAt(),
+                assignedRoles == null ? List.of() : assignedRoles.stream().toList()
+        );
+    }
 }

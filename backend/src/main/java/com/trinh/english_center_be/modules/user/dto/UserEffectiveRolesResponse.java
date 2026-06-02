@@ -5,12 +5,11 @@ import lombok.Getter;
 
 import java.util.Set;
 
-@Getter
 @Builder
-public class UserEffectiveRolesResponse {
-    private Long userId;
-    private String username;
-    private Set<RoleResponse> directRoles;
-    private Set<BusinessRoleResponse> businessRoles;
-    private Set<RoleResponse> effectiveRoles;
-}
+public record UserEffectiveRolesResponse (
+     Long userId,
+     String username,
+     Set<RoleResponse> directRoles,
+     Set<BusinessRoleResponse> businessRoles,
+     Set<RoleResponse> effectiveRoles
+){}
