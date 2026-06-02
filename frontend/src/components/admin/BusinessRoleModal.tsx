@@ -119,6 +119,7 @@ export default function BusinessRoleModal({
         </div>
 
         <InputField
+          id="description"
           label="Description"
           placeholder="Business role description"
           error={errors.description?.message}

@@ -110,6 +110,7 @@ export default function RoleModal({
     >
       <form id="role-form" className="space-y-4" onSubmit={handleSubmit(submit)}>
         <SelectField
+          id="code"
           label="Code"
           options={roleCodeOptions}
           error={errors.code?.message}
@@ -117,6 +118,7 @@ export default function RoleModal({
         />
 
         <InputField
+          id="description"
           label="Description"
           placeholder="Role description"
           error={errors.description?.message}
@@ -124,6 +126,7 @@ export default function RoleModal({
         />
 
         <SelectField
+          id="businessRoleId"
           label="Business Role"
           error={errors.businessRoleId?.message}
           options={[
