@@ -5,6 +5,7 @@ import com.trinh.english_center_be.modules.user.dto.BusinessRoleRequest;
 import com.trinh.english_center_be.modules.user.dto.BusinessRoleResponse;
 import com.trinh.english_center_be.modules.user.dto.RoleResponse;
 import com.trinh.english_center_be.modules.user.entity.BusinessRole;
+import com.trinh.english_center_be.modules.user.service.BRoleService;
 import com.trinh.english_center_be.shared.exception.BusinessException;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
 import com.trinh.english_center_be.shared.util.Constant;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import com.trinh.english_center_be.modules.user.mapper.BusinessRoleMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class BRoleServiceImpl implements BRoleService {
 
     @Override
     public List<BusinessRoleResponse> findAll() {
-        return bRoleRepository.findAll().stream().map(this::toBusinessRoleResponseOverview).toList();
+        return bRoleRepository.findAll().stream().map(BusinessRoleMapper::toOverview).toList();
     }
 
     @Override
@@ -35,7 +37,7 @@ public class BRoleServiceImpl implements BRoleService {
         if (Boolean.FALSE.equals(businessRole.getActive())) {
             throw new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_DELETED_BY_ID, Constant.BUSINESS_ROLE, id));
         }
-        return toResponse(businessRole);
+        return BusinessRoleMapper.toResponse(businessRole);
     }
 
     @Override
@@ -54,7 +56,7 @@ public class BRoleServiceImpl implements BRoleService {
                 .active(businessRoleRequest.active() != null ? businessRoleRequest.active() : true)
                 .build();
 
-        return toResponse(bRoleRepository.save(businessRole));
+        return BusinessRoleMapper.toResponse(bRoleRepository.save(businessRole));
     }
 
     @Override
@@ -93,7 +95,7 @@ public class BRoleServiceImpl implements BRoleService {
         existing.setActive(businessRoleRequest.active());
         existing.setDescription(businessRoleRequest.description());
 
-        return toResponse(bRoleRepository.save(existing));
+        return BusinessRoleMapper.toResponse(bRoleRepository.save(existing));
     }
 
     @Override
@@ -104,34 +106,6 @@ public class BRoleServiceImpl implements BRoleService {
         bRoleRepository.save(existing);
     }
 
-    private BusinessRoleResponse toResponse(BusinessRole businessRole) {
-        List<RoleResponse> roles = businessRole.getRoles() == null ? List.of() :
-            businessRole.getRoles().stream()
-                .filter(r -> Boolean.TRUE.equals(r.getActive()))
-                .map(RoleMapper::toResponse)
-                .toList();
-
-        return new BusinessRoleResponse(
-                businessRole.getId()
-                ,businessRole.getCode()
-                ,businessRole.getDescription()
-                ,businessRole.getActive()
-                ,businessRole.getCreatedAt()
-                ,businessRole.getUpdateAt()
-                ,roles);
-
-    }
-
-    private BusinessRoleResponse toBusinessRoleResponseOverview(BusinessRole businessRole) {
-        return new BusinessRoleResponse(
-                businessRole.getId()
-               ,businessRole.getCode()
-               ,businessRole.getDescription()
-               ,businessRole.getActive()
-               ,businessRole.getCreatedAt()
-               ,businessRole.getUpdateAt()
-               , List.of()
-        );
-    }
+    
 }
 
