@@ -1,9 +1,10 @@
-package com.trinh.english_center_be.modules.user.service;
+package com.trinh.english_center_be.modules.user.service.impl;
 
 import com.trinh.english_center_be.modules.user.Repository.UserRepository;
 import com.trinh.english_center_be.modules.user.dto.UserRequest;
 import com.trinh.english_center_be.modules.user.dto.UserResponse;
 import com.trinh.english_center_be.modules.user.entity.User;
+import com.trinh.english_center_be.modules.user.service.UserService;
 import com.trinh.english_center_be.shared.enums.UserStatus;
 import com.trinh.english_center_be.shared.exception.ExistByFieldException;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;

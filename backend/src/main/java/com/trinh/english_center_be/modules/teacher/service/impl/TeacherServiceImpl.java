@@ -1,9 +1,10 @@
-package com.trinh.english_center_be.modules.teacher.service;
+package com.trinh.english_center_be.modules.teacher.service.impl;
 
 import com.trinh.english_center_be.modules.teacher.dto.TeacherResponse;
 import com.trinh.english_center_be.modules.teacher.dto.TeacherUpsertRequest;
 import com.trinh.english_center_be.modules.teacher.entity.Teacher;
 import com.trinh.english_center_be.modules.teacher.repository.TeacherRepository;
+import com.trinh.english_center_be.modules.teacher.service.TeacherService;
 import com.trinh.english_center_be.modules.user.Repository.UserRoleRepository;
 import com.trinh.english_center_be.modules.user.service.UserService;
 import com.trinh.english_center_be.shared.enums.Roles;

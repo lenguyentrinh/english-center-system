@@ -1,4 +1,4 @@
-package com.trinh.english_center_be.modules.user.service;
+package com.trinh.english_center_be.modules.user.service.impl;
 
 import com.trinh.english_center_be.modules.academic.dto.CourseSuggestionResponse;
 import com.trinh.english_center_be.modules.academic.entity.Course;
@@ -13,6 +13,9 @@ import com.trinh.english_center_be.modules.user.entity.*;
 import com.trinh.english_center_be.modules.teacher.entity.Teacher;
 import com.trinh.english_center_be.modules.teacher.repository.TeacherRepository;
 import com.trinh.english_center_be.modules.user.mapper.RoleMapper;
+import com.trinh.english_center_be.modules.user.service.BRoleService;
+import com.trinh.english_center_be.modules.user.service.UserRoleAssignmentService;
+import com.trinh.english_center_be.modules.user.service.UserService;
 import com.trinh.english_center_be.shared.enums.Roles;
 import com.trinh.english_center_be.shared.exception.BusinessException;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;

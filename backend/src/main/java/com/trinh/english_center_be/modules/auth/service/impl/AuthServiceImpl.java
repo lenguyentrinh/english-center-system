@@ -1,7 +1,8 @@
-package com.trinh.english_center_be.modules.auth.service;
+package com.trinh.english_center_be.modules.auth.service.impl;
 
 import com.trinh.english_center_be.modules.auth.dto.LoginRequest;
 import com.trinh.english_center_be.modules.auth.dto.SignupRequest;
+import com.trinh.english_center_be.modules.auth.service.AuthService;
 import com.trinh.english_center_be.modules.user.entity.Role;
 import com.trinh.english_center_be.modules.user.entity.User;
 import com.trinh.english_center_be.modules.user.service.RoleService;
@@ -24,7 +25,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AuthServiceImpl implements AuthService{
+public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;

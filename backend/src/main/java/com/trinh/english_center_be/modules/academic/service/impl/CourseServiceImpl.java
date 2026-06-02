@@ -1,9 +1,10 @@
-package com.trinh.english_center_be.modules.academic.service;
+package com.trinh.english_center_be.modules.academic.service.impl;
 
 import com.trinh.english_center_be.modules.academic.dto.CourseRequest;
 import com.trinh.english_center_be.modules.academic.dto.CourseResponse;
 import com.trinh.english_center_be.modules.academic.entity.Course;
 import com.trinh.english_center_be.modules.academic.repository.CourseRepository;
+import com.trinh.english_center_be.modules.academic.service.CourseService;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
 import com.trinh.english_center_be.modules.teacher.repository.TeacherRepository;
 import com.trinh.english_center_be.modules.teacher.entity.Teacher;

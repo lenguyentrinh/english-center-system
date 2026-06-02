@@ -1,4 +1,4 @@
-package com.trinh.english_center_be.modules.user.service;
+package com.trinh.english_center_be.modules.user.service.impl;
 
 import com.trinh.english_center_be.modules.user.Repository.BRoleRepository;
 import com.trinh.english_center_be.modules.user.dto.BusinessRoleRequest;
