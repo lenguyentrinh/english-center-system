@@ -1,9 +1,10 @@
-package com.trinh.english_center_be.modules.teacher.service;
+package com.trinh.english_center_be.modules.teacher.service.impl;
 
 import com.trinh.english_center_be.modules.teacher.dto.TeacherResponse;
 import com.trinh.english_center_be.modules.teacher.dto.TeacherUpsertRequest;
 import com.trinh.english_center_be.modules.teacher.entity.Teacher;
 import com.trinh.english_center_be.modules.teacher.repository.TeacherRepository;
+import com.trinh.english_center_be.modules.teacher.service.TeacherService;
 import com.trinh.english_center_be.modules.user.Repository.UserRoleRepository;
 import com.trinh.english_center_be.modules.user.service.UserService;
 import com.trinh.english_center_be.shared.enums.Roles;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import com.trinh.english_center_be.modules.teacher.mapper.TeacherMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +32,7 @@ public class TeacherServiceImpl implements TeacherService {
     public List<TeacherResponse> findTeachers(String role) {
         if (role == null || role.isBlank()) {
             // return all teacher
-            return teacherRepository.findAllWithUser().stream().map(this::toResponse).collect(Collectors.toList());
+            return teacherRepository.findAllWithUser().stream().map(TeacherMapper::toResponse).collect(Collectors.toList());
         }
 
         Roles roleEnum = Roles.valueOf(role);
@@ -39,19 +41,19 @@ public class TeacherServiceImpl implements TeacherService {
             return List.of();
         }
 
-        return teacherRepository.findByUserIdInWithUser(userIds).stream().map(this::toResponse).collect(Collectors.toList());
+        return teacherRepository.findByUserIdInWithUser(userIds).stream().map(TeacherMapper::toResponse).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<TeacherResponse> findById(Long id) {
-        return teacherRepository.findByIdWithUser(id).map(this::toResponse);
+        return teacherRepository.findByIdWithUser(id).map(TeacherMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<TeacherResponse> findByUserId(Long userId) {
-        return teacherRepository.findByUserIdWithUser(userId).map(this::toResponse);
+        return teacherRepository.findByUserIdWithUser(userId).map(TeacherMapper::toResponse);
     }
 
     @Override
@@ -61,12 +63,7 @@ public class TeacherServiceImpl implements TeacherService {
         Teacher t = teacherRepository.findByUserId(userId).orElseGet(() -> Teacher.builder().user(user).build());
         t.setSalary(request.salary());
         Teacher saved = teacherRepository.save(t);
-        return toResponse(saved);
+        return TeacherMapper.toResponse(saved);
     }
 
-    private TeacherResponse toResponse(Teacher t) {
-        String fullName = t.getUser() != null ? t.getUser().getFullName() : null;
-        BigDecimal salary = t.getSalary();
-        return new TeacherResponse(t.getId(), fullName, salary);
-    }
 }

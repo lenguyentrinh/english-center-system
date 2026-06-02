@@ -18,7 +18,7 @@ public final class RoleUtils {
             try {
                 res.add(Roles.valueOf(t.trim()));
             } catch (IllegalArgumentException ex) {
-                // ignore unknown
+                throw new IllegalArgumentException(String.format("Invalid role: %s", t.trim()));
             }
         }
         return res;

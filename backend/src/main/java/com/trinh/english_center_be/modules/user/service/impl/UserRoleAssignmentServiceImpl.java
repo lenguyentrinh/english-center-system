@@ -1,7 +1,8 @@
-package com.trinh.english_center_be.modules.user.service;
+package com.trinh.english_center_be.modules.user.service.impl;
 
 import com.trinh.english_center_be.modules.academic.dto.CourseSuggestionResponse;
 import com.trinh.english_center_be.modules.academic.entity.Course;
+import com.trinh.english_center_be.modules.academic.mapper.CourseMapper;
 import com.trinh.english_center_be.modules.academic.repository.CourseRepository;
 import com.trinh.english_center_be.modules.user.Repository.RoleRepository;
 import com.trinh.english_center_be.modules.user.Repository.UserBusinessRoleRepository;
@@ -13,6 +14,10 @@ import com.trinh.english_center_be.modules.user.entity.*;
 import com.trinh.english_center_be.modules.teacher.entity.Teacher;
 import com.trinh.english_center_be.modules.teacher.repository.TeacherRepository;
 import com.trinh.english_center_be.modules.user.mapper.RoleMapper;
+import com.trinh.english_center_be.modules.user.mapper.BusinessRoleMapper;
+import com.trinh.english_center_be.modules.user.service.BRoleService;
+import com.trinh.english_center_be.modules.user.service.UserRoleAssignmentService;
+import com.trinh.english_center_be.modules.user.service.UserService;
 import com.trinh.english_center_be.shared.enums.Roles;
 import com.trinh.english_center_be.shared.exception.BusinessException;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
@@ -132,8 +137,8 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
 
             if (!roleCodes.isEmpty()) {
                 suggestions = courseRepository.findByAvailableRoleTeacherInAndTeacherIsNull(roleCodes).stream()
-                        .map(c -> new CourseSuggestionResponse(c.getId(), c.getCode(), c.getName(), c.getAvailableRoleTeacher()))
-                        .toList();
+                    .map(CourseMapper::toSuggestion)
+                    .toList();
             }
         }
 
@@ -195,19 +200,18 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
         }
 
         Set<BusinessRoleResponse> businessRoles = userBusinessRoles.stream()
-                .map(ubr -> toBusinessRoleResponse(
-                        ubr.getBusinessRole(),
-                        rolesByBusinessRoleId.getOrDefault(ubr.getBusinessRole().getId(), Set.of())
-                ))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+            .map(ubr -> BusinessRoleMapper.toResponseWithAssignedRoles(
+                ubr.getBusinessRole(),
+                rolesByBusinessRoleId.getOrDefault(ubr.getBusinessRole().getId(), Set.of())
+            ))
+            .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        return UserEffectiveRolesResponse.builder()
-                .userId(user.getId())
-                .username(user.getUsername())
-                .directRoles(directRoles)
-                .businessRoles(businessRoles)
-                .effectiveRoles(effectiveRoles)
-                .build();
+        return UserMapper.toEffectiveRoles(
+            user,
+            directRoles,
+            businessRoles,
+            effectiveRoles
+        );
     }
 
     // Helper methods
@@ -270,17 +274,7 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
 
     
 
-    private BusinessRoleResponse toBusinessRoleResponse(BusinessRole businessRole, Set<RoleResponse> assignedRoles) {
-        return new BusinessRoleResponse(
-                businessRole.getId()
-                ,businessRole.getCode()
-                ,businessRole.getDescription()
-                ,businessRole.getActive()
-                ,businessRole.getCreatedAt()
-                ,businessRole.getUpdateAt()
-                ,assignedRoles.stream().toList()
-        );
-    }
+    
 
     private void createTeacherIfNotExists(User user) {
         if (teacherRepository.findByUserId(user.getId()).isPresent()) return;
