@@ -3,12 +3,9 @@ import BaseField from "./BaseField";
 import classNames from "@/shared/utils/classNames";
 
 type Props = {
-  label: string;
+  label: React.ReactNode;
   error?: string;
-} 
-
-// This allows the component to accept all standard input attributes, such as `type`, `placeholder`, `value`, `id`, etc. 
-& React.InputHTMLAttributes<HTMLInputElement>;
+} & React.InputHTMLAttributes<HTMLInputElement>;
 
 const InputField = 
 //  `forwardRef` is used to forward the ref to the underlying input element, allowing parent components to directly access it if needed (e.g., for focusing).

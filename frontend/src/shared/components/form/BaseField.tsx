@@ -1,5 +1,5 @@
 type Props = {
-  label: string;
+  label: React.ReactNode;
   error?: string;
   children: React.ReactNode;
   id?: string;

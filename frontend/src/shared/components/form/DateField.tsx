@@ -2,7 +2,7 @@ import BaseField from "./BaseField";
 import classNames from "@/shared/utils/classNames";
 
 type Props = {
-  label: string;
+  label: React.ReactNode;
   error?: string;
 } & React.InputHTMLAttributes<HTMLInputElement>;
 

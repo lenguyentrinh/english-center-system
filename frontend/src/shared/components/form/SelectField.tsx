@@ -8,7 +8,7 @@ type Option = {
 };
 
 type Props = {
-  label: string;
+  label: React.ReactNode;
   error?: string;
   options: Option[];
 } & React.SelectHTMLAttributes<HTMLSelectElement>;
