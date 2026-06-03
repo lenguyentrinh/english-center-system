@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import BaseField from "./BaseField";
+import classNames from "@/shared/utils/classNames";
 
 type Option = {
   label: string;
@@ -21,15 +22,14 @@ const SelectField = forwardRef<HTMLSelectElement, Props>(function SelectField(
       <select
         ref={ref}
         {...props}
-        
-        className={[
+        className={classNames(
           "w-full rounded-lg px-3 py-2 text-sm border",
-          error ? "border-red-500" : "border-slate-300 ",
+          error ? "border-red-500" : "border-slate-300",
           error
             ? "focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
             : "focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500",
-          props.className ?? "",
-        ].join(" ")}
+          props.className
+        )}
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

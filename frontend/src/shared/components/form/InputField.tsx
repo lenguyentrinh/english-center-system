@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import BaseField from "./BaseField";
+import classNames from "@/shared/utils/classNames";
 
 type Props = {
   label: string;
@@ -20,16 +21,14 @@ forwardRef<HTMLInputElement, Props>(function InputField(
       <input
         ref={ref}
         {...props}
-        className={
-          [
-            " w-full rounded-lg border px-3 py-2 text-sm",
-            error ? "border-red-500" : "border-slate-300",
-            error
-              ? "focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-              : "focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500",
-            props.className ?? "",
-          ].join(" ")
-        }
+        className={classNames(
+          "w-full rounded-lg px-3 py-2 text-sm border",
+          error ? "border-red-500" : "border-slate-300",
+          error
+            ? "focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+            : "focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500",
+          props.className
+        )}
       />
     </BaseField>
   );
