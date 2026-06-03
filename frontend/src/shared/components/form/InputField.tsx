@@ -14,7 +14,7 @@ forwardRef<HTMLInputElement, Props>(function InputField(
   ref
 ) {
   return (
-    <BaseField label={label} error={error} id={props.id}>
+    <BaseField label={label} error={error} id={props.id} required={props.required}>
       <input
         ref={ref}
         {...props}

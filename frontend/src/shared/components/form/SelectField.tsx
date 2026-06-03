@@ -18,7 +18,7 @@ const SelectField = forwardRef<HTMLSelectElement, Props>(function SelectField(
   ref
 ) {
   return (
-    <BaseField label={label} error={error} id={props.id}>
+    <BaseField label={label} error={error} id={props.id} required={props.required}>
       <select
         ref={ref}
         {...props}

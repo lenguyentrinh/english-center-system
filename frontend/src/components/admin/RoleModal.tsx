@@ -116,6 +116,7 @@ export default function RoleModal({
           options={roleCodeOptions}
           error={errors.code?.message}
           {...register("code")}
+          required={true}
         />
 
         <InputField
@@ -135,6 +136,7 @@ export default function RoleModal({
             ...businessRoleOptions,
           ]}
           {...register("businessRoleId")}
+          required={true}
         />
       </form>
     </Modal>
