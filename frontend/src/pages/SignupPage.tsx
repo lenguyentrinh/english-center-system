@@ -10,6 +10,7 @@ import {
   type SignupForm,
 } from "@/features/auth/validation/authSchema.ts";
 import { InputField } from "@/shared/components/form";
+import Button from "@/shared/components/Button.tsx";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -94,13 +95,9 @@ export default function SignupPage() {
           id="phone"
           required={false}
         />
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {isSubmitting ? "Creating..." : "Create account"}
-        </button>
+        <Button type="submit" size="large" className="w-full" loading={isSubmitting}>
+          Create account
+        </Button>
       </form>
 
       <p className="mt-4 text-sm text-slate-600">
