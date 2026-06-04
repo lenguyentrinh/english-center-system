@@ -20,6 +20,7 @@ import {
   loginSchema,
   type LoginForm,
 } from "@/features/auth/validation/authSchema.ts";
+import { InputField } from "@/shared/components/form";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export default function LoginPage() {
       username: "",
       password: "",
     },
+    mode: "onBlur",
   });
 
   const onSubmit = async (values: LoginForm) => {
@@ -79,30 +81,25 @@ export default function LoginPage() {
 
       <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-1">
-          <label htmlFor="username" className="text-sm font-medium text-slate-700">
-            Username
-          </label>
-          <input
-            id="username"
-            autoComplete="username"
-            {...register("username")}
-            className="w-full rounded-lg border border-slate-200 shadow-sm px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
-          <p className="text-xs text-red-500">{errors.username?.message}</p>
+            <InputField
+              label="Username"
+              placeholder="Username"
+              {...register("username")}
+              error={errors.username?.message}
+              id="username"
+              required={true}
+            />
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="password" className="text-sm font-medium text-slate-700">
-            Password
-          </label>
-          <input
-            id="password"
+          <InputField
+            label="Password"
             type="password"
-            autoComplete="current-password"
             {...register("password")}
-            className="w-full rounded-lg border border-slate-200 shadow-sm px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            error={errors.password?.message}
+            id="password"
+            required={true}
           />
-          <p className="text-xs text-red-500">{errors.password?.message}</p>
         </div>
 
         <button
