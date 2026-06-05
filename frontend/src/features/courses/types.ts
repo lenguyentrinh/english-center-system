@@ -33,3 +33,13 @@ export type UpsertCoursePayload = {
   teacherId?: number | null;
   availableRoleTeacher?: string | null;
 };
+
+export type Session = {
+  id: number;
+  sessionNo: number;
+  title: string;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
+  topic: string;
+};

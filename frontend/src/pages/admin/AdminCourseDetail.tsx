@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
 import { getCourseById } from "@/features/courses/courseApi";
 import type { Course } from "@/features/courses/types.ts";
+import SessionList from "@/shared/components/SessionList.tsx";
 
 export default function AdminCourseDetail() {
   const { id } = useParams();
@@ -91,7 +92,7 @@ export default function AdminCourseDetail() {
                 </nav>
 
                 <div className="mt-2">
-                  {activeTab === "sessions" && <div className="text-sm text-slate-600">Sessions list will appear here.</div>}
+                  {activeTab === "sessions" && course && <SessionList courseId={course.id} />}
                   {activeTab === "students" && <div className="text-sm text-slate-600">Students enrolled will appear here.</div>}
                   {activeTab === "materials" && <div className="text-sm text-slate-600">Session materials will appear here.</div>}
                   {activeTab === "settings" && <div className="text-sm text-slate-600">Course settings and teacher assignment UI.</div>}

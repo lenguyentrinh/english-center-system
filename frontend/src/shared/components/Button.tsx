@@ -9,17 +9,18 @@ type Props = {
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
+  loadingText?: string;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-slate-900 text-white hover:bg-slate-700 focus:ring-slate-500",
+    "bg-slate-900 text-white hover:bg-slate-700 active:bg-slate-800 focus:ring-slate-500",
   secondary:
-    "border border-slate-300 text-slate-700 hover:bg-slate-50 focus:ring-slate-400",
+    "border border-slate-300 text-slate-700 hover:bg-slate-50 active:bg-slate-100 focus:ring-slate-400",
   danger:
-    "bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-500",
+    "bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 focus:ring-rose-500",
   success:
-    "bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500",
+    "bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 focus:ring-emerald-500",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -29,13 +30,16 @@ const sizeStyles: Record<ButtonSize, string> = {
 };
 
 const Button = forwardRef<HTMLButtonElement, Props>(function Button(
-  { children, variant = "primary", size = "medium", loading = false, disabled, className, ...props },
+  { children, variant = "primary", size = "medium", loading = false, loadingText, disabled, className, type = "button", ...props },
   ref,
 ) {
   return (
     <button
       ref={ref}
+      type={type}
       disabled={disabled || loading}
+      aria-disabled={disabled || loading}
+      aria-busy={loading}
       className={classNames(
         "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2",
         "disabled:cursor-not-allowed disabled:opacity-60",
@@ -47,6 +51,7 @@ const Button = forwardRef<HTMLButtonElement, Props>(function Button(
     >
       {loading && <Spinner />}
       {children}
+      {loading && loadingText && <span className="sr-only">{loadingText}</span>}
     </button>
   );
 });
@@ -58,6 +63,7 @@ function Spinner() {
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
+      aria-hidden="true"
     >
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path
