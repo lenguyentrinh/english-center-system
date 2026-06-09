@@ -2,8 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Modal from "@/shared/components/Modal.tsx";
-import InputField from "@/shared/components/form/InputField.tsx";
-import SelectField from "@/shared/components/form/SelectField.tsx";
+import {InputField, SelectField } from "@/shared/components/form";
 import type { RoleResponse, RoleUpsertPayload } from "@/features/admin/types.ts";
 import { roleCodeOptions } from "@/features/admin/constants.ts";
 import { z } from "zod";
@@ -57,6 +56,7 @@ export default function RoleModal({
   } = useForm<RoleForm>({
     resolver: zodResolver(roleSchema),
     defaultValues,
+    mode: "onBlur",
   });
 
   const isEditing = !!editingRole;
@@ -110,13 +110,16 @@ export default function RoleModal({
     >
       <form id="role-form" className="space-y-4" onSubmit={handleSubmit(submit)}>
         <SelectField
+          id="code"
           label="Code"
           options={roleCodeOptions}
           error={errors.code?.message}
           {...register("code")}
+          required={true}
         />
 
         <InputField
+          id="description"
           label="Description"
           placeholder="Role description"
           error={errors.description?.message}
@@ -124,6 +127,7 @@ export default function RoleModal({
         />
 
         <SelectField
+          id="businessRoleId"
           label="Business Role"
           error={errors.businessRoleId?.message}
           options={[
@@ -131,6 +135,7 @@ export default function RoleModal({
             ...businessRoleOptions,
           ]}
           {...register("businessRoleId")}
+          required={true}
         />
       </form>
     </Modal>

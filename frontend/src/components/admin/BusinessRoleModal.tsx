@@ -3,9 +3,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Modal from "@/shared/components/Modal.tsx";
-import InputField from "@/shared/components/form/InputField.tsx";
 import type { BusinessRoleResponse, BusinessRoleUpsertPayload } from "@/features/admin/types.ts";
 import { businessRoleCodeOptions } from "@/features/admin/constants.ts";
+import { CheckboxField, InputField, SelectField } from "@/shared/components/form";
 
 const businessRoleSchema = z.object({
   code: z.enum([
@@ -51,6 +51,7 @@ export default function BusinessRoleModal({
   } = useForm<BusinessRoleForm>({
     resolver: zodResolver(businessRoleSchema),
     defaultValues,
+    mode: "onBlur",
   });
 
   const isEditing = !!editingBusinessRole;
@@ -104,31 +105,29 @@ export default function BusinessRoleModal({
     >
       <form id="business-role-form" className="space-y-4" onSubmit={handleSubmit(submit)}>
         <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700">Code</label>
-          <select
+          <SelectField
+            label="Code"
+            error={errors.code?.message}
+            options={businessRoleCodeOptions}
             {...register("code")}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          >
-            {businessRoleCodeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          {errors.code?.message ? <p className="text-xs text-red-500">{errors.code.message}</p> : null}
-        </div>
+            id="code"
+            required={true}
+          />
+        </div> 
 
         <InputField
+          id="description"
           label="Description"
           placeholder="Business role description"
           error={errors.description?.message}
           {...register("description")}
         />
 
-        <label className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
-          <input type="checkbox" className="h-4 w-4 rounded border-slate-300" {...register("active")} />
-          Active
-        </label>
+        <CheckboxField
+          id="active"
+          label="Active"
+          {...register("active")}
+        />
       </form>
     </Modal>
   );

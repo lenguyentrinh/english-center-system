@@ -7,6 +7,7 @@ public class Constant {
     public static final String BUSINESS_ROLE="Business role";
     public static final String COURSE="Course";
     public static final String TEACHER="Teacher";
+    public static final String SESSION="Session";
 
     //field
     public static final String CODE_FIELD = "Role";

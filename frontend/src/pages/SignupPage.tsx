@@ -9,6 +9,8 @@ import {
   signupSchema,
   type SignupForm,
 } from "@/features/auth/validation/authSchema.ts";
+import { InputField } from "@/shared/components/form";
+import Button from "@/shared/components/Button.tsx";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ export default function SignupPage() {
       fullName: "",
       phone: "",
     },
+    mode: "onBlur",
   });
 
   const onSubmit = async (values: SignupForm) => {
@@ -43,56 +46,58 @@ export default function SignupPage() {
     }
   };
 
+
   return (
     <AuthLayout>
       <h1 className="text-2xl font-bold text-slate-900">Create account</h1>
       <p className="mt-1 text-sm text-slate-600">Register a new student account.</p>
 
       <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        <input
+        <InputField
+          label="Username"
           placeholder="Username"
           {...register("username")}
-          className="w-full rounded-lg border border-slate-200 shadow-sm px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          error={errors.username?.message}
+          id="username"
+          required={true}
         />
-        <p className="text-xs text-red-500">{errors.username?.message}</p>
-
-        <input
+        <InputField
+          label="Password"
           type="password"
           placeholder="Password"
           {...register("password")}
-          className="w-full rounded-lg border border-slate-200 shadow-sm px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          error={errors.password?.message}
+          id="password"
+          required={true}
         />
-        <p className="text-xs text-red-500">{errors.password?.message}</p>
-
-        <input
+        <InputField
+          label="Email"
           type="email"
           placeholder="Email"
           {...register("email")}
-          className="w-full rounded-lg border border-slate-200 shadow-sm px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          error={errors.email?.message}
+          id="email"
+          required={true}
         />
-        <p className="text-xs text-red-500">{errors.email?.message}</p>
-
-        <input
+        <InputField
+          label="Full Name"
           placeholder="Full name"
           {...register("fullName")}
-          className="w-full rounded-lg border border-slate-200 shadow-sm px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          error={errors.fullName?.message}
+          id="fullName"
+          required={true}
         />
-        <p className="text-xs text-red-500">{errors.fullName?.message}</p>
-
-        <input
-          placeholder="Phone (optional)"
+        <InputField
+          label="Phone"
+          placeholder="Phone"
           {...register("phone")}
-          className="w-full rounded-lg border border-slate-200 shadow-sm px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          error={errors.phone?.message}
+          id="phone"
+          required={false}
         />
-        <p className="text-xs text-red-500">{errors.phone?.message}</p>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {isSubmitting ? "Creating..." : "Create account"}
-        </button>
+        <Button type="submit" size="large" className="w-full" loading={isSubmitting}>
+          Create account
+        </Button>
       </form>
 
       <p className="mt-4 text-sm text-slate-600">

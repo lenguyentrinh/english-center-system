@@ -6,6 +6,7 @@ import { courseSchema, type CourseForm } from "@/features/courses/courseSchema.t
 import { getTeachers, type TeacherItem } from "@/features/teachers/teachersApi";
 import { getRoles } from "@/features/admin/adminApi";
 import type { RoleResponse } from "@/features/admin/types.ts";
+import { InputField, SelectField, CheckboxField } from "@/shared/components/form";
 
 interface Props {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export default function CourseModal({ isOpen, onClose, onSubmit, submitting, edi
   const { register, control, handleSubmit, reset, watch, formState: { errors } } = useForm<CourseForm>({
     resolver: zodResolver(courseSchema),
     defaultValues,
+    mode: "onBlur",
   });
   const isEditing = !!editingCourse;
 
@@ -97,73 +99,98 @@ export default function CourseModal({ isOpen, onClose, onSubmit, submitting, edi
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6">
           <div>
-            <label className="text-sm font-medium text-slate-700">Code</label>
-            <input {...register("code")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-            <p className="text-xs text-red-500">{errors.code?.message}</p>
+            <InputField
+              label="Code"
+              placeholder="Course code"
+              {...register("code")}
+              error={errors.code?.message}
+              id="code"
+              required={true}
+            />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Name</label>
-            <input {...register("name")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-            <p className="text-xs text-red-500">{errors.name?.message}</p>
+            <InputField
+              label="Name"
+              placeholder="Course name"
+              {...register("name")}
+              error={errors.name?.message}
+              id="name"
+              required={true}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-slate-700">Start</label>
-              <input type="date" {...register("startDate")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-              <p className="text-xs text-red-500">{errors.startDate?.message}</p>
+              <InputField
+                label="Start"
+                type="date"
+                {...register("startDate")}
+                error={errors.startDate?.message}
+                id="startDate"
+                required={true}
+              />
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700">End</label>
-              <input type="date" {...register("endDate")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-              <p className="text-xs text-red-500">{errors.endDate?.message}</p>
+              <InputField
+                label="End"
+                type="date"
+                {...register("endDate")}
+                error={errors.endDate?.message}
+                id="endDate"
+                required={true}
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-slate-700">Minimum age</label>
-              <input type="number" {...register("minimumAge", { valueAsNumber: true })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-              <p className="text-xs text-red-500">{errors.minimumAge?.message}</p>
+              <InputField
+                label="Minimum age"
+                type="number"
+                {...register("minimumAge", { valueAsNumber: true })}
+                error={errors.minimumAge?.message}
+                id="minimumAge"
+                required={true}
+              />
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700">Entry level</label>
-              <input {...register("requiredEntryLevel")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-              <p className="text-xs text-red-500">{errors.requiredEntryLevel?.message}</p>
+              <InputField
+                label="Entry level"
+                placeholder="Required entry level"
+                {...register("requiredEntryLevel")}
+                error={errors.requiredEntryLevel?.message}
+                id="requiredEntryLevel"
+                required={true}
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center gap-3">
-              <input type="checkbox" {...register("prerequisitesRequired")} className="h-4 w-4" />
-              <label className="text-sm font-medium text-slate-700">Prerequisites required</label>
+              <CheckboxField
+                label="Prerequisites required"
+                error={errors.prerequisitesRequired?.message}
+                id="prerequisitesRequired"
+                {...register("prerequisitesRequired")}
+              />
             </div>
             <div>
-                <label className="text-sm font-medium text-slate-700">Available teacher role</label>
-                <select {...register("availableRoleTeacher")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                  {teacherRoles.length === 0 ? (
-                    <>
-                      <option value="TEACHER">Teacher</option>
-                      <option value="TEACHER_IELTS_6">IELTS 6.0</option>
-                      <option value="TEACHER_IELTS_7">IELTS 7.0</option>
-                      <option value="TEACHER_IELTS_8">IELTS 8.0</option>
-                      <option value="TEACHER_TOEIC_650">TOEIC 650+</option>
-                      <option value="TEACHER_TOEIC_750">TOEIC 750+</option>
-                      <option value="TEACHER_TOEIC_850">TOEIC 850+</option>
-                    </>
-                  ) : (
-                    teacherRoles.map((r) => (
-                      <option key={r.id} value={r.code}>{r.description ?? r.code}</option>
-                    ))
-                  )}
-                </select>
+              <SelectField
+                label="Available teacher role"
+                error={errors.availableRoleTeacher?.message}
+                options={teacherRoles.map(r => ({ value: r.code, label: r.description ?? r.code }))}
+                {...register("availableRoleTeacher")}
+                id="availableRoleTeacher"
+                required={true}
+              />
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Teacher</label>
+            <label htmlFor="teacherId" className="text-sm font-medium text-slate-700">Teacher</label>
             <Controller
               control={control}
               name="teacherId"
               render={({ field }) => (
                 <select
                   {...field}
+                  id="teacherId"
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 >
@@ -186,17 +213,28 @@ export default function CourseModal({ isOpen, onClose, onSubmit, submitting, edi
             <p className="text-xs text-red-500">{errors.teacherId?.message}</p>
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Max Students</label>
-            <input type="number" {...register("maxStudent", { valueAsNumber: true })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-            <p className="text-xs text-red-500">{errors.maxStudent?.message}</p>
+            <InputField
+              label="Max Students"
+              type="number"
+              {...register("maxStudent", { valueAsNumber: true })}
+              error={errors.maxStudent?.message}
+              id="maxStudent"
+              required={true}
+            />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Status</label>
-            <select {...register("status")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-              <option value="OPEN">OPEN</option>
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="CLOSED">CLOSED</option>
-            </select>
+            <SelectField
+              label="Status"
+              error={errors.status?.message}
+              options={[
+                { value: "OPEN", label: "OPEN" },
+                { value: "ACTIVE", label: "ACTIVE" },
+                { value: "CLOSED", label: "CLOSED" },
+              ]}
+              {...register("status")}
+              id="status"
+              required={true}
+            />
           </div>
           <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm border rounded-lg">Cancel</button>
