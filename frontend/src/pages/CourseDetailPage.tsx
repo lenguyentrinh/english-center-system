@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import Button from "@/shared/components/Button.tsx";
 import PublicLayout from "@/shared/components/layout/PublicLayout.tsx";
 import { getCourseById } from "@/features/courses/courseApi.ts";
 import type { Course } from "@/features/courses/types.ts";
@@ -138,13 +139,9 @@ export default function CourseDetailPage() {
                   The UI is ready for enrollment. Once the backend exposes an enrollment endpoint, this button can be wired without changing the page structure.
                 </p>
 
-                <button
-                  type="button"
-                  onClick={handleEnroll}
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-                >
+                <Button size="large" className="mt-6 w-full rounded-full" onClick={handleEnroll}>
                   Enroll
-                </button>
+                </Button>
               </div>
 
               <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">

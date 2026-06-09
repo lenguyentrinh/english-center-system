@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import Button from "@/shared/components/Button.tsx";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
 import ConfirmDialog from "@/shared/components/ConfirmDialog.tsx";
 import CourseTable from "@/components/courses/CourseTable";
@@ -88,13 +89,7 @@ export default function AdminCoursesPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsCreateModalOpen(true)}
-          className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-        >
-          Add Course
-        </button>
+        <Button onClick={() => setIsCreateModalOpen(true)}>Add Course</Button>
       </div>
 
       {listError ? <div className="mb-6 text-red-600">{listError}</div> : null}

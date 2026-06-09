@@ -6,6 +6,7 @@ import { courseSchema, type CourseForm } from "@/features/courses/courseSchema.t
 import { getTeachers, type TeacherItem } from "@/features/teachers/teachersApi";
 import { getRoles } from "@/features/admin/adminApi";
 import type { RoleResponse } from "@/features/admin/types.ts";
+import Button from "@/shared/components/Button.tsx";
 import { InputField, SelectField, CheckboxField } from "@/shared/components/form";
 
 interface Props {
@@ -237,10 +238,8 @@ export default function CourseModal({ isOpen, onClose, onSubmit, submitting, edi
             />
           </div>
           <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm border rounded-lg">Cancel</button>
-            <button type="submit" disabled={submitting} className="px-4 py-2 text-sm bg-slate-900 text-white rounded-lg">
-              {submitting ? "Saving..." : isEditing ? "Update" : "Create"}
-            </button>
+            <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+            <Button type="submit" loading={submitting}>{submitting ? "Saving..." : isEditing ? "Update" : "Create"}</Button>
           </div>
         </form>
       </div>

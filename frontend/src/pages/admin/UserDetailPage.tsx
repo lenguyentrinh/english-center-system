@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import Button from "@/shared/components/Button.tsx";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
 import ConfirmDialog from "@/shared/components/ConfirmDialog.tsx";
 import {
@@ -352,14 +353,7 @@ export default function UserDetailPage() {
                       </option>
                     ))}
                   </select>
-                  <button
-                    type="button"
-                    onClick={handleAssignRole}
-                    disabled={!selectedRoleId || submitting}
-                    className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Assign Role
-                  </button>
+                  <Button onClick={handleAssignRole} disabled={!selectedRoleId || submitting}>Assign Role</Button>
                 </div>
               </div>
             </article>
@@ -403,14 +397,7 @@ export default function UserDetailPage() {
                       </option>
                     ))}
                   </select>
-                  <button
-                    type="button"
-                    onClick={handleAssignBusinessRole}
-                    disabled={!selectedBusinessRoleId || submitting}
-                    className="w-full rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Assign Business Role
-                  </button>
+                  <Button className="w-full" onClick={handleAssignBusinessRole} disabled={!selectedBusinessRoleId || submitting}>Assign Business Role</Button>
                 </div>
               </div>
             </article>
@@ -509,8 +496,8 @@ export default function UserDetailPage() {
               </div>
             </div>
             <div className="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
-              <button onClick={() => setSuggestedModalOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg">Cancel</button>
-              <button onClick={handleConfirmAssignSuggested} disabled={submitting} className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50">{submitting ? 'Assigning...' : 'Assign Selected'}</button>
+              <Button variant="secondary" onClick={() => setSuggestedModalOpen(false)}>Cancel</Button>
+              <Button onClick={handleConfirmAssignSuggested} loading={submitting}>{submitting ? 'Assigning...' : 'Assign Selected'}</Button>
             </div>
           </div>
         </div>
