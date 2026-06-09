@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import Button from "@/shared/components/Button.tsx";
 import { logout } from "@/features/auth/authApi.ts";
 import {
   AUTH_CHANGED_EVENT,
@@ -172,13 +173,14 @@ export default function Header() {
 
               <div className="mt-2 border-t border-slate-100 pt-2">
                 {authed ? (
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
-                  >
-                    Logout
-                  </button>
+            <Button
+              type="button"
+              variant="danger"
+              className="w-full !justify-start rounded-xl px-3 py-2 text-sm"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
                 ) : (
                   <Link
                     to="/auth/login"

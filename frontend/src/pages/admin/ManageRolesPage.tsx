@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import Button from "@/shared/components/Button.tsx";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
 import ConfirmDialog from "@/shared/components/ConfirmDialog.tsx";
 import RoleModal from "@/components/admin/RoleModal.tsx";
@@ -142,13 +143,7 @@ export default function ManageRolesPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-        >
-          Add Role
-        </button>
+        <Button onClick={handleOpenCreate}>Add Role</Button>
       </div>
 
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -211,20 +206,8 @@ export default function ManageRolesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(role)}
-                          className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingRole(role)}
-                          className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50"
-                        >
-                          Delete
-                        </button>
+                        <Button size="small" variant="secondary" onClick={() => handleOpenEdit(role)}>Edit</Button>
+                        <Button size="small" variant="danger" onClick={() => setDeletingRole(role)}>Delete</Button>
                       </div>
                     </td>
                   </tr>

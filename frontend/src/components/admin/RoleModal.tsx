@@ -2,34 +2,11 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Modal from "@/shared/components/Modal.tsx";
+import Button from "@/shared/components/Button.tsx";
 import {InputField, SelectField } from "@/shared/components/form";
 import type { RoleResponse, RoleUpsertPayload } from "@/features/admin/types.ts";
 import { roleCodeOptions } from "@/features/admin/constants.ts";
-import { z } from "zod";
-
-const roleSchema = z.object({
-  code: z.enum([
-    "ADMIN",
-    "TEACHER",
-    "STUDENT",
-    "TEACHER_IELTS_6",
-    "TEACHER_IELTS_7",
-    "TEACHER_IELTS_8",
-    "TEACHER_TOEIC_650",
-    "TEACHER_TOEIC_750",
-    "TEACHER_TOEIC_850",
-  ]),
-  description: z.string().max(500, "Description must be at most 500 characters").optional().or(z.literal("")),
-  businessRoleId: z.string().optional().or(z.literal("")),
-});
-
-type RoleForm = z.infer<typeof roleSchema>;
-
-const defaultValues: RoleForm = {
-  code: "ADMIN",
-  description: "",
-  businessRoleId: "",
-};
+import { roleSchema, defaultRoleValues, type RoleForm } from "@/features/admin/roleSchema.ts";
 
 type Props = {
   isOpen: boolean;
@@ -55,7 +32,7 @@ export default function RoleModal({
     formState: { errors },
   } = useForm<RoleForm>({
     resolver: zodResolver(roleSchema),
-    defaultValues,
+    defaultValues: defaultRoleValues,
     mode: "onBlur",
   });
 
@@ -71,7 +48,7 @@ export default function RoleModal({
         businessRoleId: editingRole.businessRoleId ? String(editingRole.businessRoleId) : "",
       });
     } else {
-      reset(defaultValues);
+      reset(defaultRoleValues);
     }
   }, [isOpen, editingRole, reset]);
 
@@ -90,21 +67,10 @@ export default function RoleModal({
       onClose={onClose}
       footer={
         <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            form="role-form"
-            disabled={submitting}
-            className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
-          >
+          <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button type="submit" form="role-form" loading={submitting}>
             {submitting ? "Saving..." : isEditing ? "Update Role" : "Create Role"}
-          </button>
+          </Button>
         </div>
       }
     >
