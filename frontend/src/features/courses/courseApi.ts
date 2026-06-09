@@ -1,6 +1,6 @@
 import { apiClient } from "@/shared/api/client.ts";
 import type { ApiResponse } from "@/shared/types/api-response.type";
-import type { Course, UpsertCoursePayload, Session } from "./types.ts";
+import type { Course, UpsertCoursePayload, Session, UpsertSessionPayload } from "./types.ts";
 
 function mapServerCourseToClient(server: any): Course {
   return {
@@ -56,5 +56,27 @@ export const deleteCourse = async (id: number): Promise<ApiResponse<null>> => {
 
 export const getSessionsByCourseId = async (courseId: number): Promise<ApiResponse<Session[]>> => {
   const { data } = await apiClient.get<ApiResponse<Session[]>>(`/courses/${courseId}/sessions`);
+  return data;
+};
+
+export const createSession = async (
+  courseId: number,
+  payload: UpsertSessionPayload,
+): Promise<ApiResponse<Session>> => {
+  const { data } = await apiClient.post<ApiResponse<Session>>(`/courses/${courseId}/sessions`, payload);
+  return data;
+};
+
+export const updateSession = async (
+  courseId: number,
+  sessionId: number,
+  payload: UpsertSessionPayload,
+): Promise<ApiResponse<Session>> => {
+  const { data } = await apiClient.put<ApiResponse<Session>>(`/courses/${courseId}/sessions/${sessionId}`, payload);
+  return data;
+};
+
+export const deleteSession = async (courseId: number, sessionId: number): Promise<ApiResponse<null>> => {
+  const { data } = await apiClient.delete<ApiResponse<null>>(`/courses/${courseId}/sessions/${sessionId}`);
   return data;
 };
