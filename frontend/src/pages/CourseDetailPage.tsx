@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Button from "@/shared/components/Button.tsx";
 import PublicLayout from "@/shared/components/layout/PublicLayout.tsx";
-import { getCourseById } from "@/features/courses/courseApi.ts";
-import type { Course } from "@/features/courses/types.ts";
-import { getApiErrorMessage } from "@/shared/api/error.ts";
+import { useAppDispatch, useAppSelector } from "@/app/hooks.ts";
+import { fetchCourseById } from "@/features/courses/courseThunks.ts";
 import { isAuthenticated } from "@/features/auth/authSession.ts";
 
 const formatDate = (value: string) =>
@@ -29,36 +28,19 @@ const getDurationLabel = (startDate: string, endDate: string) => {
 export default function CourseDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const courseId = Number(id);
 
-  const [course, setCourse] = useState<Course | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { selectedCourse: course, loadingDetail: loading, detailError: error } = useAppSelector((state) => state.courses);
 
   useEffect(() => {
     if (!Number.isFinite(courseId)) {
-      setError("Invalid course id");
-      setLoading(false);
+      toast.error("Invalid course id");
       return;
     }
 
-    const loadCourse = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await getCourseById(courseId);
-        setCourse(res.data);
-      } catch (err) {
-        const message = getApiErrorMessage(err, "Failed to load course detail");
-        setError(message);
-        toast.error(message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void loadCourse();
-  }, [courseId]);
+    void dispatch(fetchCourseById(courseId));
+  }, [courseId, dispatch]);
 
   const durationLabel = useMemo(
     () => (course ? getDurationLabel(course.startDate, course.endDate) : "-"),
