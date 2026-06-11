@@ -135,8 +135,9 @@ If exceeding limits, break into multiple tasks.
   ```
   features/myfeature/
     ├── myfeatureApi.ts         (API calls)
+    ├── myfeatureThunks.ts      (createAsyncThunk operations)
+    ├── myfeatureSlice.ts       (Redux slice)
     ├── types.ts                (TypeScript types)
-    ├── myfeatureSlice.ts       (Redux slice, if needed)
     ├── pages/                  (route pages)
     └── components/             (feature components)
   ```

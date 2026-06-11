@@ -133,7 +133,7 @@ service/impl/AuthServiceImpl.java (@Service)
 - No useState for data that multiple components need
 - useState OK only for UI state (collapsed, modal open, etc.)
 - Use thunks for async API calls
-- Auth state lives in BOTH Redux AND `sessionStorage` (for persistence across tabs)
+- Auth state uses `sessionStorage` + custom events (`authSession.ts`/`authIdentity.ts`) — NOT Redux (auth is session-scoped, no data-fetching benefit from Redux)
 
 **Prevents:** Prop drilling, state synchronization bugs, lost auth on page reload
 

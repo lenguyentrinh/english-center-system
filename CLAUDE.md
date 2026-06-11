@@ -32,7 +32,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **State Management**: Redux Toolkit + React Redux
 - **Forms**: React Hook Form + Zod validation
 - **HTTP Client**: Axios
-- **Async State**: TanStack Query
+- **Async State**: Redux Toolkit (createAsyncThunk + createSlice)
 - **UI Notifications**: React Toastify
 - **Linting**: ESLint (flat config) with TypeScript & React Hooks plugins
 

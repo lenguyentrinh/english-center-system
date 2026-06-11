@@ -39,9 +39,12 @@ This document tracks ongoing work and enables seamless handoffs between sessions
 
 ### Frontend Features Implemented
 - **auth**: Login/logout, session management via sessionStorage
-- **courses**: Course list and management (Redux slice exists)
-- **admin**: Admin dashboard basics (Redux slice exists)
-- **teachers**: Teacher list and management (Redux slice exists)
+- **courses**: Course list and management (Redux slice + thunks connected)
+- **admin**: Full CRUD for users/roles/business roles via Redux (14 thunks + slice)
+- **teachers**: Teacher list via Redux (thunks + slice connected)
+- **session**: Session list by course via Redux thunks
+- **UI components**: Shared Button component used across 15+ pages
+- **Form schemas**: Extracted to feature-level files (businessRoleSchema, roleSchema)
 
 ### Developer Experience
 - ✅ CLAUDE.md - Developer guidance and setup instructions
@@ -54,7 +57,7 @@ This document tracks ongoing work and enables seamless handoffs between sessions
 
 ## In Progress
 
-None currently. (Last session completed repository setup & documentation)
+None currently. (Refactoring: shared Button + Redux thunks/slices for admin/teachers/sessions complete)
 
 ---
 
@@ -77,14 +80,13 @@ None currently. (Last session completed repository setup & documentation)
 - Owner: spring-boot-engineer
 
 #### 2. **Frontend Course Pages** (Frontend)
-- Status: Not started
+- Status: Partial — pages exist and connected to Redux, forms need UI polish
 - Details:
-  - Need CourseListPage component showing all courses
-  - Need CourseDetailPage for single course view
-  - Need course creation/edit form
-  - Integrate with courseApi.ts endpoints
-  - Connect to Redux course slice
-- Action: Create pages and form components following feature-based structure
+  - CourseListPage (HomePage/CoursesPage): exists, connected via Redux thunks
+  - CourseDetailPage: exists with session list, connected via Redux
+  - Course creation/edit form: CourseModal exists but may need UX improvement
+  - All connected to courseApi.ts endpoints via Redux thunks
+- Action: Review UI/UX of course forms and detail pages
 - Modules affected: courses feature
 - Owner: react-ts-engineer
 
@@ -232,9 +234,9 @@ None currently. (Last session completed repository setup & documentation)
 
 ### Decision: Redux for Frontend State
 - **Why**: Predictable state management, time-travel debugging, SSR-ready
-- **How**: One slice per feature, thunks for async, sessionStorage for auth
+- **How**: One slice per feature (courses, admin, teachers), thunks for async, sessionStorage for auth
 - **Trade-off**: More boilerplate than useState, but better for shared state
-- **Status**: Implemented partially (auth, courses, admin, teachers)
+- **Status**: Implemented for courses, admin (14 thunks), teachers (thunks + slices), sessions
 
 ### Decision: JWT + SessionStorage (No Refresh Tokens)
 - **Why**: Simpler for MVP, suitable for same-site SPA
@@ -297,7 +299,8 @@ None currently. (Last session completed repository setup & documentation)
 - Some entities incomplete (Student needs relationships)
 - Attendance module exists but no service layer
 - Frontend error handling needs consistent approach
-- Form validation partial (only auth forms done)
+- Form validation partial (only auth + business roles + roles done)
+- 27 pre-existing ESLint errors (mostly `no-explicit-any` in API files) — needs cleanup
 
 ### For Next AI Session
 - Read RULE.md first (architectural constraints)
