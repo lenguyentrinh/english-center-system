@@ -2,24 +2,20 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Button from "@/shared/components/Button.tsx";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
-import { getCourseById } from "@/features/courses/courseApi";
-import type { Course } from "@/features/courses/types.ts";
+import { useAppDispatch, useAppSelector } from "@/app/hooks.ts";
+import { fetchCourseById } from "@/features/courses/courseThunks.ts";
 import SessionList from "@/shared/components/SessionList.tsx";
 
 export default function AdminCourseDetail() {
   const { id } = useParams();
-  const [course, setCourse] = useState<Course | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { selectedCourse: course, loadingDetail: loading } = useAppSelector((state) => state.courses);
   const [activeTab, setActiveTab] = useState<string>("sessions");
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
-    void getCourseById(Number(id))
-      .then((res) => setCourse(res.data))
-      .catch(() => setCourse(null))
-      .finally(() => setLoading(false));
-  }, [id]);
+    void dispatch(fetchCourseById(Number(id)));
+  }, [id, dispatch]);
 
   const statusBadgeClass: { [key: string]: string } = {
     OPEN: "rounded-full px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800",
@@ -105,4 +101,3 @@ export default function AdminCourseDetail() {
     </AdminLayout>
   );
 }
-

@@ -4,19 +4,15 @@ import Button from "@/shared/components/Button.tsx";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
 import ConfirmDialog from "@/shared/components/ConfirmDialog.tsx";
 import RoleModal from "@/components/admin/RoleModal.tsx";
+import { useAppDispatch, useAppSelector } from "@/app/hooks.ts";
 import {
-  createRole,
-  deleteRole,
-  getBusinessRoles,
-  getRoles,
-  updateRole,
-} from "@/features/admin/adminApi.ts";
-import type {
-  BusinessRoleResponse,
-  RoleResponse,
-  RoleUpsertPayload,
-} from "@/features/admin/types.ts";
-import { getApiErrorMessage } from "@/shared/api/error.ts";
+  createRoleThunk,
+  deleteRoleThunk,
+  fetchBusinessRoles,
+  fetchRoles,
+  updateRoleThunk,
+} from "@/features/admin/adminThunks.ts";
+import type { RoleResponse, RoleUpsertPayload } from "@/features/admin/types.ts";
 
 const badgeClass = (active: boolean) =>
   active
@@ -24,35 +20,18 @@ const badgeClass = (active: boolean) =>
     : "bg-slate-100 text-slate-600";
 
 export default function ManageRolesPage() {
-  const [roles, setRoles] = useState<RoleResponse[]>([]);
-  const [businessRoles, setBusinessRoles] = useState<BusinessRoleResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const { roles, businessRoles, loadingRoles: loadingRolesState, loadingBusinessRoles: loadingBusinessRolesState, submitting, error } = useAppSelector((state) => state.admin);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<RoleResponse | null>(null);
   const [deletingRole, setDeletingRole] = useState<RoleResponse | null>(null);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const [rolesRes, businessRolesRes] = await Promise.all([getRoles(), getBusinessRoles()]);
-      setRoles(rolesRes.data);
-      setBusinessRoles(businessRolesRes.data);
-    } catch (err) {
-      const message = getApiErrorMessage(err, "Failed to load roles");
-      setError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = loadingRolesState || loadingBusinessRolesState;
 
   useEffect(() => {
-    void loadData();
-  }, []);
+    void dispatch(fetchRoles());
+    void dispatch(fetchBusinessRoles());
+  }, [dispatch]);
 
   const businessRoleOptions = useMemo(
     () =>
@@ -96,19 +75,15 @@ export default function ManageRolesPage() {
 
   const handleSubmit = async (payload: RoleUpsertPayload) => {
     try {
-      setSubmitting(true);
-
       const res = editingRole
-        ? await updateRole(editingRole.id, payload)
-        : await createRole(payload);
+        ? await dispatch(updateRoleThunk({ id: editingRole.id, payload })).unwrap()
+        : await dispatch(createRoleThunk(payload)).unwrap();
 
       toast.success(res.message);
       closeModal();
-      await loadData();
+      void dispatch(fetchRoles());
     } catch (err) {
-      toast.error(getApiErrorMessage(err, editingRole ? "Failed to update role" : "Failed to create role"));
-    } finally {
-      setSubmitting(false);
+      toast.error(err as string);
     }
   };
 
@@ -116,15 +91,12 @@ export default function ManageRolesPage() {
     if (!deletingRole) return;
 
     try {
-      setSubmitting(true);
-      const res = await deleteRole(deletingRole.id);
+      const res = await dispatch(deleteRoleThunk(deletingRole.id)).unwrap();
       toast.success(res.message);
       setDeletingRole(null);
-      await loadData();
+      void dispatch(fetchRoles());
     } catch (err) {
-      toast.error(getApiErrorMessage(err, "Failed to delete role"));
-    } finally {
-      setSubmitting(false);
+      toast.error(err as string);
     }
   };
 

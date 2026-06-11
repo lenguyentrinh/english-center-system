@@ -1,11 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
 import PublicLayout from "@/shared/components/layout/PublicLayout.tsx";
 import CourseCard from "@/shared/components/CourseCard.tsx";
-import { getCourses } from "@/features/courses/courseApi.ts";
-import type { Course } from "@/features/courses/types.ts";
-import { getApiErrorMessage } from "@/shared/api/error.ts";
+import { useAppDispatch, useAppSelector } from "@/app/hooks.ts";
+import { fetchCourses } from "@/features/courses/courseThunks.ts";
 
 const whyChooseUs = [
   "Native and Vietnamese teachers working together",
@@ -30,28 +28,12 @@ const testimonials = [
 ];
 
 export default function HomePage() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadCourses = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await getCourses();
-      setCourses(res.data);
-    } catch (err) {
-      const message = getApiErrorMessage(err, "Failed to load featured courses");
-      setError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const dispatch = useAppDispatch();
+  const { courses, loadingList: loading, listError: error } = useAppSelector((state) => state.courses);
 
   useEffect(() => {
-    void loadCourses();
-  }, []);
+    void dispatch(fetchCourses());
+  }, [dispatch]);
 
   const featuredCourses = useMemo(
     () => [...courses].sort((left, right) => right.id - left.id).slice(0, 4),
