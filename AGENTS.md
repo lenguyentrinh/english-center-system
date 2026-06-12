@@ -215,6 +215,17 @@ pnpm run build           # TypeScript + Vite build
 - Check browser console for errors
 - Test against running backend (port 8080)
 
+---------------------------------------------
+Available project skills:
+
+- .agents/skills/design-taste-frontend/SKILL.md
+
+When generating or modifying frontend code:
+- Read and apply this skill first
+- Follow its design principles
+- Explain which principles are being applied
+----------------------------------------------
+
 ### Manual Testing Checklist
 
 For each new/modified feature:
