@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Button from "@/shared/components/Button.tsx";
 import Header from "@/shared/components/layout/Header.tsx";
 import Footer from "@/shared/components/layout/Footer.tsx";
 import CourseTable from "@/components/courses/CourseTable";
@@ -81,12 +82,7 @@ export default function CoursesManagePage() {
               <h1 className="text-3xl font-bold text-slate-900">Courses</h1>
               <p className="mt-1 text-sm text-slate-600">Manage all your courses in one place</p>
             </div>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700"
-            >
-              Add Course
-            </button>
+            <Button onClick={() => setIsCreateModalOpen(true)}>Add Course</Button>
           </div>
 
           {listError && <div className="mb-6 text-red-600">{listError}</div>}

@@ -4,15 +4,18 @@ import {
   deleteCourseThunk,
   fetchCourseById,
   fetchCourses,
+  fetchSessionsByCourseId,
   updateCourseThunk,
 } from "./courseThunks.ts";
-import type { Course } from "./types.ts";
+import type { Course, Session } from "./types.ts";
 
 type CoursesState = {
   courses: Course[];
   selectedCourse: Course | null;
+  sessions: Session[];
   loadingList: boolean;
   loadingDetail: boolean;
+  loadingSessions: boolean;
   submitting: boolean;
   listError: string | null;
   detailError: string | null;
@@ -22,8 +25,10 @@ type CoursesState = {
 const initialState: CoursesState = {
   courses: [],
   selectedCourse: null,
+  sessions: [],
   loadingList: false,
   loadingDetail: false,
+  loadingSessions: false,
   submitting: false,
   listError: null,
   detailError: null,
@@ -112,6 +117,17 @@ const courseSlice = createSlice({
       .addCase(deleteCourseThunk.rejected, (state, action) => {
         state.submitting = false;
         state.mutationError = action.payload ?? action.error.message ?? "Failed to delete course";
+      })
+      .addCase(fetchSessionsByCourseId.pending, (state) => {
+        state.loadingSessions = true;
+      })
+      .addCase(fetchSessionsByCourseId.fulfilled, (state, action) => {
+        state.loadingSessions = false;
+        state.sessions = action.payload.data;
+      })
+      .addCase(fetchSessionsByCourseId.rejected, (state) => {
+        state.loadingSessions = false;
+        state.sessions = [];
       });
   },
 });

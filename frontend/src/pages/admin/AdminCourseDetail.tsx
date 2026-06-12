@@ -1,24 +1,21 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import Button from "@/shared/components/Button.tsx";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
-import { getCourseById } from "@/features/courses/courseApi";
-import type { Course } from "@/features/courses/types.ts";
+import { useAppDispatch, useAppSelector } from "@/app/hooks.ts";
+import { fetchCourseById } from "@/features/courses/courseThunks.ts";
 import SessionList from "@/shared/components/SessionList.tsx";
 
 export default function AdminCourseDetail() {
   const { id } = useParams();
-  const [course, setCourse] = useState<Course | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { selectedCourse: course, loadingDetail: loading } = useAppSelector((state) => state.courses);
   const [activeTab, setActiveTab] = useState<string>("sessions");
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
-    void getCourseById(Number(id))
-      .then((res) => setCourse(res.data))
-      .catch(() => setCourse(null))
-      .finally(() => setLoading(false));
-  }, [id]);
+    void dispatch(fetchCourseById(Number(id)));
+  }, [id, dispatch]);
 
   const statusBadgeClass: { [key: string]: string } = {
     OPEN: "rounded-full px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800",
@@ -39,9 +36,7 @@ export default function AdminCourseDetail() {
 
         <div className="flex items-center gap-3">
           <div className={statusBadgeClass[course?.status ?? "OPEN"]}>{course?.status}</div>
-          <button className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
-            Edit course
-          </button>
+          <Button>Edit course</Button>
         </div>
       </div>
 
@@ -81,13 +76,14 @@ export default function AdminCourseDetail() {
                     { key: "materials", label: "Materials" },
                     { key: "settings", label: "Settings" },
                   ].map((t) => (
-                    <button
+                    <Button
                       key={t.key}
+                      size="small"
                       onClick={() => setActiveTab(t.key)}
-                      className={`rounded-md px-3 py-1 text-sm font-medium transition hover:bg-slate-200 hover:text-green-800 ${activeTab === t.key ? "bg-slate-900 text-white" : "text-slate-600"}`}
+                      className={activeTab === t.key ? "bg-slate-900 text-white" : "text-slate-600"}
                     >
                       {t.label}
-                    </button>
+                    </Button>
                   ))}
                 </nav>
 
@@ -105,4 +101,3 @@ export default function AdminCourseDetail() {
     </AdminLayout>
   );
 }
-

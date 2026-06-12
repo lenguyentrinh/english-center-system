@@ -1,3 +1,4 @@
+import Button from "@/shared/components/Button.tsx";
 import type { Course } from "@/features/courses/types.ts";
 
 interface CourseTableProps {
@@ -62,28 +63,16 @@ export default function CourseTable({ courses, loading, onView, onUpdate, onDele
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
                     {onView ? (
-                      <button
-                        onClick={() => onView(course)}
-                        className="inline-flex rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
-                        disabled={submitting}
-                      >
+                      <Button size="small" onClick={() => onView(course)} disabled={submitting}>
                         View
-                      </button>
+                      </Button>
                     ) : null}
-                    <button
-                      onClick={() => onUpdate(course)}
-                      className="inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                      disabled={submitting}
-                    >
+                    <Button size="small" variant="secondary" onClick={() => onUpdate(course)} disabled={submitting}>
                       Edit
-                    </button>
-                    <button
-                      onClick={() => onDelete(course.id)}
-                      className="inline-flex items-center rounded-md border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
-                      disabled={submitting}
-                    >
+                    </Button>
+                    <Button size="small" variant="danger" onClick={() => onDelete(course.id)} disabled={submitting}>
                       Delete
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>

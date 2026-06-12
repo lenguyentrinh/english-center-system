@@ -1,12 +1,13 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
 import type { ApiResponse } from "@/shared/types/api-response.type";
-import type { Course, UpsertCoursePayload } from "./types.ts";
+import type { Course, Session, UpsertCoursePayload } from "./types.ts";
 import {
   createCourse,
   deleteCourse,
   getCourseById,
   getCourses,
+  getSessionsByCourseId,
   updateCourse,
 } from "./courseApi.ts";
 
@@ -63,6 +64,17 @@ export const deleteCourseThunk = createAsyncThunk<ApiResponse<null>, number, Rej
       return await deleteCourse(id);
     } catch (error) {
       return rejectWithValue(getApiErrorMessage(error, "Failed to delete course"));
+    }
+  }
+);
+
+export const fetchSessionsByCourseId = createAsyncThunk<ApiResponse<Session[]>, number, RejectValue>(
+  "courses/fetchSessions",
+  async (courseId, { rejectWithValue }) => {
+    try {
+      return await getSessionsByCourseId(courseId);
+    } catch (error) {
+      return rejectWithValue(getApiErrorMessage(error, "Failed to load sessions"));
     }
   }
 );

@@ -1,9 +1,33 @@
 # English Center System
 
-This repository contains two separate applications:
+Full-stack educational management platform for English language learning centers.
 
-- `backend/` — Spring Boot backend application
-- `frontend/` — React + Vite frontend application
+**Repository:** Spring Boot 3.5.7 + React 19 (monorepo)
+
+---
+
+## 🚀 Quick Start for Developers
+
+### Read These First (Important!)
+1. **[NAVIGATION.md](./NAVIGATION.md)** ← Start here if you're lost (complete linking system)
+2. **[HANDOFF.md](./HANDOFF.md)** - Next steps & what to build
+3. **[RULE.md](./RULE.md)** - Architecture rules (MUST READ before coding)
+4. **[AGENTS.md](./AGENTS.md)** - Development workflow & process
+5. **[CLAUDE.md](./CLAUDE.md)** - Environment setup & getting started
+6. **[/docs/README.md](./docs/README.md)** - Detailed specifications
+7. **[/docs/QUICK_REFERENCE.md](./docs/QUICK_REFERENCE.md)** - Keep this open while coding
+
+### Key Documents
+| Document | Purpose |
+|----------|---------|
+| HANDOFF.md | Next steps & priorities |
+| PROGRESS.md | Project history & status |
+| NAVIGATION.md | File relationships & links |
+| RULE.md | Architectural constraints |
+| AGENTS.md | Development workflow |
+| /docs/ | Specifications & requirements |
+
+---
 
 ## Prerequisites
 

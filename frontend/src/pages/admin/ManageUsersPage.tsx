@@ -1,36 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
-import { getUsers } from "@/features/admin/adminApi.ts";
-import type { UserSummaryResponse } from "@/features/admin/types.ts";
-import { getApiErrorMessage } from "@/shared/api/error.ts";
+import Button from "@/shared/components/Button.tsx";
+import { useAppDispatch, useAppSelector } from "@/app/hooks.ts";
+import { fetchUsers } from "@/features/admin/adminThunks.ts";
 
 const formatDate = (value: string | null) => (value ? new Date(value).toLocaleString() : "-");
 
 export default function ManageUsersPage() {
-  const [users, setUsers] = useState<UserSummaryResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await getUsers();
-      setUsers(res.data);
-    } catch (err) {
-      const message = getApiErrorMessage(err, "Failed to load users");
-      setError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const dispatch = useAppDispatch();
+  const { users, loadingUsers: loading, error } = useAppSelector((state) => state.admin);
 
   useEffect(() => {
-    void loadUsers();
-  }, []);
+    void dispatch(fetchUsers());
+  }, [dispatch]);
 
   return (
     <AdminLayout>
@@ -49,8 +32,11 @@ export default function ManageUsersPage() {
       </div>
 
       {error ? (
-        <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
+        <div className="mb-6 flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <span className="grow">{error}</span>
+          <Button size="small" variant="danger" onClick={() => dispatch(fetchUsers())} loading={loading}>
+            Retry
+          </Button>
         </div>
       ) : null}
 
@@ -93,11 +79,10 @@ export default function ManageUsersPage() {
                     <td className="px-6 py-4 text-slate-700">{formatDate(user.createdAt)}</td>
                     <td className="px-6 py-4 text-slate-700">{formatDate(user.updatedAt)}</td>
                     <td className="px-6 py-4">
-                      <Link
-                        to={`/admin/users/${user.id}`}
-                        className="inline-flex rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
-                      >
-                        View
+                      <Link to={`/admin/users/${user.id}`}>
+                        <Button size="small" variant="primary" tabIndex={-1}>
+                          View
+                        </Button>
                       </Link>
                     </td>
                   </tr>

@@ -1,21 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import Button from "@/shared/components/Button.tsx";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
 import ConfirmDialog from "@/shared/components/ConfirmDialog.tsx";
 import RoleModal from "@/components/admin/RoleModal.tsx";
+import { useAppDispatch, useAppSelector } from "@/app/hooks.ts";
 import {
-  createRole,
-  deleteRole,
-  getBusinessRoles,
-  getRoles,
-  updateRole,
-} from "@/features/admin/adminApi.ts";
-import type {
-  BusinessRoleResponse,
-  RoleResponse,
-  RoleUpsertPayload,
-} from "@/features/admin/types.ts";
-import { getApiErrorMessage } from "@/shared/api/error.ts";
+  createRoleThunk,
+  deleteRoleThunk,
+  fetchBusinessRoles,
+  fetchRoles,
+  updateRoleThunk,
+} from "@/features/admin/adminThunks.ts";
+import type { RoleResponse, RoleUpsertPayload } from "@/features/admin/types.ts";
 
 const badgeClass = (active: boolean) =>
   active
@@ -23,35 +20,18 @@ const badgeClass = (active: boolean) =>
     : "bg-slate-100 text-slate-600";
 
 export default function ManageRolesPage() {
-  const [roles, setRoles] = useState<RoleResponse[]>([]);
-  const [businessRoles, setBusinessRoles] = useState<BusinessRoleResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const { roles, businessRoles, loadingRoles: loadingRolesState, loadingBusinessRoles: loadingBusinessRolesState, submitting, error } = useAppSelector((state) => state.admin);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<RoleResponse | null>(null);
   const [deletingRole, setDeletingRole] = useState<RoleResponse | null>(null);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const [rolesRes, businessRolesRes] = await Promise.all([getRoles(), getBusinessRoles()]);
-      setRoles(rolesRes.data);
-      setBusinessRoles(businessRolesRes.data);
-    } catch (err) {
-      const message = getApiErrorMessage(err, "Failed to load roles");
-      setError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = loadingRolesState || loadingBusinessRolesState;
 
   useEffect(() => {
-    void loadData();
-  }, []);
+    void dispatch(fetchRoles());
+    void dispatch(fetchBusinessRoles());
+  }, [dispatch]);
 
   const businessRoleOptions = useMemo(
     () =>
@@ -95,19 +75,15 @@ export default function ManageRolesPage() {
 
   const handleSubmit = async (payload: RoleUpsertPayload) => {
     try {
-      setSubmitting(true);
-
       const res = editingRole
-        ? await updateRole(editingRole.id, payload)
-        : await createRole(payload);
+        ? await dispatch(updateRoleThunk({ id: editingRole.id, payload })).unwrap()
+        : await dispatch(createRoleThunk(payload)).unwrap();
 
       toast.success(res.message);
       closeModal();
-      await loadData();
+      void dispatch(fetchRoles());
     } catch (err) {
-      toast.error(getApiErrorMessage(err, editingRole ? "Failed to update role" : "Failed to create role"));
-    } finally {
-      setSubmitting(false);
+      toast.error(err as string);
     }
   };
 
@@ -115,15 +91,12 @@ export default function ManageRolesPage() {
     if (!deletingRole) return;
 
     try {
-      setSubmitting(true);
-      const res = await deleteRole(deletingRole.id);
+      const res = await dispatch(deleteRoleThunk(deletingRole.id)).unwrap();
       toast.success(res.message);
       setDeletingRole(null);
-      await loadData();
+      void dispatch(fetchRoles());
     } catch (err) {
-      toast.error(getApiErrorMessage(err, "Failed to delete role"));
-    } finally {
-      setSubmitting(false);
+      toast.error(err as string);
     }
   };
 
@@ -142,13 +115,7 @@ export default function ManageRolesPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-        >
-          Add Role
-        </button>
+        <Button onClick={handleOpenCreate}>Add Role</Button>
       </div>
 
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -211,20 +178,8 @@ export default function ManageRolesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(role)}
-                          className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingRole(role)}
-                          className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50"
-                        >
-                          Delete
-                        </button>
+                        <Button size="small" variant="secondary" onClick={() => handleOpenEdit(role)}>Edit</Button>
+                        <Button size="small" variant="danger" onClick={() => setDeletingRole(role)}>Delete</Button>
                       </div>
                     </td>
                   </tr>

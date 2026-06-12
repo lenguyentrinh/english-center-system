@@ -1,22 +1,18 @@
-import { useEffect, useState } from "react";
-import { getSessionsByCourseId } from "@/features/courses/courseApi.ts";
-import type { Session } from "@/features/courses/types.ts";
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/app/hooks.ts";
+import { fetchSessionsByCourseId } from "@/features/courses/courseThunks.ts";
 
 type Props = {
   courseId: number;
 };
 
 export default function SessionList({ courseId }: Props) {
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { sessions, loadingSessions: loading } = useAppSelector((state) => state.courses);
 
   useEffect(() => {
-    setLoading(true);
-    void getSessionsByCourseId(courseId)
-      .then((res) => setSessions(res.data ?? []))
-      .catch(() => setSessions([]))
-      .finally(() => setLoading(false));
-  }, [courseId]);
+    void dispatch(fetchSessionsByCourseId(courseId));
+  }, [courseId, dispatch]);
 
   if (loading) {
     return <div className="text-sm text-slate-500">Loading sessions...</div>;

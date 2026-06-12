@@ -32,10 +32,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **State Management**: Redux Toolkit + React Redux
 - **Forms**: React Hook Form + Zod validation
 - **HTTP Client**: Axios
-- **Async State**: TanStack Query
+- **Async State**: Redux Toolkit (createAsyncThunk + createSlice)
 - **UI Notifications**: React Toastify
 - **Linting**: ESLint (flat config) with TypeScript & React Hooks plugins
 
+
+---------------------------------------------------------
+Always review the following files before starting work:
+
+- AGENTS.md
+- RULE.md
+- PROGRESS.md
+
+These documents contain:
+- Agent workflow
+- Repository rules
+- Session state and handoff information
+
+Treat them as part of the project instructions.
+----------------------------------------------------------
 ## Architecture
 
 ### Backend Module Structure

@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import AuthLayout from "@/shared/components/layout/AuthLayout.tsx";
+import Button from "@/shared/components/Button.tsx";
 import { login, probeAdminAccess } from "@/features/auth/authApi.ts";
 import {
   clearCurrentUsername,
@@ -27,7 +28,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isValid, isSubmitting },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -102,13 +103,9 @@ export default function LoginPage() {
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {isSubmitting ? "Logging in..." : "Login"}
-        </button>
+        <Button type="submit" size="large" className="w-full" loading={isSubmitting} disabled={!isValid}>
+          Login
+        </Button>
       </form>
 
       <p className="mt-4 text-sm text-slate-600">

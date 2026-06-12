@@ -1,5 +1,6 @@
 import { useNavigate, NavLink, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import Button from "@/shared/components/Button.tsx";
 import { logout } from "@/features/auth/authApi.ts";
 import {
   AUTH_CHANGED_EVENT,
@@ -79,13 +80,9 @@ export default function Sidebar() {
             Home
           </Link>
           {authed ? (
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex-1 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
-            >
+            <Button className="flex-1 bg-white text-slate-950 hover:bg-slate-200" onClick={handleLogout}>
               Logout
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>
