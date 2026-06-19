@@ -43,3 +43,12 @@ export type Session = {
   endTime: string;
   topic: string;
 };
+
+export type UpsertSessionPayload = {
+  sessionNo: number;
+  title: string;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
+  topic?: string | null;
+};
