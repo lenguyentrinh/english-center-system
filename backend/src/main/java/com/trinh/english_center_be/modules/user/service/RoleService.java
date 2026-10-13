@@ -12,8 +12,8 @@ public interface RoleService {
     Optional<Role> findRoleByRoleName(Roles role);
     void save(Role role);
     List<RoleResponse> findAll();
-    RoleResponse findById(Long id);
+    RoleResponse findById(String id);
     RoleResponse create(RoleRequest roleRequest);
-    RoleResponse updateById(Long id, RoleRequest roleRequest);
-    void softDeleteById(Long id);
+    RoleResponse updateById(String id, RoleRequest roleRequest);
+    void softDeleteById(String id);
 }

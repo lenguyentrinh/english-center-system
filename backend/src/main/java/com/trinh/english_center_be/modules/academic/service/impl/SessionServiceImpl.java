@@ -10,31 +10,28 @@ import com.trinh.english_center_be.modules.academic.service.SessionService;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
 import com.trinh.english_center_be.shared.util.Constant;
 import com.trinh.english_center_be.shared.util.MessageConstant;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class SessionServiceImpl implements SessionService {
 
     private final CourseSessionRepository courseSessionRepository;
     private final CourseRepository courseRepository;
 
     @Override
-    public List<SessionResponse> findByCourseId(Long courseId) {
-        return courseSessionRepository.findByCourseIdOrderBySessionNoAsc(courseId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    public List<SessionResponse> findByCourseId(String courseId) {
+        return courseRepository.findById(courseId)
+                .map(course -> courseSessionRepository.findByCourseOrderBySessionNoAsc(course).stream()
+                        .map(this::toResponse)
+                        .toList())
+                .orElse(List.of());
     }
 
     @Override
-    @Transactional
-    public SessionResponse create(Long courseId, SessionRequest request) {
+    public SessionResponse create(String courseId, SessionRequest request) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.COURSE, courseId)));
@@ -53,11 +50,8 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    @Transactional
-    public SessionResponse update(Long courseId, Long sessionId, SessionRequest request) {
-        CourseSession session = courseSessionRepository.findByIdAndCourseId(sessionId, courseId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.SESSION, sessionId)));
+    public SessionResponse update(String courseId, String sessionId, SessionRequest request) {
+        CourseSession session = findSessionOfCourse(courseId, sessionId);
 
         session.setSessionNo(request.sessionNo());
         session.setTitle(request.title());
@@ -70,14 +64,22 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    @Transactional
-    public void delete(Long courseId, Long sessionId) {
-        CourseSession session = courseSessionRepository.findByIdAndCourseId(sessionId, courseId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.SESSION, sessionId)));
+    public void delete(String courseId, String sessionId) {
+        CourseSession session = findSessionOfCourse(courseId, sessionId);
 
         session.setActive(false);
         courseSessionRepository.save(session);
+    }
+
+    /**
+     * Session -> Course is a DBRef, so the course is loaded first and the session is matched
+     * against that document. Both "course missing" and "session not in course" report the session as not found.
+     */
+    private CourseSession findSessionOfCourse(String courseId, String sessionId) {
+        return courseRepository.findById(courseId)
+                .flatMap(course -> courseSessionRepository.findByIdAndCourse(sessionId, course))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.SESSION, sessionId)));
     }
 
     private SessionResponse toResponse(CourseSession session) {

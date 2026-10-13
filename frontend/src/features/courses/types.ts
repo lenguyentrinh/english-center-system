@@ -1,7 +1,7 @@
 export type CourseStatus = "OPEN" | "ACTIVE" | "CLOSED";
 
 export type Course = {
-  id: number;
+  id: string;
   code: string;
   name: string;
   startDate: string;
@@ -11,7 +11,7 @@ export type Course = {
   minimumAge?: number | null;
   requiredEntryLevel?: string | null;
   prerequisitesRequired?: boolean | null;
-  teacher?: { id: number; username?: string; fullName?: string } | null;
+  teacher?: { id: string; username?: string; fullName?: string } | null;
   availableRoleTeacher?:
     | "TEACHER"
     | "TEACHER_IELTS_6"
@@ -30,12 +30,12 @@ export type UpsertCoursePayload = {
   endDate: string;
   maxStudent: number;
   status: CourseStatus;
-  teacherId?: number | null;
+  teacherId?: string | null;
   availableRoleTeacher?: string | null;
 };
 
 export type Session = {
-  id: number;
+  id: string;
   sessionNo: number;
   title: string;
   sessionDate: string;
@@ -45,21 +45,21 @@ export type Session = {
 };
 
 export type CourseSummary = {
-  id: number;
+  id: string;
   code: string;
   name: string;
   availableRoleTeacher?: string | null;
 };
 
 export type ServerCourse = {
-  id: number;
+  id: string;
   code: string;
   name: string;
   startDate: string;
   endDate: string;
   maxStudent: number;
   status: CourseStatus;
-  teacherId?: number | null;
+  teacherId?: string | null;
   teacherFullName?: string | null;
   availableRoleTeacher?: Course["availableRoleTeacher"];
   minimumAge?: number | null;

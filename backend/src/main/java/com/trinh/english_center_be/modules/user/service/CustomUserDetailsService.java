@@ -1,5 +1,6 @@
 package com.trinh.english_center_be.modules.user.service;
 
+import com.trinh.english_center_be.modules.user.Repository.RoleRepository;
 import com.trinh.english_center_be.modules.user.Repository.UserRepository;
 import com.trinh.english_center_be.modules.user.Repository.UserRoleRepository;
 import com.trinh.english_center_be.modules.user.entity.Role;
@@ -25,19 +26,21 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
+    private final RoleRepository roleRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(String.format(MessageConstant.ENTITY_NOT_FOUND_BY, Constant.USER, Constant.USERNAME_FIELD, username)));
 
-        List<UserRole> userRoles = userRoleRepository.findByUserIdWithRole(user.getId());
-        if (userRoles.isEmpty()) {
+        List<String> roleIds = userRoleRepository.findByUserId(user.getId()).stream()
+                .map(UserRole::getRoleId)
+                .toList();
+        if (roleIds.isEmpty()) {
             throw new UsernameNotFoundException("User has no roles assigned");
         }
 
-        Set<SimpleGrantedAuthority> authorities = userRoles.stream()
-                .map(UserRole::getRole)
+        Set<SimpleGrantedAuthority> authorities = roleRepository.findAllById(roleIds).stream()
                 .filter(Objects::nonNull)
                 .map(Role::getCode)
                 .filter(Objects::nonNull)

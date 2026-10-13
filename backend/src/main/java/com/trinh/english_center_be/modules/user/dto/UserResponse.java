@@ -5,7 +5,7 @@ import com.trinh.english_center_be.shared.enums.UserStatus;
 import java.time.LocalDateTime;
 
 public record UserResponse(
-        Long id,
+        String id,
         String username,
         String email,
         String fullName,

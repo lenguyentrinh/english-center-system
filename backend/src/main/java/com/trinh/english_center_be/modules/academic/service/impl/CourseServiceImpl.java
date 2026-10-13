@@ -3,26 +3,28 @@ package com.trinh.english_center_be.modules.academic.service.impl;
 import com.trinh.english_center_be.modules.academic.dto.CourseRequest;
 import com.trinh.english_center_be.modules.academic.dto.CourseResponse;
 import com.trinh.english_center_be.modules.academic.entity.Course;
+import com.trinh.english_center_be.modules.academic.mapper.CourseMapper;
 import com.trinh.english_center_be.modules.academic.repository.CourseRepository;
 import com.trinh.english_center_be.modules.academic.service.CourseService;
-import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
-import com.trinh.english_center_be.modules.teacher.repository.TeacherRepository;
 import com.trinh.english_center_be.modules.teacher.entity.Teacher;
-import java.util.List;
-import com.trinh.english_center_be.modules.academic.mapper.CourseMapper;
+import com.trinh.english_center_be.modules.teacher.repository.TeacherRepository;
+import com.trinh.english_center_be.modules.user.Repository.UserRepository;
+import com.trinh.english_center_be.shared.enums.Roles;
+import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
 import com.trinh.english_center_be.shared.util.Constant;
 import com.trinh.english_center_be.shared.util.MessageConstant;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class CourseServiceImpl implements CourseService {
 
     private final CourseRepository courseRepository;
     private final TeacherRepository teacherRepository;
+    private final UserRepository userRepository;
 
     @Override
     public List<CourseResponse> findAll() {
@@ -30,7 +32,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public CourseResponse findById(Long id) {
+    public CourseResponse findById(String id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.COURSE, id)));
 
@@ -38,7 +40,6 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    @Transactional
     public CourseResponse create(CourseRequest request) {
         Course course = Course.builder()
                 .code(request.code())
@@ -54,17 +55,14 @@ public class CourseServiceImpl implements CourseService {
                 .build();
 
         if (request.teacherId() != null) {
-            Teacher teacher = teacherRepository.findById(request.teacherId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Teacher not found: " + request.teacherId()));
-            course.setTeacher(teacher);
+            course.setTeacher(findTeacherOrThrow(request.teacherId()));
         }
 
         return CourseMapper.toResponse(courseRepository.save(course));
     }
 
     @Override
-    @Transactional
-    public CourseResponse update(Long id, CourseRequest request) {
+    public CourseResponse update(String id, CourseRequest request) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.COURSE, id)));
 
@@ -80,9 +78,7 @@ public class CourseServiceImpl implements CourseService {
         course.setAvailableRoleTeacher(request.availableRoleTeacher());
 
         if (request.teacherId() != null) {
-            Teacher teacher = teacherRepository.findById(request.teacherId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Teacher not found: " + request.teacherId()));
-            course.setTeacher(teacher);
+            course.setTeacher(findTeacherOrThrow(request.teacherId()));
         } else {
             course.setTeacher(null);
         }
@@ -91,8 +87,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    @Transactional
-    public void softDeleteById(Long id) {
+    public void softDeleteById(String id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.COURSE, id)));
 
@@ -101,8 +96,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    @Transactional
-    public CourseResponse assignTeacher(Long courseId, Long teacherId) {
+    public CourseResponse assignTeacher(String courseId, String teacherId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.COURSE, courseId)));
 
@@ -114,16 +108,29 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public List<CourseResponse> findByTeacherUserId(Long userId) {
-        List<Course> courses = courseRepository.findByTeacherUserId(userId);
-        return courses.stream().map(CourseMapper::toResponse).toList();
+    public List<CourseResponse> findByTeacherUserId(String userId) {
+        return findTeacherByUserId(userId)
+                .map(teacher -> courseRepository.findByTeacher(teacher).stream().map(CourseMapper::toResponse).toList())
+                .orElse(List.of());
     }
 
     @Override
-    public List<CourseResponse> findByTeacherUserIdAndAvailableRoles(Long userId, List<com.trinh.english_center_be.shared.enums.Roles> roles) {
+    public List<CourseResponse> findByTeacherUserIdAndAvailableRoles(String userId, List<Roles> roles) {
         if (roles == null || roles.isEmpty()) return List.of();
-        List<Course> courses = courseRepository.findByTeacherUserIdAndAvailableRoleTeacherIn(userId, roles);
-        return courses.stream().map(CourseMapper::toResponse).toList();
+        return findTeacherByUserId(userId)
+                .map(teacher -> courseRepository.findByTeacherAndAvailableRoleTeacherIn(teacher, roles).stream()
+                        .map(CourseMapper::toResponse)
+                        .toList())
+                .orElse(List.of());
     }
-    
+
+    private Teacher findTeacherOrThrow(String teacherId) {
+        return teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found: " + teacherId));
+    }
+
+    /** Course -> Teacher is a DBRef, so course lookups by user go user -> teacher -> courses. */
+    private Optional<Teacher> findTeacherByUserId(String userId) {
+        return userRepository.findById(userId).flatMap(teacherRepository::findByUser);
+    }
 }

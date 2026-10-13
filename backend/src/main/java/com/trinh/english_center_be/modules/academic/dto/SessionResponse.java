@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record SessionResponse(
-        Long id,
+        String id,
         Integer sessionNo,
         String title,
         LocalDate sessionDate,

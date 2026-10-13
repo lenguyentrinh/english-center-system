@@ -10,16 +10,16 @@ import java.util.Optional;
 public interface UserService {
     // CRUD Operations
     List<UserResponse> findAll();
-    UserResponse findByIdResponse(Long id);
+    UserResponse findByIdResponse(String id);
     UserResponse create(UserRequest request);
-    UserResponse update(Long id, UserRequest request);
-    void softDeleteById(Long id);
+    UserResponse update(String id, UserRequest request);
+    void softDeleteById(String id);
     
     // Existing methods
     Optional<User> findByUsername(String username);
     boolean existByUserName(String username);
-    User findById(Long id);
+    User findById(String id);
     void save(User user);
-    boolean isUserActive(Long id);
+    boolean isUserActive(String id);
     boolean existByEmail(String email);
 }

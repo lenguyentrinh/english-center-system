@@ -11,7 +11,7 @@ export const courseSchema = z
     minimumAge: z.number().min(0, "Minimum age must be 0 or greater"),
     requiredEntryLevel: z.string().min(1, "Required entry level is required"),
     prerequisitesRequired: z.boolean(),
-    teacherId: z.number().optional(),
+    teacherId: z.string().optional(),
     availableRoleTeacher: z.enum([
       "TEACHER",
       "TEACHER_IELTS_6",

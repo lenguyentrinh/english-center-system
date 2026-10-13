@@ -20,16 +20,16 @@ export type BusinessRoleCode =
   | "ENGLISH_COMMUNICATION_ADVANCED";
 
 export type RoleResponse = {
-  id: number;
+  id: string;
   code: RoleCode;
   description: string | null;
   active: boolean;
-  businessRoleId: number | null;
+  businessRoleId: string | null;
   businessRoleCode: BusinessRoleCode | null;
 };
 
 export type BusinessRoleResponse = {
-  id: number;
+  id: string;
   code: BusinessRoleCode;
   description: string | null;
   active: boolean;
@@ -39,7 +39,7 @@ export type BusinessRoleResponse = {
 };
 
 export type UserSummaryResponse = {
-  id: number;
+  id: string;
   username: string;
   email: string | null;
   fullName: string | null;
@@ -50,7 +50,7 @@ export type UserSummaryResponse = {
 };
 
 export type UserEffectiveRolesResponse = {
-  userId: number;
+  userId: string;
   username: string;
   directRoles: RoleResponse[];
   businessRoles: BusinessRoleResponse[];
@@ -60,7 +60,7 @@ export type UserEffectiveRolesResponse = {
 export type RoleUpsertPayload = {
   code: RoleCode;
   description?: string;
-  businessRoleId?: number | null;
+  businessRoleId?: string | null;
 };
 
 export type BusinessRoleUpsertPayload = {

@@ -13,7 +13,7 @@ export function useCourseMutations() {
   });
 
   const update = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: UpsertCoursePayload }) =>
+    mutationFn: ({ id, payload }: { id: string; payload: UpsertCoursePayload }) =>
       updateCourse(id, payload),
     onSuccess: (_res, { id }) => {
       void queryClient.invalidateQueries({ queryKey: ["course", id] });
@@ -22,7 +22,7 @@ export function useCourseMutations() {
   });
 
   const remove = useMutation({
-    mutationFn: (id: number) => deleteCourse(id),
+    mutationFn: (id: string) => deleteCourse(id),
     onSuccess: refresh,
   });
 

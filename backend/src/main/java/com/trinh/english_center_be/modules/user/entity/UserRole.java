@@ -1,18 +1,24 @@
 package com.trinh.english_center_be.modules.user.entity;
 
 import com.trinh.english_center_be.shared.BaseEntity;
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "user_roles")
+/**
+ * Join document between a user and a role. Stores ids (not DBRefs) so lookups are simple
+ * equality queries; the (userId, roleId) pair is unique.
+ */
+@Document(collection = "user_roles")
+@CompoundIndex(name = "uk_user_role", def = "{'userId': 1, 'roleId': 1}", unique = true)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,20 +26,15 @@ import org.hibernate.annotations.CreationTimestamp;
 @SuperBuilder
 public class UserRole extends BaseEntity {
 
-    @EmbeddedId
-    private UserRoleId id;
+    @Id
+    private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("userId")
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Indexed
+    private String userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("roleId")
-    @JoinColumn(name = "role_id")
-    private Role role;
+    @Indexed
+    private String roleId;
 
-    @CreationTimestamp
-    @Column(name = "assigned_at", updatable = false)
+    @CreatedDate
     private LocalDateTime assignedAt;
 }

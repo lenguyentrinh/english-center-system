@@ -40,7 +40,7 @@ export default function HomePage() {
   const error = useQueryErrorMessage(queryError, "Failed to load featured courses");
 
   const featuredCourses = useMemo(
-    () => [...courses].sort((left, right) => right.id - left.id).slice(0, 4),
+    () => [...courses].sort((left, right) => right.id.localeCompare(left.id)).slice(0, 4),
     [courses]
   );
 

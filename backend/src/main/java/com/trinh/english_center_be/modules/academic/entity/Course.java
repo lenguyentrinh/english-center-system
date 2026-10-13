@@ -1,23 +1,21 @@
 package com.trinh.english_center_be.modules.academic.entity;
 
+import com.trinh.english_center_be.modules.teacher.entity.Teacher;
 import com.trinh.english_center_be.shared.BaseEntity;
 import com.trinh.english_center_be.shared.enums.CourseStatus;
 import com.trinh.english_center_be.shared.enums.Roles;
-import jakarta.persistence.*;
-import com.trinh.english_center_be.modules.teacher.entity.Teacher;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "courses")
+@Document(collection = "courses")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,42 +24,29 @@ import lombok.experimental.SuperBuilder;
 public class Course extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(name = "code", unique = true, length = 30)
+    @Indexed(unique = true, sparse = true)
     private String code;
 
-    @Column(name = "name", length = 100)
     private String name;
 
-    @Column(name = "start_date")
     private LocalDate startDate;
 
-    @Column(name = "end_date")
     private LocalDate endDate;
 
-    @Column(name = "max_student")
     private Integer maxStudent;
 
-    @Column(name = "status", length = 20)
-    @Enumerated(EnumType.STRING)
     private CourseStatus status;
 
-    @Column(name = "minimum_age")
     private Integer minimumAge;
 
-    @Column(name = "required_entry_level", length = 30)
     private String requiredEntryLevel;
 
-    @Column(name = "prerequisites_required", columnDefinition = "TINYINT DEFAULT 0")
     private Boolean prerequisitesRequired;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "teacher_id")
+    @DBRef(lazy = true)
     private Teacher teacher;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "available_role_teacher", length = 50)
     private Roles availableRoleTeacher;
 }

@@ -15,7 +15,7 @@ export const getUsers = async (): Promise<ApiResponse<UserSummaryResponse[]>> =>
   return data;
 };
 
-export const getUserById = async (id: number): Promise<ApiResponse<UserSummaryResponse>> => {
+export const getUserById = async (id: string): Promise<ApiResponse<UserSummaryResponse>> => {
   const { data } = await apiClient.get<ApiResponse<UserSummaryResponse>>(`/users/${id}`);
   return data;
 };
@@ -25,7 +25,7 @@ export const getRoles = async (): Promise<ApiResponse<RoleResponse[]>> => {
   return data;
 };
 
-export const getRoleById = async (id: number): Promise<ApiResponse<RoleResponse>> => {
+export const getRoleById = async (id: string): Promise<ApiResponse<RoleResponse>> => {
   const { data } = await apiClient.get<ApiResponse<RoleResponse>>(`/roles/${id}`);
   return data;
 };
@@ -36,14 +36,14 @@ export const createRole = async (payload: RoleUpsertPayload): Promise<ApiRespons
 };
 
 export const updateRole = async (
-  id: number,
+  id: string,
   payload: RoleUpsertPayload
 ): Promise<ApiResponse<RoleResponse>> => {
   const { data } = await apiClient.put<ApiResponse<RoleResponse>>(`/roles/${id}`, payload);
   return data;
 };
 
-export const deleteRole = async (id: number): Promise<ApiResponse<null>> => {
+export const deleteRole = async (id: string): Promise<ApiResponse<null>> => {
   const { data } = await apiClient.delete<ApiResponse<null>>(`/roles/${id}`);
   return data;
 };
@@ -54,7 +54,7 @@ export const getBusinessRoles = async (): Promise<ApiResponse<BusinessRoleRespon
 };
 
 export const getBusinessRoleById = async (
-  id: number
+  id: string
 ): Promise<ApiResponse<BusinessRoleResponse>> => {
   const { data } = await apiClient.get<ApiResponse<BusinessRoleResponse>>(`/business-roles/${id}`);
   return data;
@@ -68,20 +68,20 @@ export const createBusinessRole = async (
 };
 
 export const updateBusinessRole = async (
-  id: number,
+  id: string,
   payload: BusinessRoleUpsertPayload
 ): Promise<ApiResponse<BusinessRoleResponse>> => {
   const { data } = await apiClient.put<ApiResponse<BusinessRoleResponse>>(`/business-roles/${id}`, payload);
   return data;
 };
 
-export const deleteBusinessRole = async (id: number): Promise<ApiResponse<null>> => {
+export const deleteBusinessRole = async (id: string): Promise<ApiResponse<null>> => {
   const { data } = await apiClient.delete<ApiResponse<null>>(`/business-roles/${id}`);
   return data;
 };
 
 export const getUserEffectiveRoles = async (
-  userId: number
+  userId: string
 ): Promise<ApiResponse<UserEffectiveRolesResponse>> => {
   const { data } = await apiClient.get<ApiResponse<UserEffectiveRolesResponse>>(
     `/users/${userId}/roles`
@@ -90,24 +90,24 @@ export const getUserEffectiveRoles = async (
 };
 
 export const assignRoleToUser = async (
-  userId: number,
-  roleId: number
+  userId: string,
+  roleId: string
 ): Promise<ApiResponse<null>> => {
   const { data } = await apiClient.post<ApiResponse<null>>(`/users/${userId}/roles/${roleId}`);
   return data;
 };
 
 export const removeRoleFromUser = async (
-  userId: number,
-  roleId: number
+  userId: string,
+  roleId: string
 ): Promise<ApiResponse<null>> => {
   const { data } = await apiClient.delete<ApiResponse<null>>(`/users/${userId}/roles/${roleId}`);
   return data;
 };
 
 export const assignBusinessRoleToUser = async (
-  userId: number,
-  businessRoleId: number
+  userId: string,
+  businessRoleId: string
 ): Promise<ApiResponse<CourseSummary[]>> => {
   const { data } = await apiClient.post<ApiResponse<CourseSummary[]>>(
     `/users/${userId}/roles/business-roles/${businessRoleId}`
@@ -116,16 +116,16 @@ export const assignBusinessRoleToUser = async (
 };
 
 export const assignTeacherToCourse = async (
-  courseId: number,
-  teacherId: number
+  courseId: string,
+  teacherId: string
 ): Promise<ApiResponse<unknown>> => {
   const { data } = await apiClient.post<ApiResponse<unknown>>(`/courses/${courseId}/assign-teacher/${teacherId}`);
   return data;
 };
 
 export const removeBusinessRoleFromUser = async (
-  userId: number,
-  businessRoleId: number
+  userId: string,
+  businessRoleId: string
 ): Promise<ApiResponse<null>> => {
   const { data } = await apiClient.delete<ApiResponse<null>>(
     `/users/${userId}/roles/business-roles/${businessRoleId}`

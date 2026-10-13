@@ -8,9 +8,9 @@ import java.util.Optional;
 public interface TeacherService {
     List<TeacherResponse> findTeachers(String role);
 
-    Optional<TeacherResponse> findById(Long id);
+    Optional<TeacherResponse> findById(String id);
 
-    Optional<TeacherResponse> findByUserId(Long userId);
+    Optional<TeacherResponse> findByUserId(String userId);
 
-    TeacherResponse upsertByUserId(Long userId, TeacherUpsertRequest request);
+    TeacherResponse upsertByUserId(String userId, TeacherUpsertRequest request);
 }

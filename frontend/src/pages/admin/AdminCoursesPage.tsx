@@ -30,7 +30,7 @@ export default function AdminCoursesPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
-  const [deletingCourseId, setDeletingCourseId] = useState<number | null>(null);
+  const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
 
   const handleCreateSubmit = async (payload: UpsertCoursePayload) => {
     try {

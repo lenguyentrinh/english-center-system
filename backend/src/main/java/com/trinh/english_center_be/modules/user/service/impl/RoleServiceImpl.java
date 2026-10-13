@@ -16,14 +16,12 @@ import com.trinh.english_center_be.shared.util.MessageConstant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
@@ -35,7 +33,6 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @Transactional
     public void save(Role role) {
         roleRepository.save(role);
     }
@@ -46,7 +43,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public RoleResponse findById(Long id) {
+    public RoleResponse findById(String id) {
         Role role = roleRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.ROLE, id))
         );
@@ -57,7 +54,6 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @Transactional
     public RoleResponse create(RoleRequest roleRequest) {
         if (roleRepository.existsByCode(roleRequest.code())) {
             throw new BusinessException(
@@ -79,8 +75,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @Transactional
-    public void softDeleteById(Long id) {
+    public void softDeleteById(String id) {
         Role role = roleRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.ROLE, id))
         );
@@ -90,8 +85,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @Transactional
-    public RoleResponse updateById(Long id, RoleRequest roleRequest) {
+    public RoleResponse updateById(String id, RoleRequest roleRequest) {
         Role existing = roleRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.ROLE, id))
         );
@@ -111,13 +105,11 @@ public class RoleServiceImpl implements RoleService {
         return RoleMapper.toResponse(roleRepository.save(existing));
     }
 
-    private BusinessRole resolveActiveBusinessRole(Long businessRoleId) {
+    private BusinessRole resolveActiveBusinessRole(String businessRoleId) {
         BusinessRole businessRole = bRoleService.findById(businessRoleId);
         if (Boolean.FALSE.equals(businessRole.getActive())) {
             throw new BusinessException(String.format(MessageConstant.OBJECT_INACTIVE, Constant.BUSINESS_ROLE), HttpStatus.BAD_REQUEST);
         }
         return businessRole;
     }
-
-    
 }

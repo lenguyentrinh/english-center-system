@@ -68,7 +68,7 @@ export default function RoleModal({
       reset({
         code: editingRole.code,
         description: editingRole.description ?? "",
-        businessRoleId: editingRole.businessRoleId ? String(editingRole.businessRoleId) : "",
+        businessRoleId: editingRole.businessRoleId ?? "",
       });
     } else {
       reset(defaultValues);
@@ -79,7 +79,7 @@ export default function RoleModal({
     onSubmit({
       code: values.code,
       description: values.description?.trim() || undefined,
-      businessRoleId: values.businessRoleId ? Number(values.businessRoleId) : null,
+      businessRoleId: values.businessRoleId || null,
     });
   };
 

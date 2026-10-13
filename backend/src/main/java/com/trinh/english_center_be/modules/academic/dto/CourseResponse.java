@@ -6,7 +6,7 @@ import com.trinh.english_center_be.shared.enums.Roles;
 import java.time.LocalDate;
 
 public record CourseResponse(
-        Long id,
+        String id,
         String code,
         String name,
         LocalDate startDate,
@@ -16,7 +16,7 @@ public record CourseResponse(
         Integer minimumAge,
         String requiredEntryLevel,
         Boolean prerequisitesRequired,
-        Long teacherId,
+        String teacherId,
         String teacherFullName,
         Roles availableRoleTeacher
 ) {

@@ -13,7 +13,6 @@ import com.trinh.english_center_be.shared.util.MessageConstant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +20,6 @@ import com.trinh.english_center_be.modules.user.mapper.UserMapper;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -36,13 +34,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse findByIdResponse(Long id) {
+    public UserResponse findByIdResponse(String id) {
         User user = findById(id);
         return UserMapper.toResponse(user);
     }
 
     @Override
-    @Transactional
     public UserResponse create(UserRequest request) {
         if (existByUserName(request.username())) {
             throw new ExistByFieldException(
@@ -71,8 +68,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
-    public UserResponse update(Long id, UserRequest request) {
+    public UserResponse update(String id, UserRequest request) {
         User user = findById(id);
 
         if (!user.getUsername().equals(request.username()) && existByUserName(request.username())) {
@@ -99,8 +95,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
-    public void softDeleteById(Long id) {
+    public void softDeleteById(String id) {
         User user = findById(id);
         user.setActive(false);
         userRepository.save(user);
@@ -118,7 +113,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findById(Long id) {
+    public User findById(String id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         String.format(
@@ -130,13 +125,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public void save(User user) {
         userRepository.save(user);
     }
 
     @Override
-    public boolean isUserActive(Long id) {
+    public boolean isUserActive(String id) {
         return userRepository.findById(id)
                 .map(user -> user.getStatus() == UserStatus.ACTIVE)
                 .orElse(false);

@@ -29,9 +29,9 @@ const getDurationLabel = (startDate: string, endDate: string) => {
 export default function CourseDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const courseId = Number(id);
+  const courseId = id ?? "";
 
-  const isValidId = Number.isFinite(courseId);
+  const isValidId = courseId.length > 0;
   const { data, isLoading: loading, error: queryError } = useQuery({
     queryKey: ["course", courseId],
     queryFn: () => getCourseById(courseId),

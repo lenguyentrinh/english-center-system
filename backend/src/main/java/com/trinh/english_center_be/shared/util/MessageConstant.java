@@ -3,8 +3,8 @@ package com.trinh.english_center_be.shared.util;
 public class MessageConstant {
     //success
     public static final String LIST_SUCCESSFULLY = "List all %s successfully";
-    public static final String RETRIEVED_SUCCESSFULLY = "%s retrieved successfully by id: %d";
-    public static final String UPDATED_SUCCESSFULLY = "%s updated successfully by id: %d";
+    public static final String RETRIEVED_SUCCESSFULLY = "%s retrieved successfully by id: %s";
+    public static final String UPDATED_SUCCESSFULLY = "%s updated successfully by id: %s";
     public static final String CREATED_SUCCESSFULLY = "%s created successfully";
     public static final String DELETED_SUCCESSFULLY = "%s soft deleted successfully";
     public static final String ASSIGN_SUCCESSFULLY = "%s assigned to user successfully";
@@ -13,7 +13,7 @@ public class MessageConstant {
     // business message
     public static final String ENTITY_NOT_FOUND_BY = "%s not found by %s: %s";
     public static final String ENTITY_ALREADY_EXISTS = "%s already exists by %s";
-    public static final String NOT_FOUND_BY_ID="%s not found by id: %d";
+    public static final String NOT_FOUND_BY_ID="%s not found by id: %s";
     public static final String USER_ALREADY_VALUE= "User already has this %s";
     public static final String USER_DOES_NOT_VALUE= "Cannot remove because User does not have this %s";
     public static final String FIELD_ALREADY_VALUE = "%s '%s' already exists";
@@ -24,7 +24,7 @@ public class MessageConstant {
 
     public static final String USER_ACCOUNT_NOT_ACTIVE = "User account is not active";
     public static final String STUDENT_ROLE_NOT_FOUND  = "Student role not found";
-    public static final String NOT_FOUND_DELETED_BY_ID = "%s with  %d was deleted";
+    public static final String NOT_FOUND_DELETED_BY_ID = "%s with  %s was deleted";
 
     //auth
     public static final String  LOGIN_SUCCESS= "Login successful";

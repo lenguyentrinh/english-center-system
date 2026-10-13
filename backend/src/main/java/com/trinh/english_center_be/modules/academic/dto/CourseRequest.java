@@ -44,7 +44,7 @@ public record CourseRequest(
         @NotNull(message = MessageConstant.PREREQUISITES_REQUIRED_NOT_NULL)
         Boolean prerequisitesRequired,
 
-        Long teacherId,
+        String teacherId,
 
         @NotNull(message = MessageConstant.AVAILABLE_ROLE_TEACHER_NOT_NULL)
         Roles availableRoleTeacher

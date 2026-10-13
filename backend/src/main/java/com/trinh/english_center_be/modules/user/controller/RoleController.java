@@ -42,7 +42,7 @@ public class RoleController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<RoleResponse>> getById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<RoleResponse>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         200,
@@ -66,7 +66,7 @@ public class RoleController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<RoleResponse>> update(
-            @PathVariable Long id,
+            @PathVariable String id,
             @Valid @RequestBody RoleRequest request
     ) {
         return ResponseEntity.ok(
@@ -80,7 +80,7 @@ public class RoleController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
         roleService.softDeleteById(id);
         return ResponseEntity.ok(
                 new ApiResponse<>(

@@ -7,7 +7,7 @@ import java.util.Set;
 
 @Builder
 public record UserEffectiveRolesResponse (
-     Long userId,
+     String userId,
      String username,
      Set<RoleResponse> directRoles,
      Set<BusinessRoleResponse> businessRoles,

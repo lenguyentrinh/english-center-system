@@ -6,11 +6,11 @@ import java.util.List;
 
 public interface CourseService {
     List<CourseResponse> findAll();
-    CourseResponse findById(Long id);
+    CourseResponse findById(String id);
     CourseResponse create(CourseRequest request);
-    CourseResponse update(Long id, CourseRequest request);
-    void softDeleteById(Long id);
-    CourseResponse assignTeacher(Long courseId, Long teacherId);
-    List<CourseResponse> findByTeacherUserId(Long userId);
-    List<CourseResponse> findByTeacherUserIdAndAvailableRoles(Long userId, List<com.trinh.english_center_be.shared.enums.Roles> roles);
+    CourseResponse update(String id, CourseRequest request);
+    void softDeleteById(String id);
+    CourseResponse assignTeacher(String courseId, String teacherId);
+    List<CourseResponse> findByTeacherUserId(String userId);
+    List<CourseResponse> findByTeacherUserIdAndAvailableRoles(String userId, List<com.trinh.english_center_be.shared.enums.Roles> roles);
 }

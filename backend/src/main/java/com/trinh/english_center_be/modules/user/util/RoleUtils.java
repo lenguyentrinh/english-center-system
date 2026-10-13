@@ -1,6 +1,5 @@
 package com.trinh.english_center_be.modules.user.util;
 
-import com.trinh.english_center_be.modules.user.entity.BusinessRole;
 import com.trinh.english_center_be.modules.user.entity.Role;
 import com.trinh.english_center_be.shared.enums.Roles;
 
@@ -24,10 +23,11 @@ public final class RoleUtils {
         return res;
     }
 
-    public static List<Roles> getTeacherRoleCodes(BusinessRole br) {
+    /** @param roles roles of a business role, typically loaded via RoleRepository.findByBusinessRole */
+    public static List<Roles> getTeacherRoleCodes(List<Role> roles) {
         List<Roles> res = new ArrayList<>();
-        if (br == null || br.getRoles() == null) return res;
-        for (Role r : br.getRoles()) {
+        if (roles == null) return res;
+        for (Role r : roles) {
             if (r == null || r.getCode() == null) continue;
             if (r.getCode().name().startsWith("TEACHER")) res.add(r.getCode());
         }

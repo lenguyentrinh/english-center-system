@@ -45,7 +45,7 @@ You will:
 - Document endpoints for Swagger UI via SpringDoc OpenAPI annotations
 
 ### Database & JPA
-- Target MySQL 8.0+ with UTF-8MB4 charset
+- Target MongoDB 7+ (Spring Data MongoDB, String ObjectId ids)
 - Use Hibernate with `ddl-auto: update` in dev environment
 - Write efficient JPA queries; use projections for read-only operations
 - Leverage `@Query` for complex scenarios

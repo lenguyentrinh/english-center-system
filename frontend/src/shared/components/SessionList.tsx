@@ -5,7 +5,7 @@ import type { Session } from "@/features/courses/types.ts";
 const NO_SESSIONS: Session[] = [];
 
 type Props = {
-  courseId: number;
+  courseId: string;
 };
 
 export default function SessionList({ courseId }: Props) {

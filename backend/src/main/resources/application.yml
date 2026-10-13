@@ -9,31 +9,16 @@ spring:
       - optional:file:.env[.properties]
       - optional:file:backend/.env[.properties]
 
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-
-  jpa:
-    open-in-view: false
-    show-sql: true
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        format_sql: true
-        highlight_sql: true
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/english_center_db}
+      auto-index-creation: true
 
   jackson:
     time-zone: ${TIMEZONE:Asia/Ho_Chi_Minh}
 
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
-
-logging:
-  level:
-    org.hibernate.tool.schema: DEBUG
-    org.hibernate.SQL: DEBUG
 
 jwt:
   secret: ${JWT_SECRET:lethinguyentrinh-english-center-ms-jwt-key-32chars}

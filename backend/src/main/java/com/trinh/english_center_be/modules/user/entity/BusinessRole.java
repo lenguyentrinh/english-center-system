@@ -2,19 +2,21 @@ package com.trinh.english_center_be.modules.user.entity;
 
 import com.trinh.english_center_be.shared.BaseEntity;
 import com.trinh.english_center_be.shared.enums.BusinessRoles;
-import jakarta.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "business_roles")
+/**
+ * The roles that belong to a business role are not stored here; they are looked up through
+ * {@code RoleRepository.findByBusinessRole(...)} because {@link Role} holds the reference.
+ */
+@Document(collection = "business_roles")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,17 +26,10 @@ import lombok.experimental.SuperBuilder;
 public class BusinessRole extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(name = "code", unique = true)
-    @Enumerated(EnumType.STRING)
+    @Indexed(unique = true, sparse = true)
     private BusinessRoles code;
 
-    @Column(name = "description")
     private String description;
-
-    @OneToMany(mappedBy = "businessRole", fetch = FetchType.LAZY)
-    @Builder.Default
-    private Set<Role> roles = new HashSet<>();
 }

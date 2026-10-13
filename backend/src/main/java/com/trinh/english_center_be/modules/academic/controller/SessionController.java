@@ -30,7 +30,7 @@ public class SessionController {
     private final SessionService sessionService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<SessionResponse>>> getByCourseId(@PathVariable Long courseId) {
+    public ResponseEntity<ApiResponse<List<SessionResponse>>> getByCourseId(@PathVariable String courseId) {
         return ResponseEntity.ok(new ApiResponse<>(
                 200,
                 String.format(MessageConstant.LIST_SUCCESSFULLY, Constant.SESSION),
@@ -41,7 +41,7 @@ public class SessionController {
     @PostMapping
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<SessionResponse>> create(
-            @PathVariable Long courseId,
+            @PathVariable String courseId,
             @Valid @RequestBody SessionRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(
@@ -54,8 +54,8 @@ public class SessionController {
     @PutMapping("/{sessionId}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<SessionResponse>> update(
-            @PathVariable Long courseId,
-            @PathVariable Long sessionId,
+            @PathVariable String courseId,
+            @PathVariable String sessionId,
             @Valid @RequestBody SessionRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(
                 200,
@@ -67,8 +67,8 @@ public class SessionController {
     @DeleteMapping("/{sessionId}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(
-            @PathVariable Long courseId,
-            @PathVariable Long sessionId) {
+            @PathVariable String courseId,
+            @PathVariable String sessionId) {
         sessionService.delete(courseId, sessionId);
         return ResponseEntity.ok(new ApiResponse<>(
                 200,

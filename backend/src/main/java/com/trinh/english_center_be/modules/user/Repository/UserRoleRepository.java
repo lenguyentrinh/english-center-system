@@ -1,24 +1,17 @@
 package com.trinh.english_center_be.modules.user.Repository;
 
 import com.trinh.english_center_be.modules.user.entity.UserRole;
-import com.trinh.english_center_be.modules.user.entity.UserRoleId;
-import com.trinh.english_center_be.shared.enums.Roles;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.util.List;
+import java.util.Optional;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> {
+public interface UserRoleRepository extends MongoRepository<UserRole, String> {
 
-    @Query("SELECT ur FROM UserRole ur JOIN FETCH ur.role WHERE ur.id.userId = :userId")
-    List<UserRole> findByUserIdWithRole(@Param("userId") Long userId);
+    List<UserRole> findByUserId(String userId);
 
-    @Query("SELECT ur FROM UserRole ur JOIN FETCH ur.role r LEFT JOIN FETCH r.businessRole WHERE ur.id.userId = :userId")
-    List<UserRole> findByUserIdWithRoleAndBusinessRole(@Param("userId") Long userId);
+    List<UserRole> findByRoleId(String roleId);
 
-    boolean existsByIdUserIdAndIdRoleId(Long userId, Long roleId);
+    Optional<UserRole> findByUserIdAndRoleId(String userId, String roleId);
 
-    @Query("SELECT ur.user.id FROM UserRole ur JOIN ur.role r WHERE r.code = :code")
-    List<Long> findUserIdsByRoleCode(@Param("code") Roles code);
+    boolean existsByUserIdAndRoleId(String userId, String roleId);
 }

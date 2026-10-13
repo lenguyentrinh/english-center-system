@@ -6,8 +6,8 @@ import com.trinh.english_center_be.modules.academic.dto.SessionResponse;
 import java.util.List;
 
 public interface SessionService {
-    List<SessionResponse> findByCourseId(Long courseId);
-    SessionResponse create(Long courseId, SessionRequest request);
-    SessionResponse update(Long courseId, Long sessionId, SessionRequest request);
-    void delete(Long courseId, Long sessionId);
+    List<SessionResponse> findByCourseId(String courseId);
+    SessionResponse create(String courseId, SessionRequest request);
+    SessionResponse update(String courseId, String sessionId, SessionRequest request);
+    void delete(String courseId, String sessionId);
 }

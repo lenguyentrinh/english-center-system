@@ -18,7 +18,7 @@ export default function CoursesPage() {
   const error = useQueryErrorMessage(queryError, "Failed to load courses");
 
   const sortedCourses = useMemo(
-    () => [...courses].sort((left, right) => right.id - left.id),
+    () => [...courses].sort((left, right) => right.id.localeCompare(left.id)),
     [courses]
   );
 

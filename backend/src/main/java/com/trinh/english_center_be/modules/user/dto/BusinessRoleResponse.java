@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record BusinessRoleResponse (
-    Long id,
+    String id,
     BusinessRoles code,
     String description,
     Boolean active,

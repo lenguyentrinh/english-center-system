@@ -48,7 +48,7 @@ export default function ManageBusinessRolesPage() {
   };
 
   const rolesByBusinessRoleId = useMemo(() => {
-    const grouped = new Map<number, RoleResponse[]>();
+    const grouped = new Map<string, RoleResponse[]>();
 
     roles.forEach((role) => {
       if (!role.businessRoleId) return;

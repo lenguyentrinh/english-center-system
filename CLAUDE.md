@@ -15,9 +15,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Backend
 - **Framework**: Spring Boot 3.5.7
 - **Language**: Java 24
-- **Database**: MySQL 8.0+
+- **Database**: MongoDB 7+
 - **Authentication**: JWT (jjwt)
-- **Data Access**: Spring Data JPA with Hibernate
+- **Data Access**: Spring Data MongoDB
 - **API Documentation**: SpringDoc OpenAPI (Swagger UI)
 - **Validation**: Spring Validation
 - **Utilities**: Lombok for boilerplate reduction
@@ -41,15 +41,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Backend follows a **modular architecture** organized by domain. Each module under `backend/src/main/java/com/trinh/english_center_be/modules/` contains:
 - **controller/**: REST endpoints
 - **service/**: Business logic (interface + impl)
-- **repository/**: Spring Data JPA data access
-- **entity/**: JPA domain models
+- **repository/**: Spring Data MongoDB data access
+- **entity/**: MongoDB document models (`@Document`, String ObjectId ids)
 - **dto/**: Data transfer objects (Request/Response)
 - **mapper/**: Entity ↔ DTO conversion
 
 Current modules: `academic`, `attendance`, `auth`, `student`, `teacher`, `user`
 
 **Shared utilities** in `backend/src/main/java/com/trinh/english_center_be/shared/`:
-- `BaseEntity`: Abstract base for JPA entities (id, createdAt, updatedAt)
+- `BaseEntity`: Abstract base for documents (createdAt, updateAt, active)
 - `config/`: Spring configuration (security, OpenAPI/Swagger, etc.)
 - `exception/`: Custom exceptions and global error handling
 - `response/`: Standard API response wrappers
@@ -100,9 +100,9 @@ pnpm run preview                     # Preview production build locally
 ```
 
 ### Database
-Create MySQL database before running backend:
-```sql
-CREATE DATABASE english_center_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+Start MongoDB before running the backend. The database and collections are created automatically on first use:
+```bash
+docker run -d --name english-center-mongo -p 27017:27017 mongo:7
 ```
 
 ## Configuration
@@ -112,8 +112,7 @@ Both backend and frontend require `.env` files (see `.env.example` in each direc
 
 **Backend** (`.env` in `backend/`):
 - `SERVER_PORT`: API port (default: 8080)
-- `DB_URL`: MySQL JDBC URL
-- `DB_USERNAME`, `DB_PASSWORD`: Database credentials
+- `MONGODB_URI`: MongoDB connection string (default: mongodb://localhost:27017/english_center_db)
 - `JWT_SECRET`: JWT signing key (min 32 chars for HS256)
 - `JWT_EXPIRATION`: Token expiration in ms (default: 3600000 = 1 hour)
 - `TIMEZONE`: Server timezone (default: Asia/Ho_Chi_Minh)
@@ -123,7 +122,7 @@ Both backend and frontend require `.env` files (see `.env.example` in each direc
 
 ### Backend Configuration
 - Spring configuration in `backend/src/main/resources/application.yml`
-- Hibernate auto-schema update enabled (`ddl-auto: update`)
+- MongoDB indexes are created automatically (`auto-index-creation: true`)
 - SQL logging enabled in dev profile
 - CORS and security configured via Spring Security
 

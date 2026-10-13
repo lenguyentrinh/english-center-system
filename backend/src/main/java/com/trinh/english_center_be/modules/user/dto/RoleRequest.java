@@ -14,5 +14,5 @@ public record RoleRequest (
     @Size(max = Constant.DESCRIPTION_MAX_LENGTH, message = MessageConstant.DESCRIPTION_MAX_LENGTH)
     String description,
 
-    Long businessRoleId
+    String businessRoleId
 ){}

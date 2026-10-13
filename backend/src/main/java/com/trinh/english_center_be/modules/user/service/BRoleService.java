@@ -8,12 +8,10 @@ import java.util.List;
 
 public interface BRoleService {
     List<BusinessRoleResponse> findAll();
-    BusinessRoleResponse findResponseById(Long id);
+    BusinessRoleResponse findResponseById(String id);
     BusinessRoleResponse create(BusinessRoleRequest businessRoleRequest);
-    BusinessRole findById(Long id);
-
-    BusinessRole findByIdWithRoles(Long id);
+    BusinessRole findById(String id);
     void save(BusinessRole businessRole);
-    BusinessRoleResponse updateById(Long id, BusinessRoleRequest businessRoleRequest);
-    void softDeleteById(Long id);
+    BusinessRoleResponse updateById(String id, BusinessRoleRequest businessRoleRequest);
+    void softDeleteById(String id);
 }

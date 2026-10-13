@@ -28,7 +28,7 @@ public class UserRoleAssignmentController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<UserEffectiveRolesResponse>> getEffectiveRoles(@PathVariable Long userId) {
+    public ResponseEntity<ApiResponse<UserEffectiveRolesResponse>> getEffectiveRoles(@PathVariable String userId) {
         return ResponseEntity.ok(new ApiResponse<>(
                 200,
                 String.format(MessageConstant.RETRIEVED_SUCCESSFULLY, Constant.USER, userId),
@@ -39,8 +39,8 @@ public class UserRoleAssignmentController {
     @PostMapping("/{roleId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> assignRole(
-            @PathVariable Long userId,
-            @PathVariable Long roleId
+            @PathVariable String userId,
+            @PathVariable String roleId
     ) {
         userRoleAssignmentService.assignRole(userId, roleId);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -50,8 +50,8 @@ public class UserRoleAssignmentController {
     @DeleteMapping("/{roleId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> removeRole(
-            @PathVariable Long userId,
-            @PathVariable Long roleId
+            @PathVariable String userId,
+            @PathVariable String roleId
     ) {
         userRoleAssignmentService.removeRole(userId, roleId);
         return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.REMOVE_SUCCESSFULLY, Constant.ROLE), null));
@@ -60,8 +60,8 @@ public class UserRoleAssignmentController {
     @PostMapping("/business-roles/{businessRoleId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<CourseSuggestionResponse>>> assignBusinessRole(
-            @PathVariable Long userId,
-            @PathVariable Long businessRoleId
+            @PathVariable String userId,
+            @PathVariable String businessRoleId
     ) {
         List <CourseSuggestionResponse> suggestions =
                 userRoleAssignmentService.assignBusinessRole(userId, businessRoleId);
@@ -72,8 +72,8 @@ public class UserRoleAssignmentController {
     @DeleteMapping("/business-roles/{businessRoleId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> removeBusinessRole(
-            @PathVariable Long userId,
-            @PathVariable Long businessRoleId
+            @PathVariable String userId,
+            @PathVariable String businessRoleId
     ) {
         userRoleAssignmentService.removeBusinessRole(userId, businessRoleId);
         return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.REMOVE_SUCCESSFULLY, Constant.BUSINESS_ROLE), null));

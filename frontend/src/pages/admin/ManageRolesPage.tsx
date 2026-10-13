@@ -50,7 +50,7 @@ export default function ManageRolesPage() {
   const businessRoleOptions = useMemo(
     () =>
       businessRoles.map((businessRole) => ({
-        value: String(businessRole.id),
+        value: businessRole.id,
         label: `${businessRole.code}${businessRole.active ? "" : " (inactive)"}`,
       })),
     [businessRoles]

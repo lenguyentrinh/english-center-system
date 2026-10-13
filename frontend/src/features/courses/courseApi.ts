@@ -26,7 +26,7 @@ export const getCourses = async (): Promise<ApiResponse<Course[]>> => {
   return { ...data, data: mapped } as ApiResponse<Course[]>;
 };
 
-export const getCourseById = async (id: number): Promise<ApiResponse<Course>> => {
+export const getCourseById = async (id: string): Promise<ApiResponse<Course>> => {
   const { data } = await apiClient.get<ApiResponse<ServerCourse>>(`/courses/${id}`);
   const mapped = data.data ? mapServerCourseToClient(data.data) : null;
   return { ...data, data: mapped } as ApiResponse<Course>;
@@ -41,7 +41,7 @@ export const createCourse = async (
 };
 
 export const updateCourse = async (
-  id: number,
+  id: string,
   payload: UpsertCoursePayload
 ): Promise<ApiResponse<Course>> => {
   const { data } = await apiClient.put<ApiResponse<ServerCourse>>(`/courses/${id}`, payload);
@@ -49,12 +49,12 @@ export const updateCourse = async (
   return { ...data, data: mapped } as ApiResponse<Course>;
 };
 
-export const deleteCourse = async (id: number): Promise<ApiResponse<null>> => {
+export const deleteCourse = async (id: string): Promise<ApiResponse<null>> => {
   const { data } = await apiClient.delete<ApiResponse<null>>(`/courses/${id}`);
   return data;
 };
 
-export const getSessionsByCourseId = async (courseId: number): Promise<ApiResponse<Session[]>> => {
+export const getSessionsByCourseId = async (courseId: string): Promise<ApiResponse<Session[]>> => {
   const { data } = await apiClient.get<ApiResponse<Session[]>>(`/courses/${courseId}/sessions`);
   return data;
 };

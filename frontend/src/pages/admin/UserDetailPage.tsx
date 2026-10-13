@@ -30,8 +30,8 @@ import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage.ts";
 import { statusBadgeClass } from "@/features/admin/constants.ts";
 
 type RemovalTarget =
-  | { kind: "role"; id: number; label: string; courses?: CourseSummary[] }
-  | { kind: "businessRole"; id: number; label: string; courses?: CourseSummary[] }
+  | { kind: "role"; id: string; label: string; courses?: CourseSummary[] }
+  | { kind: "businessRole"; id: string; label: string; courses?: CourseSummary[] }
   | null;
 
 const NO_ROLES: RoleResponse[] = [];
@@ -44,7 +44,7 @@ const chipClass =
 
 export default function UserDetailPage() {
   const { id } = useParams();
-  const userId = Number(id);
+  const userId = id ?? "";
 
   const [submitting, setSubmitting] = useState(false);
   const [selectedRoleId, setSelectedRoleId] = useState("");
@@ -52,9 +52,9 @@ export default function UserDetailPage() {
   const [removalTarget, setRemovalTarget] = useState<RemovalTarget>(null);
   const [suggestedModalOpen, setSuggestedModalOpen] = useState(false);
   const [suggestedCourses, setSuggestedCourses] = useState<CourseSummary[]>([]);
-  const [selectedSuggestedCourseIds, setSelectedSuggestedCourseIds] = useState<number[]>([]);
+  const [selectedSuggestedCourseIds, setSelectedSuggestedCourseIds] = useState<string[]>([]);
 
-  const isValidId = Number.isFinite(userId);
+  const isValidId = userId.length > 0;
   const { data, isLoading: loading, error: queryError, refetch } = useQuery({
     queryKey: ["user-detail", userId],
     queryFn: async () => {
@@ -80,7 +80,7 @@ export default function UserDetailPage() {
   const loadError = useQueryErrorMessage(queryError, "Failed to load user detail");
   const error = isValidId ? loadError : "Invalid user id";
 
-  const toggleSuggestedCourse = (courseId: number) => {
+  const toggleSuggestedCourse = (courseId: string) => {
     setSelectedSuggestedCourseIds((prev) => {
       // remove if already selected, add if not selected
       if (prev.includes(courseId)) return prev.filter((id) => id !== courseId);
@@ -147,7 +147,7 @@ export default function UserDetailPage() {
 
     try {
       setSubmitting(true);
-      const res = await assignRoleToUser(userId, Number(selectedRoleId));
+      const res = await assignRoleToUser(userId, selectedRoleId);
       toast.success(res.message);
       setSelectedRoleId("");
       await refetch();
@@ -163,7 +163,7 @@ export default function UserDetailPage() {
 
     try {
       setSubmitting(true);
-      const res = await assignBusinessRoleToUser(userId, Number(selectedBusinessRoleId));
+      const res = await assignBusinessRoleToUser(userId, selectedBusinessRoleId);
       toast.success(res.message);
       setSelectedBusinessRoleId("");
 
@@ -183,7 +183,7 @@ export default function UserDetailPage() {
     }
   };
 
-  const openRemovalConfirm = async (kind: "role" | "businessRole", id: number, label: string) => {
+  const openRemovalConfirm = async (kind: "role" | "businessRole", id: string, label: string) => {
     try {
       const teacherRes = await getTeacherByUserId(userId);
       const teacher = teacherRes.data;
@@ -248,7 +248,7 @@ export default function UserDetailPage() {
       setSubmitting(false);
     }
   };
-  if (!Number.isFinite(userId)) {
+  if (!isValidId) {
     return (
       <AdminLayout>
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700">

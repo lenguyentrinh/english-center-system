@@ -1,17 +1,15 @@
 package com.trinh.english_center_be.modules.user.Repository;
 
 import com.trinh.english_center_be.modules.user.entity.UserBusinessRole;
-import com.trinh.english_center_be.modules.user.entity.UserBusinessRoleId;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.util.List;
+import java.util.Optional;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface UserBusinessRoleRepository extends JpaRepository<UserBusinessRole, UserBusinessRoleId> {
+public interface UserBusinessRoleRepository extends MongoRepository<UserBusinessRole, String> {
 
-    @Query("SELECT ubr FROM UserBusinessRole ubr JOIN FETCH ubr.businessRole br LEFT JOIN FETCH br.roles WHERE ubr.id.userId = :userId")
-    List<UserBusinessRole> findByUserIdWithBusinessRoleAndRoles(@Param("userId") Long userId);
+    List<UserBusinessRole> findByUserId(String userId);
 
-    boolean existsByIdUserIdAndIdBusinessRoleId(Long userId, Long businessRoleId);
+    Optional<UserBusinessRole> findByUserIdAndBusinessRoleId(String userId, String businessRoleId);
+
+    boolean existsByUserIdAndBusinessRoleId(String userId, String businessRoleId);
 }

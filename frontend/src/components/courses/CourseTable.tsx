@@ -5,7 +5,7 @@ interface CourseTableProps {
   loading: boolean;
   onView?: (course: Course) => void;
   onUpdate: (course: Course) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
   submitting?: boolean;
 }
 

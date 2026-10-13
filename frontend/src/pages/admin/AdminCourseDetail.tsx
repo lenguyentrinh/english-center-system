@@ -7,12 +7,13 @@ import SessionList from "@/shared/components/SessionList.tsx";
 
 export default function AdminCourseDetail() {
   const { id } = useParams();
+  const courseId = id ?? "";
   const [activeTab, setActiveTab] = useState<string>("sessions");
 
   const { data, isLoading: loading } = useQuery({
-    queryKey: ["course", Number(id)],
-    queryFn: () => getCourseById(Number(id)),
-    enabled: !!id,
+    queryKey: ["course", courseId],
+    queryFn: () => getCourseById(courseId),
+    enabled: !!courseId,
   });
   const course = data?.data ?? null;
 

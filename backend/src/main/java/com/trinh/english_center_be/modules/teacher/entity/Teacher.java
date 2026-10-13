@@ -2,25 +2,18 @@ package com.trinh.english_center_be.modules.teacher.entity;
 
 import com.trinh.english_center_be.modules.user.entity.User;
 import com.trinh.english_center_be.shared.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "teachers")
+@Document(collection = "teachers")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,13 +22,12 @@ import lombok.experimental.SuperBuilder;
 public class Teacher extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @Indexed(unique = true)
+    @DBRef(lazy = true)
     private User user;
 
-    @Column(name = "salary", precision = 12, scale = 2)
+    /** Stored as a string by Spring Data (default BigDecimal mapping); exposed as a JSON number. */
     private BigDecimal salary;
 }

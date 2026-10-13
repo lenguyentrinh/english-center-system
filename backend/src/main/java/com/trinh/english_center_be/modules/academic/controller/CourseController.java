@@ -34,7 +34,7 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<CourseResponse>> getById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<CourseResponse>> getById(@PathVariable String id) {
         return ResponseEntity.ok(new ApiResponse<>(
                 200,
                 String.format(MessageConstant.RETRIEVED_SUCCESSFULLY, Constant.COURSE, id),
@@ -51,7 +51,7 @@ public class CourseController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<CourseResponse>> update(@PathVariable Long id, @Valid @RequestBody CourseRequest request) {
+    public ResponseEntity<ApiResponse<CourseResponse>> update(@PathVariable String id, @Valid @RequestBody CourseRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(
                 200,
                 String.format(MessageConstant.UPDATED_SUCCESSFULLY, Constant.COURSE, id),
@@ -61,14 +61,14 @@ public class CourseController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
         courseService.softDeleteById(id);
         return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.DELETED_SUCCESSFULLY, Constant.COURSE), null));
     }
 
     @PostMapping("/{id}/assign-teacher/{teacherId}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<CourseResponse>> assignTeacher(@PathVariable Long id, @PathVariable Long teacherId) {
+    public ResponseEntity<ApiResponse<CourseResponse>> assignTeacher(@PathVariable String id, @PathVariable String teacherId) {
         CourseResponse res = courseService.assignTeacher(id, teacherId);
         return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.ASSIGN_SUCCESSFULLY, "Teacher"), res));
     }

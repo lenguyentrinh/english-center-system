@@ -32,7 +32,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
-    public ResponseEntity<ApiResponse<UserResponse>> getById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<UserResponse>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
                 new ApiResponse<>(200, String.format(MessageConstant.RETRIEVED_SUCCESSFULLY, Constant.USER, id),
                         userService.findByIdResponse(id))
@@ -49,7 +49,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
-    public ResponseEntity<ApiResponse<UserResponse>> update(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<UserResponse>> update(@PathVariable String id,
                                                             @Valid @RequestBody UserRequest request
     ) {
         return ResponseEntity.ok(
@@ -60,7 +60,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
         userService.softDeleteById(id);
         return ResponseEntity.ok(
                 new ApiResponse<>(200, String.format(MessageConstant.DELETED_SUCCESSFULLY, Constant.USER), null)

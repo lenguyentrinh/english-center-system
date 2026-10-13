@@ -42,7 +42,7 @@ public class BusinessRoleController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<BusinessRoleResponse>> getById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<BusinessRoleResponse>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         200,
@@ -66,7 +66,7 @@ public class BusinessRoleController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<BusinessRoleResponse>> update(
-            @PathVariable Long id,
+            @PathVariable String id,
             @Valid @RequestBody BusinessRoleRequest request
     ) {
         return ResponseEntity.ok(
@@ -80,7 +80,7 @@ public class BusinessRoleController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
         bRoleService.softDeleteById(id);
         return ResponseEntity.ok(
                 new ApiResponse<>(

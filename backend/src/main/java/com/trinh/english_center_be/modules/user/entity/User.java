@@ -2,20 +2,16 @@ package com.trinh.english_center_be.modules.user.entity;
 
 import com.trinh.english_center_be.shared.BaseEntity;
 import com.trinh.english_center_be.shared.enums.UserStatus;
-import jakarta.persistence.*;
-
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "users")
+@Document(collection = "users")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,25 +20,19 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class User extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(name = "username", nullable = false, unique = true, length = 50)
+    @Indexed(unique = true)
     private String username;
 
-    @Column(name = "password", nullable = false, length = 255)
     private String password;
 
-    @Column(name = "email", unique = true, length = 100)
+    @Indexed(unique = true, sparse = true)
     private String email;
 
-    @Column(name = "full_name", length = 100)
     private String fullName;
 
-    @Column(name = "phone", length = 20)
     private String phone;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 20)
     private UserStatus status;
 }

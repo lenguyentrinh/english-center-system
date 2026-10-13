@@ -32,21 +32,21 @@ public class TeacherController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<TeacherResponse>> getById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<TeacherResponse>> getById(@PathVariable String id) {
         return teacherService.findById(id)
                 .map(t -> ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.RETRIEVED_SUCCESSFULLY, Constant.TEACHER, id), t)))
                 .orElseGet(() -> ResponseEntity.ok(new ApiResponse<>(404, String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.TEACHER, id), null)));
     }
 
     @GetMapping("/by-user/{userId}")
-    public ResponseEntity<ApiResponse<TeacherResponse>> getByUserId(@PathVariable Long userId) {
+    public ResponseEntity<ApiResponse<TeacherResponse>> getByUserId(@PathVariable String userId) {
         return teacherService.findByUserId(userId)
                 .map(t -> ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.RETRIEVED_SUCCESSFULLY, Constant.TEACHER, t.id()), t)))
                 .orElseGet(() -> ResponseEntity.ok(new ApiResponse<>(404, String.format(MessageConstant.NOT_FOUND_BY_ID, "Teacher for user", userId), null)));
     }
 
     @GetMapping("/by-user/{userId}/courses")
-    public ResponseEntity<ApiResponse<List<CourseResponse>>> getCoursesByUserId(@PathVariable Long userId,
+    public ResponseEntity<ApiResponse<List<CourseResponse>>> getCoursesByUserId(@PathVariable String userId,
                                                                                 @RequestParam(value = "availableRoles", required = false) String availableRolesCsv) {
         List<CourseResponse> courses;
         if (availableRolesCsv == null || availableRolesCsv.isBlank()) {
@@ -67,7 +67,7 @@ public class TeacherController {
     }
 
     @PutMapping("/by-user/{userId}")
-    public ResponseEntity<ApiResponse<TeacherResponse>> upsertByUserId(@PathVariable Long userId, @RequestBody TeacherUpsertRequest request) {
+    public ResponseEntity<ApiResponse<TeacherResponse>> upsertByUserId(@PathVariable String userId, @RequestBody TeacherUpsertRequest request) {
         TeacherResponse resp = teacherService.upsertByUserId(userId, request);
         return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.UPDATED_SUCCESSFULLY, Constant.TEACHER, resp.id()), resp));
     }

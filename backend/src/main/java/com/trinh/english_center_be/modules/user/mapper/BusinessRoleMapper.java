@@ -3,18 +3,22 @@ package com.trinh.english_center_be.modules.user.mapper;
 import com.trinh.english_center_be.modules.user.dto.BusinessRoleResponse;
 import com.trinh.english_center_be.modules.user.dto.RoleResponse;
 import com.trinh.english_center_be.modules.user.entity.BusinessRole;
+import com.trinh.english_center_be.modules.user.entity.Role;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public final class BusinessRoleMapper {
     private BusinessRoleMapper() {}
 
-    public static BusinessRoleResponse toResponse(BusinessRole businessRole) {
+    /**
+     * @param roles roles that belong to the business role, loaded by the caller through
+     *              RoleRepository.findByBusinessRole; inactive roles are filtered out here
+     */
+    public static BusinessRoleResponse toResponse(BusinessRole businessRole, List<Role> roles) {
         if (businessRole == null) return null;
-        List<RoleResponse> roles = businessRole.getRoles() == null ? List.of() :
-                businessRole.getRoles().stream()
+        List<RoleResponse> roleResponses = roles == null ? List.of() :
+                roles.stream()
                         .filter(r -> Boolean.TRUE.equals(r.getActive()))
                         .map(RoleMapper::toResponse)
                         .toList();
@@ -26,7 +30,7 @@ public final class BusinessRoleMapper {
                 businessRole.getActive(),
                 businessRole.getCreatedAt(),
                 businessRole.getUpdateAt(),
-                roles
+                roleResponses
         );
     }
 

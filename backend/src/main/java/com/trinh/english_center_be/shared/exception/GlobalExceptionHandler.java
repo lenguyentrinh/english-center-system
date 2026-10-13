@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +54,48 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .path(request.getRequestURI())
                 .origin("validation")
+                .build();
+
+        return ResponseEntity.status(error.getStatus()).body(response);
+    }
+
+    // =========================
+    // MongoDB (Spring Data) errors
+    // =========================
+
+    /** Unique index violation (e.g. duplicate username/email/code, duplicate user-role link). */
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateKey(
+            DuplicateKeyException ex,
+            HttpServletRequest request
+    ) {
+        ErrorCode error = ErrorCode.ENTITY_EXISTS;
+
+        ErrorResponse response = ErrorResponse.builder()
+                .status(error.getStatus())
+                .message(error.getMessage())
+                .timestamp(LocalDateTime.now())
+                .path(request.getRequestURI())
+                .origin("database")
+                .build();
+
+        return ResponseEntity.status(error.getStatus()).body(response);
+    }
+
+    /** Any other Spring Data / MongoDB access failure. */
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ErrorResponse> handleDataAccess(
+            DataAccessException ex,
+            HttpServletRequest request
+    ) {
+        ErrorCode error = ErrorCode.DATABASE_ERROR;
+
+        ErrorResponse response = ErrorResponse.builder()
+                .status(error.getStatus())
+                .message(error.getMessage())
+                .timestamp(LocalDateTime.now())
+                .path(request.getRequestURI())
+                .origin("database")
                 .build();
 
         return ResponseEntity.status(error.getStatus()).body(response);
