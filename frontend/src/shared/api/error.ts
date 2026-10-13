@@ -29,7 +29,13 @@ export const getApiErrorMessage = (
       return data.origin ? `${data.message} (origin: ${data.origin})` : data.message;
     }
 
-    const status = error.response?.status;
+    if (!error.response) {
+      if (error.code === "ECONNABORTED") return "Request timed out: the server took too long to respond";
+      return "Cannot reach the server: check your connection, API URL or CORS settings";
+    }
+
+    const status = error.response.status;
+    if (status >= 500) return `Server error (${status}): please try again later`;
     if (status === 403) return "Permission denied: you are not allowed to do this action";
     if (status === 401) return "Authentication required: please login again";
 
