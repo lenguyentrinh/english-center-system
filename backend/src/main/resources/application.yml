@@ -4,6 +4,11 @@ server:
     context-path: ${CONTEXT_PATH:/api}
 
 spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:backend/.env[.properties]
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -31,7 +36,6 @@ logging:
     org.hibernate.SQL: DEBUG
 
 jwt:
-  # At least 32 characters for HS256
   secret: ${JWT_SECRET:lethinguyentrinh-english-center-ms-jwt-key-32chars}
   # Milliseconds only (3600000 = 1 hour). Do not set seconds here.
   expiration-ms: ${JWT_EXPIRATION_MS:3600000}
