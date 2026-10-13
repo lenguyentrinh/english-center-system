@@ -11,9 +11,13 @@ import ManageRolesPage from "@/pages/admin/ManageRolesPage.tsx";
 import ManageBusinessRolesPage from "@/pages/admin/ManageBusinessRolesPage.tsx";
 import ManageUsersPage from "@/pages/admin/ManageUsersPage.tsx";
 import UserDetailPage from "@/pages/admin/UserDetailPage.tsx";
-import RequireAdmin from "@/shared/components/auth/RequireAdmin.tsx";
+import RequireAuth from "@/shared/components/auth/RequireAuth.tsx";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage.tsx";
+import VerifyEmailPage from "@/pages/VerifyEmailPage.tsx";
 import { Navigate } from "react-router-dom";
 import PublicLayout from "@/shared/components/layout/PublicLayout.tsx";
+
+const ADMIN_ONLY = ["ADMIN"];
 
 const Placeholder = ({ title }: { title: string }) => (
   <PublicLayout>
@@ -29,17 +33,19 @@ export const router = createBrowserRouter([
   { path: "/", element: <HomePage /> },
   { path: "/auth/login", element: <LoginPage /> },
   { path: "/auth/signup", element: <SignupPage /> },
-  { path: "/account", element: <AccountPage /> },
+  { path: "/auth/forgot-password", element: <ForgotPasswordPage /> },
+  { path: "/auth/verify-email", element: <VerifyEmailPage /> },
+  { path: "/account", element: <RequireAuth><AccountPage /></RequireAuth> },
   { path: "/courses", element: <CoursesPage /> },
   { path: "/courses/:id", element: <CourseDetailPage /> },
   { path: "/teaching-classes", element: <Navigate to="/courses" replace /> },
-  { path: "/admin", element: <RequireAdmin><Navigate to="/admin/users" replace /></RequireAdmin> },
-  { path: "/admin/users", element: <RequireAdmin><ManageUsersPage /></RequireAdmin> },
-  { path: "/admin/users/:id", element: <RequireAdmin><UserDetailPage /></RequireAdmin> },
-  { path: "/admin/courses", element: <RequireAdmin><AdminCoursesPage /></RequireAdmin> },
-  { path: "/admin/courses/:id", element: <RequireAdmin><AdminCourseDetail /></RequireAdmin> },
-  { path: "/admin/roles", element: <RequireAdmin><ManageRolesPage /></RequireAdmin> },
-  { path: "/admin/business-roles", element: <RequireAdmin><ManageBusinessRolesPage /></RequireAdmin> },
+  { path: "/admin", element: <RequireAuth roles={ADMIN_ONLY}><Navigate to="/admin/users" replace /></RequireAuth> },
+  { path: "/admin/users", element: <RequireAuth roles={ADMIN_ONLY}><ManageUsersPage /></RequireAuth> },
+  { path: "/admin/users/:id", element: <RequireAuth roles={ADMIN_ONLY}><UserDetailPage /></RequireAuth> },
+  { path: "/admin/courses", element: <RequireAuth roles={ADMIN_ONLY}><AdminCoursesPage /></RequireAuth> },
+  { path: "/admin/courses/:id", element: <RequireAuth roles={ADMIN_ONLY}><AdminCourseDetail /></RequireAuth> },
+  { path: "/admin/roles", element: <RequireAuth roles={ADMIN_ONLY}><ManageRolesPage /></RequireAuth> },
+  { path: "/admin/business-roles", element: <RequireAuth roles={ADMIN_ONLY}><ManageBusinessRolesPage /></RequireAuth> },
   { path: "/contact", element: <Placeholder title="Contact page (todo)" /> },
   { path: "*", element: <Placeholder title="404 - Not found" /> },
 ]);

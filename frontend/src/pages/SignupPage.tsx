@@ -32,15 +32,16 @@ export default function SignupPage() {
 
   const onSubmit = async (values: SignupForm) => {
     try {
+      const email = values.email.trim();
       const res = await signup({
         username: values.username.trim(),
         password: values.password,
-        email: values.email.trim(),
+        email,
         fullName: values.fullName.trim(),
         phone: values.phone?.trim() ? values.phone.trim() : undefined,
       });
       toast.success(res.message);
-      navigate("/auth/login");
+      navigate("/auth/verify-email", { state: { email } });
     } catch (error: unknown) {
       toast.error(getApiErrorMessage(error, "Signup failed"));
     }

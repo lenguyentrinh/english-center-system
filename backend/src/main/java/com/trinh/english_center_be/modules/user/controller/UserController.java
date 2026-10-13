@@ -2,6 +2,7 @@ package com.trinh.english_center_be.modules.user.controller;
 
 import com.trinh.english_center_be.modules.user.dto.UserRequest;
 import com.trinh.english_center_be.modules.user.dto.UserResponse;
+import com.trinh.english_center_be.modules.user.dto.UserUpdateRequest;
 import com.trinh.english_center_be.modules.user.service.UserService;
 import com.trinh.english_center_be.shared.response.ApiResponse;
 import com.trinh.english_center_be.shared.util.Constant;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -50,11 +52,14 @@ public class UserController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
     public ResponseEntity<ApiResponse<UserResponse>> update(@PathVariable String id,
-                                                            @Valid @RequestBody UserRequest request
+                                                            @Valid @RequestBody UserUpdateRequest request,
+                                                            Authentication authentication
     ) {
+        boolean admin = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         return ResponseEntity.ok(
                 new ApiResponse<>(200, String.format(MessageConstant.UPDATED_SUCCESSFULLY, Constant.USER, id),
-                        userService.update(id, request))
+                        userService.update(id, request, admin))
         );
     }
 

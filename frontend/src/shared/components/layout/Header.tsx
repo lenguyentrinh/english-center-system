@@ -1,21 +1,6 @@
-import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { logout } from "@/features/auth/authApi.ts";
-import {
-  AUTH_CHANGED_EVENT,
-  getAdminAccessState,
-  isAuthenticated,
-  setAdminAccessState,
-  setAuthenticated,
-} from "@/features/auth/authSession.ts";
-import {
-  clearCurrentUsername,
-  getCurrentDisplayName,
-  getCurrentUsername,
-} from "@/features/auth/authIdentity.ts";
-import { probeAdminAccess } from "@/features/auth/authApi.ts";
-import { getUsers } from "@/features/admin/adminApi.ts";
+import { useAuth, useLogout } from "@/features/auth/useAuth.ts";
 
 const navItems = [
   { label: "Course", href: "/courses" },
@@ -26,45 +11,9 @@ const navItems = [
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [authed, setAuthed] = useState(() => isAuthenticated());
-  const [username, setUsername] = useState(() => getCurrentDisplayName() || getCurrentUsername());
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(() => getAdminAccessState());
-
-  useEffect(() => {
-    const onAuthChanged = () => {
-      setAuthed(isAuthenticated());
-      setUsername(getCurrentDisplayName() || getCurrentUsername());
-      setIsAdmin(getAdminAccessState());
-    };
-    window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
-    return () => window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
-  }, []);
-
-  useEffect(() => {
-    const bootstrap = async () => {
-      if (!authed || getAdminAccessState() !== null) return;
-
-      const adminAllowed = await probeAdminAccess();
-      setAdminAccessState(adminAllowed);
-
-      if (adminAllowed) {
-        try {
-          const usersRes = await getUsers();
-          const currentUsername = getCurrentUsername();
-          const currentUser = usersRes.data.find((user) => user.username === currentUsername);
-          if (currentUser?.fullName?.trim()) {
-            setUsername(currentUser.fullName.trim());
-          }
-        } catch {
-          // Keep the existing display name if the admin user lookup fails.
-        }
-      }
-
-      setIsAdmin(adminAllowed);
-    };
-
-    void bootstrap();
-  }, [authed]);
+  const { user, isAuthenticated: authed, isAdmin } = useAuth();
+  const logoutMutation = useLogout();
+  const username = user?.fullName?.trim() || user?.username || "";
 
   const activeLinkClass = (href: string) => {
     const isActive = href === "/courses"
@@ -81,18 +30,14 @@ export default function Header() {
     ].join(" ");
   };
 
-  const handleLogout = async () => {
-    try {
-      const res = await logout();
-      toast.success(res.message);
-    } catch {
-      // Even if API logout fails (expired session), we should still clear client state.
-      toast.success("Logged out");
-    } finally {
-      setAuthenticated(false);
-      clearCurrentUsername();
-      navigate("/");
-    }
+  const handleLogout = () => {
+    logoutMutation.mutate(undefined, {
+      // Local state is cleared even when the API call fails (e.g. the session had already expired).
+      onSettled: () => {
+        toast.success("Logged out");
+        navigate("/");
+      },
+    });
   };
 
   return (

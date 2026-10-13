@@ -16,6 +16,13 @@ spring:
       uri: ${MONGODB_URI:mongodb://localhost:27017/english_center_db}
       auto-index-creation: true
 
+  mail:
+    # No host here on purpose: an empty spring.mail.host would still create a (broken) sender.
+    # Set spring.mail.host/port/username/password in .env (or SPRING_MAIL_* env vars) to enable SMTP.
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
   jackson:
     time-zone: ${TIMEZONE:Asia/Ho_Chi_Minh}
 
@@ -24,8 +31,26 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET:lethinguyentrinh-english-center-ms-jwt-key-32chars}
-  # Milliseconds only (3600000 = 1 hour). Do not set seconds here.
-  expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+  # Access token lifetime in milliseconds (900000 = 15 min). Renewed via the refresh token.
+  expiration-ms: ${JWT_EXPIRATION_MS:900000}
+  # Refresh token lifetime in milliseconds (604800000 = 7 days).
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+
+auth:
+  otp:
+    ttl-minutes: ${OTP_TTL_MINUTES:5}
+    # HMAC key for stored reset codes; defaults to the JWT secret.
+    secret: ${OTP_SECRET:${JWT_SECRET:lethinguyentrinh-english-center-ms-jwt-key-32chars}}
+  rate-limit:
+    max-requests: ${AUTH_RATE_LIMIT_MAX:10}
+    window-seconds: ${AUTH_RATE_LIMIT_WINDOW_SECONDS:60}
+
+app:
+  name: ${APP_NAME:English Center}
+
+# Sender address. With no spring.mail.host configured (dev), reset codes are printed to the log instead of emailed.
+mail:
+  from: ${MAIL_FROM:no-reply@english-center.local}
 
 cookie:
   secure: ${COOKIE_SECURE:false}

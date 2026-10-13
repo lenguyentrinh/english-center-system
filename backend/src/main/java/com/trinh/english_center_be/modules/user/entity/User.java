@@ -35,4 +35,14 @@ public class User extends BaseEntity {
     private String phone;
 
     private UserStatus status;
+
+    /**
+     * Null on accounts created before verification existed; those count as verified. Self-registered
+     * accounts start false; admin-created accounts and completed password resets set true.
+     */
+    private Boolean emailVerified;
+
+    public boolean isEmailVerified() {
+        return emailVerified == null || emailVerified;
+    }
 }

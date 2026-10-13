@@ -30,6 +30,15 @@ public class MessageConstant {
     public static final String  LOGIN_SUCCESS= "Login successful";
     public static final String  SIGNUP_SUCCESS= "Signup successful";
     public static final String  LOGOUT_SUCCESS= "Logout successful";
+    public static final String  REFRESH_SUCCESS = "Session refreshed";
+    public static final String  ME_SUCCESS = "Current user retrieved successfully";
+    public static final String  PASSWORD_CHANGED = "Password changed successfully";
+    public static final String  FORGOT_PASSWORD_SENT = "If this email is registered, a verification code has been sent.";
+    public static final String  SIGNUP_VERIFY_EMAIL = "Account created. Enter the code we emailed you to verify your address.";
+    public static final String  RESEND_VERIFICATION_SENT = "If this account is awaiting verification, a new code has been sent.";
+    public static final String  EMAIL_VERIFIED = "Email verified successfully";
+    public static final String  OTP_VALID = "Code is valid";
+    public static final String  PASSWORD_RESET_SUCCESS = "Password has been reset successfully";
 
     //message validate field
     //user

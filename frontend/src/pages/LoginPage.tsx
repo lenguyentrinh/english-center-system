@@ -1,29 +1,30 @@
-import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import AuthLayout from "@/shared/components/layout/AuthLayout.tsx";
-import { login, probeAdminAccess } from "@/features/auth/authApi.ts";
-import {
-  clearCurrentUsername,
-  setCurrentDisplayName,
-  setCurrentUsername,
-} from "@/features/auth/authIdentity.ts";
+import PageLoader from "@/shared/components/PageLoader.tsx";
+import { fetchMe, login } from "@/features/auth/authApi.ts";
+import { AUTH_QUERY_KEY } from "@/features/auth/authKeys.ts";
+import { safeReturnPath } from "@/features/auth/safeReturnPath.ts";
+import { useAuth } from "@/features/auth/useAuth.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
-import {
-  clearAdminAccessState,
-  setAdminAccessState,
-  setAuthenticated,
-} from "@/features/auth/authSession.ts";
-import { getUsers } from "@/features/admin/adminApi.ts";
 import {
   loginSchema,
   type LoginForm,
 } from "@/features/auth/validation/authSchema.ts";
 import { InputField } from "@/shared/components/form";
+import Button from "@/shared/components/Button.tsx";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const { isLoading, isAuthenticated } = useAuth();
+  const returnTo = safeReturnPath(searchParams.get("return")) ?? "/";
+
   const {
     register,
     handleSubmit,
@@ -34,45 +35,33 @@ export default function LoginPage() {
       username: "",
       password: "",
     },
-    mode: "onBlur",
+    mode: "onTouched",
   });
 
   const onSubmit = async (values: LoginForm) => {
-    const username = values.username.trim();
-
     try {
       const res = await login({
-        username,
+        username: values.username.trim(),
         password: values.password,
       });
+      // Fetch the session now so the destination page already knows who is signed in.
+      const user = await queryClient.fetchQuery({ queryKey: AUTH_QUERY_KEY, queryFn: fetchMe, staleTime: 0 });
       toast.success(res.message);
-      setAuthenticated(true);
-      setCurrentUsername(username);
-      setCurrentDisplayName(username);
-
-      const isAdmin = await probeAdminAccess();
-      setAdminAccessState(isAdmin);
-
-      if (isAdmin) {
-        try {
-          const usersRes = await getUsers();
-          const currentUser = usersRes.data.find((user) => user.username === username);
-          setCurrentDisplayName(currentUser?.fullName?.trim() || currentUser?.username || username);
-        } catch {
-          setCurrentDisplayName(username);
-        }
-      } else {
-        clearAdminAccessState();
-      }
-
-      navigate("/");
+      navigate(user ? returnTo : "/", { replace: true });
     } catch (error: unknown) {
-      setAuthenticated(false);
-      clearCurrentUsername();
-      clearAdminAccessState();
+      // Correct password but unverified email: continue on the verification page, which sends a fresh code.
+      if (axios.isAxiosError(error) && error.response?.data?.origin === "email-not-verified") {
+        const email = values.username.includes("@") ? values.username.trim() : "";
+        toast.info("Please verify your email to continue.");
+        navigate("/auth/verify-email", { state: { email, autoSend: true } });
+        return;
+      }
       toast.error(getApiErrorMessage(error, "Login failed"));
     }
   };
+
+  if (isLoading) return <PageLoader />;
+  if (isAuthenticated) return <Navigate to={returnTo} replace />;
 
   return (
     <AuthLayout>
@@ -80,35 +69,35 @@ export default function LoginPage() {
       <p className="mt-1 text-sm text-slate-600">Use your account to continue.</p>
 
       <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        <div className="space-y-1">
-            <InputField
-              label="Username"
-              placeholder="Username"
-              {...register("username")}
-              error={errors.username?.message}
-              id="username"
-              required={true}
-            />
+        <InputField
+          label="Username or email"
+          placeholder="Username or email"
+          autoComplete="username"
+          {...register("username")}
+          error={errors.username?.message}
+          id="username"
+          required={true}
+        />
+
+        <InputField
+          label="Password"
+          type="password"
+          autoComplete="current-password"
+          {...register("password")}
+          error={errors.password?.message}
+          id="password"
+          required={true}
+        />
+
+        <div className="text-right">
+          <Link to="/auth/forgot-password" className="text-sm font-medium text-indigo-600 underline hover:text-indigo-500">
+            Forgot password?
+          </Link>
         </div>
 
-        <div className="space-y-1">
-          <InputField
-            label="Password"
-            type="password"
-            {...register("password")}
-            error={errors.password?.message}
-            id="password"
-            required={true}
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {isSubmitting ? "Logging in..." : "Login"}
-        </button>
+        <Button type="submit" size="large" className="w-full" loading={isSubmitting}>
+          Login
+        </Button>
       </form>
 
       <p className="mt-4 text-sm text-slate-600">

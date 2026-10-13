@@ -72,10 +72,16 @@ Current modules: `academic`, `attendance`, `auth`, `student`, `teacher`, `user`
   - `tsconfig.node.json`: Tooling config (Vite, build scripts)
 
 ### Authentication & Security
-- Backend: JWT-based authentication (SpringSecurity) with configurable expiration
-- Frontend: Token stored and sent in API requests via Axios interceptors
-- Cookie support configurable via `COOKIE_SECURE` env var
-- API secured with standard Spring Security patterns
+- **Cookies only, no token in JSON**: `AUTH_TOKEN` (JWT access, 15 min, path `/`) and `REFRESH_TOKEN` (opaque `id.secret`, 7 days, path `<context-path>/auth`), both HttpOnly. `COOKIE_SECURE` / `COOKIE_SAMESITE` configurable.
+- **Refresh rotation** (`RefreshTokenServiceImpl`): each `POST /auth/refresh` revokes the old token and issues a new one via a conditional update (no Mongo transaction needed). Reusing a revoked token outside a 10 s grace window revokes every session of that user.
+- **Endpoints** (`/auth/*`): `signup`, `login` (username or email), `refresh`, `logout`, `me`, `change-password`, `forgot-password`, `verify-otp`, `reset-password`. Login errors share one message; `forgot-password` always answers the same.
+- **Password reset**: 6-digit code, HMAC-hashed, 5 min TTL, 5 attempts, 60 s resend cooldown; `verify-otp` does not consume it, `reset-password` re-checks and consumes it, then revokes all sessions. Without `spring.mail.host` the code is logged (dev only); prod refuses to start without SMTP.
+- **Email verification**: self-signup creates `emailVerified=false` and emails a code (`POST /auth/verify-email`, `/auth/resend-verification`, same OTP safeguards, separate collection). Login with a correct password but unverified email returns 401 with `origin: "email-not-verified"`. `User.emailVerified == null` (legacy) counts as verified; admin-created users and completed password resets are verified.
+- **User profile update** (`PUT /users/{id}`, `UserUpdateRequest`) never touches the password; only admins can change `status` and `email`.
+- `AuthRateLimitFilter`: 10 POST/min per IP on login/signup/forgot/verify/reset (in-memory, per instance).
+- Principal is `AuthUserDetails` (has `id`), so `#id == authentication.principal.id` works. Roles/status are re-read from the DB on every request.
+- Anonymous access to protected URLs returns **401** (custom entry point); the frontend relies on that to refresh.
+- Frontend: `useAuth()` (TanStack Query key `["auth","me"]`) is the single source of session state; `RequireAuth roles={[...]}` guards routes and redirects to `/auth/login?return=<path>` (validated by `safeReturnPath`). The axios interceptor in `shared/api/client.ts` does one shared refresh then replays the request; menus hidden by role are UX only, the backend enforces permissions.
 
 ## Development Commands
 
@@ -114,7 +120,9 @@ Both backend and frontend require `.env` files (see `.env.example` in each direc
 - `SERVER_PORT`: API port (default: 8080)
 - `MONGODB_URI`: MongoDB connection string (default: mongodb://localhost:27017/english_center_db)
 - `JWT_SECRET`: JWT signing key (min 32 chars for HS256)
-- `JWT_EXPIRATION`: Token expiration in ms (default: 3600000 = 1 hour)
+- `JWT_EXPIRATION_MS`: Access token lifetime in ms (default: 900000 = 15 min)
+- `JWT_REFRESH_EXPIRATION_MS`: Refresh token lifetime in ms (default: 604800000 = 7 days)
+- `spring.mail.host/port/username/password`, `MAIL_FROM`: SMTP for password-reset emails (optional in dev)
 - `TIMEZONE`: Server timezone (default: Asia/Ho_Chi_Minh)
 
 **Frontend** (`.env` in `frontend/`):

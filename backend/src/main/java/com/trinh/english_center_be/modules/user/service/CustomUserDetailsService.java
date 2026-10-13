@@ -1,5 +1,6 @@
 package com.trinh.english_center_be.modules.user.service;
 
+import com.trinh.english_center_be.modules.auth.security.AuthUserDetails;
 import com.trinh.english_center_be.modules.user.Repository.RoleRepository;
 import com.trinh.english_center_be.modules.user.Repository.UserRepository;
 import com.trinh.english_center_be.modules.user.Repository.UserRoleRepository;
@@ -47,12 +48,12 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .map(code -> new SimpleGrantedAuthority("ROLE_" + code.name()))
                 .collect(Collectors.toSet());
 
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .authorities(authorities)
-                .accountLocked(user.getStatus() != null && user.getStatus() == UserStatus.LOCKED)
-                .disabled(user.getStatus() != null && user.getStatus() != UserStatus.ACTIVE)
-                .build();
+        return new AuthUserDetails(
+                user.getId(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getStatus() == null || user.getStatus() == UserStatus.ACTIVE,
+                user.getStatus() != UserStatus.LOCKED,
+                authorities);
     }
 }

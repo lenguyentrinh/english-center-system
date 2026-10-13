@@ -3,6 +3,7 @@ package com.trinh.english_center_be.modules.user.service.impl;
 import com.trinh.english_center_be.modules.user.Repository.UserRepository;
 import com.trinh.english_center_be.modules.user.dto.UserRequest;
 import com.trinh.english_center_be.modules.user.dto.UserResponse;
+import com.trinh.english_center_be.modules.user.dto.UserUpdateRequest;
 import com.trinh.english_center_be.modules.user.entity.User;
 import com.trinh.english_center_be.modules.user.service.UserService;
 import com.trinh.english_center_be.shared.enums.UserStatus;
@@ -56,10 +57,11 @@ public class UserServiceImpl implements UserService {
         User user = User.builder()
                 .username(request.username())
                 .password(passwordEncoder.encode(request.password()))
-                .email(request.email())
+                .email(request.email().trim().toLowerCase())
                 .fullName(request.fullName())
                 .phone(request.phone())
                 .status(request.status())
+                .emailVerified(true)
                 .active(true)
                 .build();
 
@@ -68,30 +70,35 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse update(String id, UserRequest request) {
+    public UserResponse update(String id, UserUpdateRequest request, boolean admin) {
         User user = findById(id);
 
-        if (!user.getUsername().equals(request.username()) && existByUserName(request.username())) {
-            throw new IllegalArgumentException(
+        if (!request.username().equals(user.getUsername()) && existByUserName(request.username())) {
+            throw new ExistByFieldException(
                     String.format(MessageConstant.FIELD_ALREADY_VALUE, Constant.USERNAME_FIELD, request.username())
             );
         }
+        user.setUsername(request.username());
 
-        if (!user.getEmail().equals(request.email()) && existByEmail(request.email())) {
-            throw new IllegalArgumentException(
-                    String.format(MessageConstant.FIELD_ALREADY_VALUE, Constant.EMAIL_FIELD, request.email())
-            );
+        // Changing the email would need re-verification, so it is an admin-only operation.
+        if (admin && !request.email().equalsIgnoreCase(user.getEmail())) {
+            if (existByEmail(request.email())) {
+                throw new ExistByFieldException(
+                        String.format(MessageConstant.FIELD_ALREADY_VALUE, Constant.EMAIL_FIELD, request.email())
+                );
+            }
+            user.setEmail(request.email().trim().toLowerCase());
         }
 
-        user.setUsername(request.username());
-        user.setPassword(passwordEncoder.encode(request.password()));
-        user.setEmail(request.email());
         user.setFullName(request.fullName());
         user.setPhone(request.phone());
-        user.setStatus(request.status());
 
-        User updatedUser = userRepository.save(user);
-        return UserMapper.toResponse(updatedUser);
+        // A user must not be able to reactivate or otherwise change their own account state.
+        if (admin && request.status() != null) {
+            user.setStatus(request.status());
+        }
+
+        return UserMapper.toResponse(userRepository.save(user));
     }
 
     @Override
@@ -105,6 +112,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmailIgnoreCase(email);
     }
 
     @Override
@@ -138,6 +150,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean existByEmail(String email) {
-        return userRepository.existsByEmail(email);
+        return userRepository.findByEmailIgnoreCase(email.trim()).isPresent();
     }
 }

@@ -1,12 +1,6 @@
 import { useNavigate, NavLink, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { logout } from "@/features/auth/authApi.ts";
-import {
-  AUTH_CHANGED_EVENT,
-  isAuthenticated,
-  setAuthenticated,
-} from "@/features/auth/authSession.ts";
-import { clearCurrentUsername } from "@/features/auth/authIdentity.ts";
+import { useAuth, useLogout } from "@/features/auth/useAuth.ts";
 
 const navItems = [
   { to: "/admin/users", label: "Manage Users" },
@@ -17,20 +11,16 @@ const navItems = [
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const authed = isAuthenticated();
+  const { isAuthenticated: authed } = useAuth();
+  const logoutMutation = useLogout();
 
-  const handleLogout = async () => {
-    try {
-      const res = await logout();
-      toast.success(res.message);
-    } catch {
-      toast.success("Logged out");
-    } finally {
-      setAuthenticated(false);
-      clearCurrentUsername();
-      navigate("/");
-      window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
-    }
+  const handleLogout = () => {
+    logoutMutation.mutate(undefined, {
+      onSettled: () => {
+        toast.success("Logged out");
+        navigate("/");
+      },
+    });
   };
 
   return (

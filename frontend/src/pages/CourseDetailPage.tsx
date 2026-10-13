@@ -6,7 +6,7 @@ import PublicLayout from "@/shared/components/layout/PublicLayout.tsx";
 import { getCourseById } from "@/features/courses/courseApi.ts";
 import type { Course } from "@/features/courses/types.ts";
 import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage.ts";
-import { isAuthenticated } from "@/features/auth/authSession.ts";
+import { useAuth } from "@/features/auth/useAuth.ts";
 
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString("en-US", {
@@ -30,6 +30,7 @@ export default function CourseDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const courseId = id ?? "";
+  const { isAuthenticated } = useAuth();
 
   const isValidId = courseId.length > 0;
   const { data, isLoading: loading, error: queryError } = useQuery({
@@ -47,8 +48,8 @@ export default function CourseDetailPage() {
   );
 
   const handleEnroll = () => {
-    if (!isAuthenticated()) {
-      navigate("/auth/login");
+    if (!isAuthenticated) {
+      navigate(`/auth/login?return=${encodeURIComponent(`/courses/${courseId}`)}`);
       return;
     }
 

@@ -12,4 +12,8 @@ public class UnauthorizedException extends BusinessException {
     public UnauthorizedException(String message) {
         super(message, ErrorCode.UNAUTHORIZED.getStatus());
     }
+
+    public UnauthorizedException(String message, String origin) {
+        super(message, ErrorCode.UNAUTHORIZED.getStatus(), origin);
+    }
 }
