@@ -1,5 +1,6 @@
 import { apiClient } from "@/shared/api/client.ts";
 import type { ApiResponse } from "@/shared/types/api-response.type";
+import type { CourseSummary } from "@/features/courses/types";
 import type {
   BusinessRoleResponse,
   BusinessRoleUpsertPayload,
@@ -107,8 +108,8 @@ export const removeRoleFromUser = async (
 export const assignBusinessRoleToUser = async (
   userId: number,
   businessRoleId: number
-): Promise<ApiResponse<any[]>> => {
-  const { data } = await apiClient.post<ApiResponse<any[]>>(
+): Promise<ApiResponse<CourseSummary[]>> => {
+  const { data } = await apiClient.post<ApiResponse<CourseSummary[]>>(
     `/users/${userId}/roles/business-roles/${businessRoleId}`
   );
   return data;
@@ -117,8 +118,8 @@ export const assignBusinessRoleToUser = async (
 export const assignTeacherToCourse = async (
   courseId: number,
   teacherId: number
-): Promise<ApiResponse<any>> => {
-  const { data } = await apiClient.post<ApiResponse<any>>(`/courses/${courseId}/assign-teacher/${teacherId}`);
+): Promise<ApiResponse<unknown>> => {
+  const { data } = await apiClient.post<ApiResponse<unknown>>(`/courses/${courseId}/assign-teacher/${teacherId}`);
   return data;
 };
 

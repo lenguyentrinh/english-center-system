@@ -97,7 +97,6 @@ You will:
 - Use **Axios** as the HTTP client with interceptors for token injection
 - Configure base URL via `VITE_API_BASE_URL` environment variable
 - Return typed responses; map API data to frontend types immediately
-- Use **TanStack Query** for async state management and caching
 
 ### Forms & Validation
 - Use **React Hook Form** for form state management

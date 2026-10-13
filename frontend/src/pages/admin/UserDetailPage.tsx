@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
@@ -17,6 +17,7 @@ import {
 } from "@/features/admin/adminApi.ts";
 import { getTeacherByUserId } from "@/features/teachers/teachersApi";
 import { getCoursesByTeacherUserId } from "@/features/teachers/teachersApi";
+import type { CourseSummary } from "@/features/courses/types";
 import type {
   BusinessRoleResponse,
   RoleResponse,
@@ -27,8 +28,8 @@ import { getApiErrorMessage } from "@/shared/api/error.ts";
 import { statusBadgeClass } from "@/features/admin/constants.ts";
 
 type RemovalTarget =
-  | { kind: "role"; id: number; label: string; courses?: any[] }
-  | { kind: "businessRole"; id: number; label: string; courses?: any[] }
+  | { kind: "role"; id: number; label: string; courses?: CourseSummary[] }
+  | { kind: "businessRole"; id: number; label: string; courses?: CourseSummary[] }
   | null;
 
 const formatDate = (value: string | null) => (value ? new Date(value).toLocaleString() : "-");
@@ -51,10 +52,10 @@ export default function UserDetailPage() {
   const [selectedBusinessRoleId, setSelectedBusinessRoleId] = useState("");
   const [removalTarget, setRemovalTarget] = useState<RemovalTarget>(null);
   const [suggestedModalOpen, setSuggestedModalOpen] = useState(false);
-  const [suggestedCourses, setSuggestedCourses] = useState<any[]>([]);
+  const [suggestedCourses, setSuggestedCourses] = useState<CourseSummary[]>([]);
   const [selectedSuggestedCourseIds, setSelectedSuggestedCourseIds] = useState<number[]>([]);
 
-  const loadDetail = async () => {
+  const loadDetail = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -75,7 +76,7 @@ export default function UserDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
   const toggleSuggestedCourse = (courseId: number) => {
     setSelectedSuggestedCourseIds((prev) => {
@@ -128,7 +129,7 @@ export default function UserDetailPage() {
     }
 
     void loadDetail();
-  }, [userId]);
+  }, [userId, loadDetail]);
 
   const effectiveRoleIds = useMemo(
     () => new Set(effectiveRoles?.effectiveRoles.map((role) => role.id) ?? []),
@@ -177,7 +178,7 @@ export default function UserDetailPage() {
       const suggestions = res.data ?? [];
       if (Array.isArray(suggestions) && suggestions.length > 0) {
         setSuggestedCourses(suggestions);
-        setSelectedSuggestedCourseIds(suggestions.map((s: any) => s.id));
+        setSelectedSuggestedCourseIds(suggestions.map((s) => s.id));
         setSuggestedModalOpen(true);
       }
 
@@ -212,7 +213,7 @@ export default function UserDetailPage() {
       if (kind === "businessRole") {
         const br = await getBusinessRoleById(id);
         const brRoles = br.data?.roles ?? [];
-        const teacherCodes = brRoles.map((r:any) => r.code).filter(Boolean).filter((c:string) => c.startsWith("TEACHER"));
+        const teacherCodes = brRoles.map((r) => r.code).filter((c) => c.startsWith("TEACHER"));
         if (!teacherCodes.length) {
           setRemovalTarget({ kind, id, label });
           return;
@@ -224,7 +225,6 @@ export default function UserDetailPage() {
       }
     } catch (err) {
       // fallback to simple confirm on error — log for diagnostics
-      // eslint-disable-next-line no-console
       console.error("openRemovalConfirm error:", err);
     }
 
@@ -460,7 +460,7 @@ export default function UserDetailPage() {
                 <p>Are you sure you want to remove <strong>{removalTarget.label}</strong> from this user?</p>
                 <p className="mt-2 font-semibold">Assigned courses:</p>
                 <ul className="list-disc pl-5 mt-1">
-                  {removalTarget.courses.map((c: any) => (
+                  {removalTarget.courses.map((c) => (
                     <li key={c.id} className="text-sm text-slate-700">{c.code} — {c.name}</li>
                   ))}
                 </ul>

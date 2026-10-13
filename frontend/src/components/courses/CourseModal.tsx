@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Course } from "@/features/courses/types.ts";
 import { courseSchema, type CourseForm } from "@/features/courses/courseSchema.ts";
@@ -31,12 +31,16 @@ const defaultValues: CourseForm = {
 };
 
 export default function CourseModal({ isOpen, onClose, onSubmit, submitting, editingCourse }: Props) {
-  const { register, control, handleSubmit, reset, watch, formState: { errors } } = useForm<CourseForm>({
+  const { register, control, handleSubmit, reset, formState: { errors } } = useForm<CourseForm>({
     resolver: zodResolver(courseSchema),
     defaultValues,
     mode: "onBlur",
   });
   const isEditing = !!editingCourse;
+
+  const [teachers, setTeachers] = useState<TeacherItem[]>([]);
+  const [suggestedTeachers, setSuggestedTeachers] = useState<TeacherItem[]>([]);
+  const [teacherRoles, setTeacherRoles] = useState<RoleResponse[]>([]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -70,11 +74,7 @@ export default function CourseModal({ isOpen, onClose, onSubmit, submitting, edi
     }
   }, [isOpen, editingCourse, reset]);
 
-  const [teachers, setTeachers] = useState<TeacherItem[]>([]);
-  const [suggestedTeachers, setSuggestedTeachers] = useState<TeacherItem[]>([]);
-  const [teacherRoles, setTeacherRoles] = useState<RoleResponse[]>([]);
-
-  const availableRole = watch("availableRoleTeacher");
+  const availableRole = useWatch({ control, name: "availableRoleTeacher" });
 
   // fetch suggested teachers when availableRole changes
   useEffect(() => {

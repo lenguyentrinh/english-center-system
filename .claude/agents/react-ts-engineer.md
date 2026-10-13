@@ -16,7 +16,6 @@ You excel at:
 - **Redux Toolkit & React Redux**: Slice architecture, normalized state, async thunks, selectors, and middleware
 - **React Hook Form + Zod**: Type-safe form validation, schema-driven forms, and error handling
 - **TailwindCSS**: Utility-first styling, responsive design, component composition with Tailwind classes
-- **TanStack Query**: Data fetching, caching, synchronization, and optimistic updates
 - **Axios Integration**: Request/response interceptors, error handling, and API client architecture
 - **Component Architecture**: Composition, reusability, prop drilling prevention, and clear separation of concerns
 - **Performance Optimization**: Memoization, code splitting, lazy loading, and render optimization

@@ -43,3 +43,26 @@ export type Session = {
   endTime: string;
   topic: string;
 };
+
+export type CourseSummary = {
+  id: number;
+  code: string;
+  name: string;
+  availableRoleTeacher?: string | null;
+};
+
+export type ServerCourse = {
+  id: number;
+  code: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  maxStudent: number;
+  status: CourseStatus;
+  teacherId?: number | null;
+  teacherFullName?: string | null;
+  availableRoleTeacher?: Course["availableRoleTeacher"];
+  minimumAge?: number | null;
+  requiredEntryLevel?: string | null;
+  prerequisitesRequired?: boolean | null;
+};
