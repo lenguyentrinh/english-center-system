@@ -1,22 +1,19 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getSessionsByCourseId } from "@/features/courses/courseApi.ts";
 import type { Session } from "@/features/courses/types.ts";
+
+const NO_SESSIONS: Session[] = [];
 
 type Props = {
   courseId: number;
 };
 
 export default function SessionList({ courseId }: Props) {
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    void getSessionsByCourseId(courseId)
-      .then((res) => setSessions(res.data ?? []))
-      .catch(() => setSessions([]))
-      .finally(() => setLoading(false));
-  }, [courseId]);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["course-sessions", courseId],
+    queryFn: () => getSessionsByCourseId(courseId),
+  });
+  const sessions = data?.data ?? NO_SESSIONS;
 
   if (loading) {
     return <div className="text-sm text-slate-500">Loading sessions...</div>;

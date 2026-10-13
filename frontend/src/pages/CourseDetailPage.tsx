@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import PublicLayout from "@/shared/components/layout/PublicLayout.tsx";
 import { getCourseById } from "@/features/courses/courseApi.ts";
 import type { Course } from "@/features/courses/types.ts";
-import { getApiErrorMessage } from "@/shared/api/error.ts";
+import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage.ts";
 import { isAuthenticated } from "@/features/auth/authSession.ts";
 
 const formatDate = (value: string) =>
@@ -30,34 +31,15 @@ export default function CourseDetailPage() {
   const navigate = useNavigate();
   const courseId = Number(id);
 
-  const [course, setCourse] = useState<Course | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!Number.isFinite(courseId)) {
-      setError("Invalid course id");
-      setLoading(false);
-      return;
-    }
-
-    const loadCourse = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await getCourseById(courseId);
-        setCourse(res.data);
-      } catch (err) {
-        const message = getApiErrorMessage(err, "Failed to load course detail");
-        setError(message);
-        toast.error(message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void loadCourse();
-  }, [courseId]);
+  const isValidId = Number.isFinite(courseId);
+  const { data, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ["course", courseId],
+    queryFn: () => getCourseById(courseId),
+    enabled: isValidId,
+  });
+  const course: Course | null = data?.data ?? null;
+  const loadError = useQueryErrorMessage(queryError, "Failed to load course detail");
+  const error = isValidId ? loadError : "Invalid course id";
 
   const durationLabel = useMemo(
     () => (course ? getDurationLabel(course.startDate, course.endDate) : "-"),

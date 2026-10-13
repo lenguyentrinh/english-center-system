@@ -1,24 +1,20 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
 import { getCourseById } from "@/features/courses/courseApi";
-import type { Course } from "@/features/courses/types.ts";
 import SessionList from "@/shared/components/SessionList.tsx";
 
 export default function AdminCourseDetail() {
   const { id } = useParams();
-  const [course, setCourse] = useState<Course | null>(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("sessions");
 
-  useEffect(() => {
-    if (!id) return;
-    setLoading(true);
-    void getCourseById(Number(id))
-      .then((res) => setCourse(res.data))
-      .catch(() => setCourse(null))
-      .finally(() => setLoading(false));
-  }, [id]);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["course", Number(id)],
+    queryFn: () => getCourseById(Number(id)),
+    enabled: !!id,
+  });
+  const course = data?.data ?? null;
 
   const statusBadgeClass: { [key: string]: string } = {
     OPEN: "rounded-full px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800",

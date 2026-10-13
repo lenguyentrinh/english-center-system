@@ -29,9 +29,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Build Tool**: Vite
 - **Language**: TypeScript (strict mode)
 - **Styling**: TailwindCSS with @tailwindcss/vite
-- **State Management**: Redux Toolkit + React Redux
 - **Forms**: React Hook Form + Zod validation
 - **HTTP Client**: Axios
+- **Server State**: TanStack Query (`useQuery` / `useMutation`); Redux is no longer used
 - **UI Notifications**: React Toastify
 - **Linting**: ESLint (flat config) with TypeScript & React Hooks plugins
 
@@ -59,8 +59,7 @@ Current modules: `academic`, `attendance`, `auth`, `student`, `teacher`, `user`
 ### Frontend Structure
 - **`src/app/`**: Core app setup (routing, providers, state, hooks)
   - `router.tsx`: React Router configuration
-  - `providers.tsx`: Redux Provider wrapper
-  - `store.ts`: Redux Toolkit store configuration
+  - `providers.tsx`: TanStack Query provider
 - **`src/features/`**: Feature modules (auth, courses, admin, teachers)
   - Feature-based organization (one folder per domain)
   - Typically includes API calls (`*Api.ts`), types (`types.ts`), and feature-specific state
@@ -155,7 +154,7 @@ REST API is at `http://localhost:8080/api/v1/*`
 ### Frontend
 - **Feature-based organization**: One folder per domain feature
 - **Zod for validation**: Typed schema validation with type inference
-- **Redux for shared state**: Use Redux Toolkit slices for domain state
+- **TanStack Query for server state**: Fetch with `useQuery`, write with `useMutation` and invalidate related query keys
 - **API layer**: Separate API calls in `*Api.ts` files, consumed by components
 - **Component reuse**: Put shared UI components in `components/`
 - **Type safety**: Strict TypeScript with separate `types.ts` per feature

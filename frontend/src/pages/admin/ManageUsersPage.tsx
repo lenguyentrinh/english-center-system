@@ -1,36 +1,21 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
 import { getUsers } from "@/features/admin/adminApi.ts";
 import type { UserSummaryResponse } from "@/features/admin/types.ts";
-import { getApiErrorMessage } from "@/shared/api/error.ts";
+import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage.ts";
 
 const formatDate = (value: string | null) => (value ? new Date(value).toLocaleString() : "-");
 
+const NO_USERS: UserSummaryResponse[] = [];
+
 export default function ManageUsersPage() {
-  const [users, setUsers] = useState<UserSummaryResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await getUsers();
-      setUsers(res.data);
-    } catch (err) {
-      const message = getApiErrorMessage(err, "Failed to load users");
-      setError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void loadUsers();
-  }, []);
+  const { data, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ["users"],
+    queryFn: getUsers,
+  });
+  const users = data?.data ?? NO_USERS;
+  const error = useQueryErrorMessage(queryError, "Failed to load users");
 
   return (
     <AdminLayout>

@@ -97,6 +97,7 @@ You will:
 - Use **Axios** as the HTTP client with interceptors for token injection
 - Configure base URL via `VITE_API_BASE_URL` environment variable
 - Return typed responses; map API data to frontend types immediately
+- Use **TanStack Query** (`useQuery` / `useMutation`) for server data; the project no longer uses Redux
 
 ### Forms & Validation
 - Use **React Hook Form** for form state management

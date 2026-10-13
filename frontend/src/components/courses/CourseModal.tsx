@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Course } from "@/features/courses/types.ts";
@@ -15,6 +16,9 @@ interface Props {
   submitting: boolean;
   editingCourse?: Course | null;
 }
+
+const NO_TEACHERS: TeacherItem[] = [];
+const NO_TEACHER_ROLES: RoleResponse[] = [];
 
 const defaultValues: CourseForm = {
   code: "",
@@ -38,23 +42,23 @@ export default function CourseModal({ isOpen, onClose, onSubmit, submitting, edi
   });
   const isEditing = !!editingCourse;
 
-  const [teachers, setTeachers] = useState<TeacherItem[]>([]);
-  const [suggestedTeachers, setSuggestedTeachers] = useState<TeacherItem[]>([]);
-  const [teacherRoles, setTeacherRoles] = useState<RoleResponse[]>([]);
+  const { data: teacherData } = useQuery({
+    queryKey: ["course-modal-teachers"],
+    queryFn: async () => {
+      const [tRes, rRes] = await Promise.all([getTeachers(), getRoles()]);
+      return {
+        teachers: tRes.data ?? [],
+        // roles with code starting with "TEACHER"
+        teacherRoles: (rRes.data ?? []).filter((r: RoleResponse) => r.code.startsWith("TEACHER")),
+      };
+    },
+    enabled: isOpen,
+  });
+  const teachers = teacherData?.teachers ?? NO_TEACHERS;
+  const teacherRoles = teacherData?.teacherRoles ?? NO_TEACHER_ROLES;
 
   useEffect(() => {
     if (!isOpen) return;
-    void Promise.all([getTeachers(), getRoles()])
-      .then(([tRes, rRes]) => {
-        setTeachers(tRes.data ?? []);
-        // fetch teacher roles (roles with code starts with "TEACHER")
-        const teacherRoles: RoleResponse[] = (rRes.data ?? []).filter((r: RoleResponse) => r.code.startsWith("TEACHER"));
-        setTeacherRoles(teacherRoles);
-      })
-      .catch(() => {
-        setTeachers([]);
-        setTeacherRoles([]);
-      });
     if (editingCourse) {
       reset({
         code: editingCourse.code,
@@ -76,16 +80,16 @@ export default function CourseModal({ isOpen, onClose, onSubmit, submitting, edi
 
   const availableRole = useWatch({ control, name: "availableRoleTeacher" });
 
-  // fetch suggested teachers when availableRole changes
-  useEffect(() => {
-    if (!availableRole) {
-      setSuggestedTeachers([]);
-      return;
-    }
-    void getTeachers(availableRole)
-      .then((res) => setSuggestedTeachers(res.data ?? []))
-      .catch(() => setSuggestedTeachers([]));
-  }, [availableRole]);
+  // suggested teachers for the selected role
+  const { data: suggestedData } = useQuery({
+    queryKey: ["course-modal-suggested-teachers", availableRole],
+    queryFn: () => getTeachers(availableRole),
+    enabled: !!availableRole,
+  });
+  const suggestedTeachers = useMemo(
+    () => (availableRole ? suggestedData?.data ?? NO_TEACHERS : NO_TEACHERS),
+    [availableRole, suggestedData]
+  );
 
   if (!isOpen) return null;
 

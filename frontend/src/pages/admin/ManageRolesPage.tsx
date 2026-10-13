@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
 import ConfirmDialog from "@/shared/components/ConfirmDialog.tsx";
@@ -16,6 +17,10 @@ import type {
   RoleUpsertPayload,
 } from "@/features/admin/types.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
+import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage.ts";
+
+const NO_ROLES: RoleResponse[] = [];
+const NO_BUSINESSROLES: BusinessRoleResponse[] = [];
 
 const badgeClass = (active: boolean) =>
   active
@@ -23,35 +28,24 @@ const badgeClass = (active: boolean) =>
     : "bg-slate-100 text-slate-600";
 
 export default function ManageRolesPage() {
-  const [roles, setRoles] = useState<RoleResponse[]>([]);
-  const [businessRoles, setBusinessRoles] = useState<BusinessRoleResponse[]>([]);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<RoleResponse | null>(null);
   const [deletingRole, setDeletingRole] = useState<RoleResponse | null>(null);
 
+  const { data, isLoading: loading, error: queryError, refetch } = useQuery({
+    queryKey: ["roles-page"],
+    queryFn: async () => {
+      const [a, b] = await Promise.all([getRoles(), getBusinessRoles()]);
+      return { roles: a.data, businessRoles: b.data };
+    },
+  });
+  const roles = data?.roles ?? NO_ROLES;
+  const businessRoles = data?.businessRoles ?? NO_BUSINESSROLES;
+  const error = useQueryErrorMessage(queryError, "Failed to load roles");
   const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const [rolesRes, businessRolesRes] = await Promise.all([getRoles(), getBusinessRoles()]);
-      setRoles(rolesRes.data);
-      setBusinessRoles(businessRolesRes.data);
-    } catch (err) {
-      const message = getApiErrorMessage(err, "Failed to load roles");
-      setError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
+    await refetch();
   };
-
-  useEffect(() => {
-    void loadData();
-  }, []);
 
   const businessRoleOptions = useMemo(
     () =>

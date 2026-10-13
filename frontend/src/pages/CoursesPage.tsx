@@ -1,35 +1,21 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
 import PublicLayout from "@/shared/components/layout/PublicLayout.tsx";
 import CourseCard from "@/shared/components/CourseCard.tsx";
 import { getCourses } from "@/features/courses/courseApi.ts";
 import type { Course } from "@/features/courses/types.ts";
-import { getApiErrorMessage } from "@/shared/api/error.ts";
+import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage.ts";
+
+const NO_COURSES: Course[] = [];
 
 export default function CoursesPage() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadCourses = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await getCourses();
-      setCourses(res.data);
-    } catch (err) {
-      const message = getApiErrorMessage(err, "Failed to load courses");
-      setError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void loadCourses();
-  }, []);
+  const { data, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ["courses"],
+    queryFn: getCourses,
+  });
+  const courses = data?.data ?? NO_COURSES;
+  const error = useQueryErrorMessage(queryError, "Failed to load courses");
 
   const sortedCourses = useMemo(
     () => [...courses].sort((left, right) => right.id - left.id),

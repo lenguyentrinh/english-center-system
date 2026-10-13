@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
@@ -25,12 +26,16 @@ import type {
   UserSummaryResponse,
 } from "@/features/admin/types.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
+import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage.ts";
 import { statusBadgeClass } from "@/features/admin/constants.ts";
 
 type RemovalTarget =
   | { kind: "role"; id: number; label: string; courses?: CourseSummary[] }
   | { kind: "businessRole"; id: number; label: string; courses?: CourseSummary[] }
   | null;
+
+const NO_ROLES: RoleResponse[] = [];
+const NO_BUSINESS_ROLES: BusinessRoleResponse[] = [];
 
 const formatDate = (value: string | null) => (value ? new Date(value).toLocaleString() : "-");
 
@@ -41,13 +46,7 @@ export default function UserDetailPage() {
   const { id } = useParams();
   const userId = Number(id);
 
-  const [user, setUser] = useState<UserSummaryResponse | null>(null);
-  const [effectiveRoles, setEffectiveRoles] = useState<UserEffectiveRolesResponse | null>(null);
-  const [roles, setRoles] = useState<RoleResponse[]>([]);
-  const [businessRoles, setBusinessRoles] = useState<BusinessRoleResponse[]>([]);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [selectedRoleId, setSelectedRoleId] = useState("");
   const [selectedBusinessRoleId, setSelectedBusinessRoleId] = useState("");
   const [removalTarget, setRemovalTarget] = useState<RemovalTarget>(null);
@@ -55,28 +54,31 @@ export default function UserDetailPage() {
   const [suggestedCourses, setSuggestedCourses] = useState<CourseSummary[]>([]);
   const [selectedSuggestedCourseIds, setSelectedSuggestedCourseIds] = useState<number[]>([]);
 
-  const loadDetail = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const isValidId = Number.isFinite(userId);
+  const { data, isLoading: loading, error: queryError, refetch } = useQuery({
+    queryKey: ["user-detail", userId],
+    queryFn: async () => {
       const [userRes, effectiveRolesRes, rolesRes, businessRolesRes] = await Promise.all([
         getUserById(userId),
         getUserEffectiveRoles(userId),
         getRoles(),
         getBusinessRoles(),
       ]);
-      setUser(userRes.data);
-      setEffectiveRoles(effectiveRolesRes.data);
-      setRoles(rolesRes.data);
-      setBusinessRoles(businessRolesRes.data);
-    } catch (err) {
-      const message = getApiErrorMessage(err, "Failed to load user detail");
-      setError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
+      return {
+        user: userRes.data,
+        effectiveRoles: effectiveRolesRes.data,
+        roles: rolesRes.data,
+        businessRoles: businessRolesRes.data,
+      };
+    },
+    enabled: isValidId,
+  });
+  const user: UserSummaryResponse | null = data?.user ?? null;
+  const effectiveRoles: UserEffectiveRolesResponse | null = data?.effectiveRoles ?? null;
+  const roles = data?.roles ?? NO_ROLES;
+  const businessRoles = data?.businessRoles ?? NO_BUSINESS_ROLES;
+  const loadError = useQueryErrorMessage(queryError, "Failed to load user detail");
+  const error = isValidId ? loadError : "Invalid user id";
 
   const toggleSuggestedCourse = (courseId: number) => {
     setSelectedSuggestedCourseIds((prev) => {
@@ -121,16 +123,6 @@ export default function UserDetailPage() {
     }
   };
 
-  useEffect(() => {
-    if (!Number.isFinite(userId)) {
-      setError("Invalid user id");
-      setLoading(false);
-      return;
-    }
-
-    void loadDetail();
-  }, [userId, loadDetail]);
-
   const effectiveRoleIds = useMemo(
     () => new Set(effectiveRoles?.effectiveRoles.map((role) => role.id) ?? []),
     [effectiveRoles]
@@ -158,7 +150,7 @@ export default function UserDetailPage() {
       const res = await assignRoleToUser(userId, Number(selectedRoleId));
       toast.success(res.message);
       setSelectedRoleId("");
-      await loadDetail();
+      await refetch();
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to assign role"));
     } finally {
@@ -183,7 +175,7 @@ export default function UserDetailPage() {
       }
 
       // we only create the teacher server-side; do not open teacher-details modal
-      await loadDetail();
+      await refetch();
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to assign business role"));
     } finally {
@@ -244,7 +236,7 @@ export default function UserDetailPage() {
         toast.success(res.message);
       }
       setRemovalTarget(null);
-      await loadDetail();
+      await refetch();
     } catch (err) {
       toast.error(
         getApiErrorMessage(

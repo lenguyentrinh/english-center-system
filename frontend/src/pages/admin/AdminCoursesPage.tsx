@@ -1,28 +1,29 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
 import ConfirmDialog from "@/shared/components/ConfirmDialog.tsx";
 import CourseTable from "@/components/courses/CourseTable";
 import CourseModal from "@/components/courses/CourseModal";
-import { useAppDispatch, useAppSelector } from "@/app/hooks.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
+import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage.ts";
+import { getCourses } from "@/features/courses/courseApi.ts";
+import { useCourseMutations } from "@/features/courses/useCourseMutations.ts";
 import type { Course, UpsertCoursePayload } from "@/features/courses/types.ts";
-import type { ApiResponse } from "@/shared/types/api-response.type";
-import {
-  createCourseThunk,
-  deleteCourseThunk,
-  fetchCourses,
-  updateCourseThunk,
-} from "@/features/courses/courseThunks.ts";
+
+const NO_COURSES: Course[] = [];
 
 export default function AdminCoursesPage() {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const { courses, loadingList, submitting, listError } = useAppSelector(
-    (state) => state.courses
-  );
+  const { data, isLoading: loadingList, error: queryError } = useQuery({
+    queryKey: ["courses"],
+    queryFn: getCourses,
+  });
+  const courses = data?.data ?? NO_COURSES;
+  const listError = useQueryErrorMessage(queryError, "Failed to load courses");
+  const { create, update, remove, submitting } = useCourseMutations();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -31,13 +32,9 @@ export default function AdminCoursesPage() {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [deletingCourseId, setDeletingCourseId] = useState<number | null>(null);
 
-  useEffect(() => {
-    void dispatch(fetchCourses());
-  }, [dispatch]);
-
   const handleCreateSubmit = async (payload: UpsertCoursePayload) => {
     try {
-      const res: ApiResponse<Course> = await dispatch(createCourseThunk(payload)).unwrap();
+      const res = await create.mutateAsync(payload);
       toast.success(res.message);
       setIsCreateModalOpen(false);
     } catch (err: unknown) {
@@ -49,9 +46,7 @@ export default function AdminCoursesPage() {
     if (!editingCourse) return;
 
     try {
-      const res: ApiResponse<Course> = await dispatch(
-        updateCourseThunk({ id: editingCourse.id, payload })
-      ).unwrap();
+      const res = await update.mutateAsync({ id: editingCourse.id, payload });
       toast.success(res.message);
       setIsEditModalOpen(false);
       setEditingCourse(null);
@@ -64,7 +59,7 @@ export default function AdminCoursesPage() {
     if (!deletingCourseId) return;
 
     try {
-      const res: ApiResponse<null> = await dispatch(deleteCourseThunk(deletingCourseId)).unwrap();
+      const res = await remove.mutateAsync(deletingCourseId);
       toast.success(res.message);
       setIsDeleteConfirmOpen(false);
       setDeletingCourseId(null);

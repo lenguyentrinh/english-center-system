@@ -20,8 +20,6 @@ export default defineConfig([
     },
     rules: {
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-      // Existing code fetches data in effects; surface as warning until refactored
-      'react-hooks/set-state-in-effect': 'warn',
     },
   },
   {
