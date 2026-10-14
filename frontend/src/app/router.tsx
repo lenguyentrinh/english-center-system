@@ -15,6 +15,11 @@ import RequireAuth from "@/shared/components/auth/RequireAuth.tsx";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage.tsx";
 import VerifyEmailPage from "@/pages/VerifyEmailPage.tsx";
 import { Navigate } from "react-router-dom";
+import { scheduleRoutes } from "@/app/routes/schedule.tsx";
+import { classRoutes } from "@/app/routes/classes.tsx";
+import { flashcardRoutes } from "@/app/routes/flashcards.tsx";
+import { wordRushRoutes } from "@/app/routes/wordRush.tsx";
+import { miscRoutes } from "@/app/routes/misc.tsx";
 import PublicLayout from "@/shared/components/layout/PublicLayout.tsx";
 
 const ADMIN_ONLY = ["ADMIN"];
@@ -39,13 +44,18 @@ export const router = createBrowserRouter([
   { path: "/courses", element: <CoursesPage /> },
   { path: "/courses/:id", element: <CourseDetailPage /> },
   { path: "/teaching-classes", element: <Navigate to="/courses" replace /> },
-  { path: "/admin", element: <RequireAuth roles={ADMIN_ONLY}><Navigate to="/admin/users" replace /></RequireAuth> },
+  { path: "/admin", element: <RequireAuth roles={ADMIN_ONLY}><Navigate to="/admin/dashboard" replace /></RequireAuth> },
   { path: "/admin/users", element: <RequireAuth roles={ADMIN_ONLY}><ManageUsersPage /></RequireAuth> },
   { path: "/admin/users/:id", element: <RequireAuth roles={ADMIN_ONLY}><UserDetailPage /></RequireAuth> },
   { path: "/admin/courses", element: <RequireAuth roles={ADMIN_ONLY}><AdminCoursesPage /></RequireAuth> },
   { path: "/admin/courses/:id", element: <RequireAuth roles={ADMIN_ONLY}><AdminCourseDetail /></RequireAuth> },
   { path: "/admin/roles", element: <RequireAuth roles={ADMIN_ONLY}><ManageRolesPage /></RequireAuth> },
   { path: "/admin/business-roles", element: <RequireAuth roles={ADMIN_ONLY}><ManageBusinessRolesPage /></RequireAuth> },
+  ...scheduleRoutes,
+  ...classRoutes,
+  ...flashcardRoutes,
+  ...wordRushRoutes,
+  ...miscRoutes,
   { path: "/contact", element: <Placeholder title="Contact page (todo)" /> },
   { path: "*", element: <Placeholder title="404 - Not found" /> },
 ]);

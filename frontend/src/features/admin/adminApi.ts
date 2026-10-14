@@ -7,6 +7,7 @@ import type {
   RoleResponse,
   RoleUpsertPayload,
   UserEffectiveRolesResponse,
+  UserStatus,
   UserSummaryResponse,
 } from "./types.ts";
 
@@ -130,5 +131,35 @@ export const removeBusinessRoleFromUser = async (
   const { data } = await apiClient.delete<ApiResponse<null>>(
     `/users/${userId}/roles/business-roles/${businessRoleId}`
   );
+  return data;
+};
+
+export type UserCreatePayload = {
+  username: string;
+  password: string;
+  email: string;
+  fullName?: string;
+  phone?: string;
+  status: UserStatus;
+};
+
+export type UserUpdatePayload = {
+  username: string;
+  email: string;
+  fullName?: string;
+  phone?: string;
+  status?: UserStatus;
+};
+
+export const createUser = async (payload: UserCreatePayload): Promise<ApiResponse<UserSummaryResponse>> => {
+  const { data } = await apiClient.post<ApiResponse<UserSummaryResponse>>("/users", payload);
+  return data;
+};
+
+export const updateUser = async (
+  id: string,
+  payload: UserUpdatePayload
+): Promise<ApiResponse<UserSummaryResponse>> => {
+  const { data } = await apiClient.put<ApiResponse<UserSummaryResponse>>(`/users/${id}`, payload);
   return data;
 };

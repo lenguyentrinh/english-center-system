@@ -30,6 +30,22 @@ services:
       TIMEZONE: Asia/Ho_Chi_Minh
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-604800000}
+      COOKIE_SAMESITE: ${COOKIE_SAMESITE:-Lax}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:8080}
+      # Pass-through: only set in the container when defined in .env (an empty host would create a broken mail sender).
+      SPRING_MAIL_HOST:
+      SPRING_MAIL_PORT:
+      SPRING_MAIL_USERNAME:
+      SPRING_MAIL_PASSWORD:
+      # Optional first admin, created on startup only when all three are set in .env
+      ADMIN_USERNAME:
+      ADMIN_EMAIL:
+      ADMIN_PASSWORD:
+      MAIL_FROM: ${MAIL_FROM:-no-reply@english-center.local}
+      OTP_TTL_MINUTES: ${OTP_TTL_MINUTES:-5}
+      AUTH_RATE_LIMIT_MAX: ${AUTH_RATE_LIMIT_MAX:-10}
+      AUTH_RATE_LIMIT_WINDOW_SECONDS: ${AUTH_RATE_LIMIT_WINDOW_SECONDS:-60}
     ports:
       - "8080:8080"
 

@@ -10,6 +10,7 @@ import { fetchMe, login } from "@/features/auth/authApi.ts";
 import { AUTH_QUERY_KEY } from "@/features/auth/authKeys.ts";
 import { safeReturnPath } from "@/features/auth/safeReturnPath.ts";
 import { useAuth } from "@/features/auth/useAuth.ts";
+import { homePathForRoles } from "@/shared/utils/role.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
 import {
   loginSchema,
@@ -22,8 +23,9 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
-  const { isLoading, isAuthenticated } = useAuth();
-  const returnTo = safeReturnPath(searchParams.get("return")) ?? "/";
+  const { user: sessionUser, isLoading, isAuthenticated } = useAuth();
+  const returnParam = safeReturnPath(searchParams.get("return"));
+  const returnTo = returnParam ?? homePathForRoles(sessionUser?.roles);
 
   const {
     register,
@@ -47,7 +49,7 @@ export default function LoginPage() {
       // Fetch the session now so the destination page already knows who is signed in.
       const user = await queryClient.fetchQuery({ queryKey: AUTH_QUERY_KEY, queryFn: fetchMe, staleTime: 0 });
       toast.success(res.message);
-      navigate(user ? returnTo : "/", { replace: true });
+      navigate(user ? (returnParam ?? homePathForRoles(user.roles)) : "/", { replace: true });
     } catch (error: unknown) {
       // Correct password but unverified email: continue on the verification page, which sends a fresh code.
       if (axios.isAxiosError(error) && error.response?.data?.origin === "email-not-verified") {

@@ -1,21 +1,13 @@
 import type { PropsWithChildren } from "react";
 import Sidebar from "./Sidebar";
-import Header from "./Header.tsx";
-import Footer from "./Footer.tsx";
 
-export default function AdminLayout({ children }: PropsWithChildren) {
+export default function AdminLayout({ children, wide }: PropsWithChildren<{ wide?: boolean }>) {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <Header />
-      <main className="md:flex">
-        <Sidebar />
-        <section className="flex-1">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-            {children}
-          </div>
-        </section>
+    <div className="flex min-h-screen flex-nowrap items-start bg-slate-50 text-slate-800">
+      <Sidebar role="admin" />
+      <main className="min-w-0 flex-1 px-[clamp(16px,3vw,40px)] py-[22px]">
+        <div className={`mx-auto ${wide ? "max-w-[1400px]" : "max-w-[1240px]"}`}>{children}</div>
       </main>
-      <Footer />
     </div>
   );
 }
