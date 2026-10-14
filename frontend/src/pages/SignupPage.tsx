@@ -9,8 +9,7 @@ import {
   signupSchema,
   type SignupForm,
 } from "@/features/auth/validation/authSchema.ts";
-import { InputField } from "@/shared/components/form";
-import Button from "@/shared/components/Button.tsx";
+import { AuthButton, AuthField, AuthHeading, authLinkClass } from "@/features/auth/components/AuthUi.tsx";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -27,7 +26,7 @@ export default function SignupPage() {
       fullName: "",
       phone: "",
     },
-    mode: "onBlur",
+    mode: "onTouched",
   });
 
   const onSubmit = async (values: SignupForm) => {
@@ -48,63 +47,43 @@ export default function SignupPage() {
   };
 
 
-  return (
-    <AuthLayout>
-      <h1 className="text-2xl font-bold text-slate-900">Create account</h1>
-      <p className="mt-1 text-sm text-slate-600">Register a new student account.</p>
+  const row = "grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-3";
 
-      <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        <InputField
-          label="Username"
-          placeholder="Username"
-          {...register("username")}
-          error={errors.username?.message}
-          id="username"
-          required={true}
-        />
-        <InputField
-          label="Password"
-          type="password"
-          placeholder="Password"
-          {...register("password")}
-          error={errors.password?.message}
-          id="password"
-          required={true}
-        />
-        <InputField
-          label="Email"
-          type="email"
-          placeholder="Email"
-          {...register("email")}
-          error={errors.email?.message}
-          id="email"
-          required={true}
-        />
-        <InputField
-          label="Full Name"
-          placeholder="Full name"
-          {...register("fullName")}
-          error={errors.fullName?.message}
-          id="fullName"
-          required={true}
-        />
-        <InputField
-          label="Phone"
-          placeholder="Phone"
-          {...register("phone")}
-          error={errors.phone?.message}
-          id="phone"
-          required={false}
-        />
-        <Button type="submit" size="large" className="w-full" loading={isSubmitting}>
-          Create account
-        </Button>
+  return (
+    <AuthLayout cardTag="Thẻ mới · đăng ký" cardIpa="/bɪˈɡɪn/ · bắt đầu">
+      <AuthHeading title="Tạo tài khoản" small>
+        Đăng ký tài khoản học viên mới.
+      </AuthHeading>
+
+      <form className="flex flex-col gap-3" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <div className={row}>
+          <AuthField compact label="Họ và tên" placeholder="Nguyễn Minh Anh" autoComplete="name" {...register("fullName")} error={errors.fullName?.message} id="fullName" />
+          <AuthField compact label="Tên đăng nhập" placeholder="minhanh" autoComplete="username" {...register("username")} error={errors.username?.message} id="username" />
+        </div>
+        <div className={row}>
+          <AuthField compact label="Email" type="email" placeholder="minhanh@gmail.com" autoComplete="email" {...register("email")} error={errors.email?.message} id="email" />
+          <AuthField
+            compact
+            label="Số điện thoại"
+            hint={<span className="text-[13px] font-semibold text-slate-400">tuỳ chọn</span>}
+            placeholder="0901234567"
+            autoComplete="tel"
+            {...register("phone")}
+            error={errors.phone?.message}
+            id="phone"
+          />
+        </div>
+        <AuthField compact label="Mật khẩu" type="password" placeholder="Ít nhất 6 ký tự" autoComplete="new-password" {...register("password")} error={errors.password?.message} id="password" />
+
+        <AuthButton compact loading={isSubmitting} loadingText="Đang tạo…">
+          Tạo tài khoản
+        </AuthButton>
       </form>
 
-      <p className="mt-4 text-sm text-slate-600">
-        Already registered?{" "}
-        <Link to="/auth/login" className="font-semibold text-indigo-600 hover:text-indigo-500 underline">
-          Go to login
+      <p className="text-sm font-semibold text-slate-500">
+        Đã có tài khoản?{" "}
+        <Link to="/auth/login" className={authLinkClass}>
+          Đăng nhập
         </Link>
       </p>
     </AuthLayout>

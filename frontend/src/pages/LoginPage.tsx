@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,11 +16,11 @@ import {
   loginSchema,
   type LoginForm,
 } from "@/features/auth/validation/authSchema.ts";
-import { InputField } from "@/shared/components/form";
-import Button from "@/shared/components/Button.tsx";
+import { AuthBanner, AuthButton, AuthField, AuthHeading, authLinkClass, type BannerData } from "@/features/auth/components/AuthUi.tsx";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const notice = (useLocation().state as { notice?: BannerData } | null)?.notice;
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const { user: sessionUser, isLoading, isAuthenticated } = useAuth();
@@ -66,46 +66,45 @@ export default function LoginPage() {
   if (isAuthenticated) return <Navigate to={returnTo} replace />;
 
   return (
-    <AuthLayout>
-      <h1 className="text-2xl font-bold text-slate-900">Login</h1>
-      <p className="mt-1 text-sm text-slate-600">Use your account to continue.</p>
+    <AuthLayout cardTag="Thẻ 1 · đăng nhập" cardIpa="/rɪˈtɜːn/ · trở lại">
+      <AuthHeading title="Đăng nhập">Dùng tài khoản trung tâm cấp để tiếp tục.</AuthHeading>
 
-      <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        <InputField
-          label="Username or email"
-          placeholder="Username or email"
+      {notice ? <AuthBanner {...notice} /> : null}
+
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <AuthField
+          label="Tên đăng nhập hoặc email"
+          placeholder="vd. minhanh hoặc minhanh@gmail.com"
           autoComplete="username"
           {...register("username")}
           error={errors.username?.message}
           id="username"
-          required={true}
         />
 
-        <InputField
-          label="Password"
+        <AuthField
+          label="Mật khẩu"
           type="password"
+          placeholder="Ít nhất 6 ký tự"
           autoComplete="current-password"
           {...register("password")}
           error={errors.password?.message}
           id="password"
-          required={true}
+          hint={
+            <Link to="/auth/forgot-password" className={`text-[13px] ${authLinkClass}`}>
+              Quên mật khẩu?
+            </Link>
+          }
         />
 
-        <div className="text-right">
-          <Link to="/auth/forgot-password" className="text-sm font-medium text-indigo-600 underline hover:text-indigo-500">
-            Forgot password?
-          </Link>
-        </div>
-
-        <Button type="submit" size="large" className="w-full" loading={isSubmitting}>
-          Login
-        </Button>
+        <AuthButton loading={isSubmitting} loadingText="Đang đăng nhập…">
+          Đăng nhập
+        </AuthButton>
       </form>
 
-      <p className="mt-4 text-sm text-slate-600">
-        No account yet?{" "}
-        <Link to="/auth/signup" className="font-semibold text-indigo-600 hover:text-indigo-500 underline">
-          Create one
+      <p className="text-sm font-semibold text-slate-500">
+        Chưa có tài khoản?{" "}
+        <Link to="/auth/signup" className={authLinkClass}>
+          Tạo tài khoản
         </Link>
       </p>
     </AuthLayout>

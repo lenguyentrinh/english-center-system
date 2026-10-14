@@ -1,82 +1,65 @@
 import type { PropsWithChildren } from "react";
-import { Link, useLocation } from "react-router-dom";
-import signupLoginBg from "@/assets/images/signup_login_bg.png";
-import Header from "./Header.tsx";
-import Footer from "./Footer.tsx";
+import { Link } from "react-router-dom";
+import WarmupQuiz from "@/features/auth/components/WarmupQuiz.tsx";
 
-const tabs = [
-  { to: "/auth/login", label: "Login" },
-  { to: "/auth/signup", label: "Sign up" },
-];
+type Props = PropsWithChildren<{
+  cardTag: string;
+  cardIpa: string;
+}>;
 
-export default function AuthLayout({ children }: PropsWithChildren) {
-  const location = useLocation();
+const dotGrid = {
+  backgroundImage: "radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px)",
+  backgroundSize: "26px 26px",
+};
 
+export default function AuthLayout({ cardTag, cardIpa, children }: Props) {
   return (
-    <main className="relative min-h-screen bg-cover bg-contain bg-no-repeat" style={{ backgroundImage: `url(${signupLoginBg})` }}>
-      <Header />
-      <div className="absolute inset-0 bg-white/20 lg:bg-transparent" />
-      <div className="relative flex min-h-[calc(100vh-64px)] items-center px-4 py-8 sm:px-6">
-        <div className="w-full lg:ml-[7%]">
-          <div
-            className="w-full animate-fade-in rounded-2xl bg-white/85 p-8 shadow-2xl backdrop-blur-md sm:w-full md:w-[90%] lg:max-w-[460px]"
-            style={{ animation: "fadeInUp 0.6s ease-out" }}
-          >
-            <div className="mb-6 flex items-center justify-between gap-3">
-              <Link to="/" className="text-sm font-semibold text-slate-700 hover:text-slate-900">
-                English Center
-              </Link>
-              <div className="inline-flex flex-shrink-0 rounded-lg border border-slate-200 bg-white/50 p-1 backdrop-blur-sm">
-                {tabs.map((tab) => {
-                  const isActive = location.pathname === tab.to;
-                  return (
-                    <Link
-                      key={tab.to}
-                      to={tab.to}
-                      className={`whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium transition sm:px-3 sm:py-1.5 sm:text-sm ${
-                        isActive
-                          ? "bg-slate-900 text-white shadow-md"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                      }`}
-                    >
-                      {tab.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
+    <main
+      className="auth-root relative min-h-screen overflow-hidden bg-[#020617] font-sans text-white"
+      style={dotGrid}
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute right-[-6vw] bottom-[-8vw] select-none font-black leading-none"
+        style={{ fontSize: "clamp(160px,26vw,420px)", color: "rgba(255,255,255,.035)" }}
+      >
+        ___
+      </div>
 
-            <div>{children}</div>
+      <Link
+        to="/"
+        className="absolute top-[clamp(16px,3vw,36px)] left-[clamp(16px,4vw,56px)] z-10 flex items-center gap-3"
+      >
+        <span className="flex size-[42px] items-center justify-center rounded-xl bg-white text-xl font-black text-[#020617]">
+          E
+        </span>
+        <span className="flex flex-col leading-tight">
+          <span className="text-lg font-semibold text-white">English Center</span>
+          <span className="text-sm text-slate-400">Trung tâm Anh ngữ</span>
+        </span>
+      </Link>
+
+      <div className="relative mx-auto flex min-h-screen max-w-[1400px] flex-row-reverse flex-wrap content-center items-center justify-center gap-x-[clamp(80px,10vw,180px)] gap-y-[clamp(28px,4vw,64px)] px-[clamp(16px,4vw,56px)] pt-[calc(clamp(16px,3vw,36px)+58px)] pb-[clamp(16px,3vw,40px)]">
+        <div className="relative min-w-0 max-w-[440px] flex-[1_1_380px]">
+          <div className="absolute inset-0 rounded-[32px] bg-[#0891b2]" style={{ transform: "rotate(5deg) translate(8px,8px)" }} />
+          <div className="absolute inset-0 rounded-[32px] bg-[#2563eb]" style={{ transform: "rotate(-3deg) translate(-6px,5px)" }} />
+          <div className="relative flex flex-col gap-[clamp(18px,2.4vw,24px)] rounded-[32px] bg-white p-[clamp(20px,3.4vw,40px)] text-[#020617] shadow-[0_40px_80px_-30px_rgba(0,0,0,.7)]">
+            <div className="flex items-center justify-between gap-2">
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-600">{cardTag}</span>
+              <span className="text-xs font-bold text-slate-400">{cardIpa}</span>
+            </div>
+            {children}
           </div>
+        </div>
+
+        <div className="hidden min-w-0 max-w-[660px] flex-[1_1_520px] min-[1080px]:flex">
+          <WarmupQuiz />
         </div>
       </div>
 
-      <Footer />
-
       <style>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fadeInUp 0.6s ease-out;
-        }
-
-        /* Tablet & Mobile: Center positioning */
-        @media (max-width: 1023px) {
-          main > div > div {
-            margin-left: 0 !important;
-            margin-right: auto;
-            margin-left: auto;
-          }
-        }
+        html:has(.auth-root) { scrollbar-width: none; }
+        html:has(.auth-root)::-webkit-scrollbar { display: none; }
       `}</style>
     </main>
   );

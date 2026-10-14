@@ -4,8 +4,7 @@ import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import AuthLayout from "@/shared/components/layout/AuthLayout.tsx";
-import Button from "@/shared/components/Button.tsx";
-import { InputField } from "@/shared/components/form";
+import { AuthButton, AuthField, AuthHeading, authLinkClass } from "@/features/auth/components/AuthUi.tsx";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
 import { resendVerification, verifyEmail } from "@/features/auth/authApi.ts";
 import {
@@ -19,6 +18,8 @@ import {
 const RESEND_SECONDS = 60;
 
 type LocationState = { email?: string; autoSend?: boolean } | null;
+
+const layoutTag = { cardTag: "Thẻ xác thực", cardIpa: "/kənˈfɜːm/ · xác nhận" };
 
 export default function VerifyEmailPage() {
   const navigate = useNavigate();
@@ -77,7 +78,10 @@ export default function VerifyEmailPage() {
     try {
       const res = await verifyEmail({ email, otp: values.otp.trim() });
       toast.success(res.message);
-      navigate("/auth/login", { replace: true });
+      navigate("/auth/login", {
+        replace: true,
+        state: { notice: { type: "success", title: "Email đã được xác thực", text: "Bạn có thể đăng nhập ngay bây giờ." } },
+      });
     } catch (error: unknown) {
       toast.error(getApiErrorMessage(error, "Invalid or expired code"));
     }
@@ -85,11 +89,10 @@ export default function VerifyEmailPage() {
 
   if (!email) {
     return (
-      <AuthLayout>
-        <h1 className="text-2xl font-bold text-slate-900">Verify your email</h1>
-        <p className="mt-1 text-sm text-slate-600">Enter the email address you signed up with and we will send you a code.</p>
+      <AuthLayout {...layoutTag}>
+        <AuthHeading title="Xác thực email">Nhập email bạn đã dùng khi đăng ký, mình sẽ gửi mã.</AuthHeading>
         <form
-          className="mt-6 space-y-4"
+          className="flex flex-col gap-4"
           noValidate
           onSubmit={emailForm.handleSubmit(async (values) => {
             const address = values.email.trim();
@@ -97,23 +100,22 @@ export default function VerifyEmailPage() {
             setEmail(address);
           })}
         >
-          <InputField
+          <AuthField
             label="Email"
             type="email"
-            placeholder="Email"
+            placeholder="minhanh@gmail.com"
             autoComplete="email"
             {...emailForm.register("email")}
             error={emailForm.formState.errors.email?.message}
             id="email"
-            required={true}
           />
-          <Button type="submit" size="large" className="w-full" loading={emailForm.formState.isSubmitting}>
-            Send code
-          </Button>
+          <AuthButton loading={emailForm.formState.isSubmitting} loadingText="Đang gửi…">
+            Gửi mã
+          </AuthButton>
         </form>
-        <p className="mt-4 text-sm">
-          <Link to="/auth/login" className="font-semibold text-indigo-600 underline hover:text-indigo-500">
-            Back to login
+        <p className="text-sm">
+          <Link to="/auth/login" className={authLinkClass}>
+            Quay lại đăng nhập
           </Link>
         </p>
       </AuthLayout>
@@ -121,40 +123,39 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <AuthLayout>
-      <h1 className="text-2xl font-bold text-slate-900">Verify your email</h1>
-      <p className="mt-1 text-sm text-slate-600">
-        Enter the 6-digit code we sent to <span className="break-all font-semibold">{email}</span>. It expires in 5 minutes.
-      </p>
+    <AuthLayout {...layoutTag}>
+      <AuthHeading title="Xác thực email">
+        Nhập mã 6 số đã gửi tới <span className="break-all font-extrabold text-slate-700">{email}</span>. Mã hết hạn sau 5 phút.
+      </AuthHeading>
 
-      <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-        <InputField
-          label="Verification code"
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <AuthField
+          otp
+          label="Mã xác thực"
           inputMode="numeric"
           maxLength={6}
-          placeholder="123456"
+          placeholder="••••••"
           autoComplete="one-time-code"
-          {...register("otp")}
+          {...register("otp", { setValueAs: (v: string) => v.replace(/\D/g, "") })}
           error={errors.otp?.message}
           id="otp"
-          required={true}
         />
-        <Button type="submit" size="large" className="w-full" loading={isSubmitting}>
-          Verify email
-        </Button>
+        <AuthButton loading={isSubmitting} loadingText="Đang xác thực…">
+          Xác thực email
+        </AuthButton>
       </form>
 
-      <div className="mt-4 flex justify-between text-sm">
-        <Link to="/auth/login" className="font-medium text-slate-600 underline hover:text-slate-900">
-          Back to login
+      <div className="flex justify-between text-sm">
+        <Link to="/auth/login" className="font-bold text-slate-600 hover:text-slate-900 hover:underline">
+          Quay lại đăng nhập
         </Link>
         <button
           type="button"
           onClick={() => void sendCode()}
           disabled={cooldown > 0}
-          className="font-medium text-indigo-600 underline hover:text-indigo-500 disabled:cursor-not-allowed disabled:text-slate-400 disabled:no-underline"
+          className="font-bold text-[#2563eb] hover:text-[#1e40af] hover:underline disabled:cursor-not-allowed disabled:text-slate-400 disabled:no-underline"
         >
-          {cooldown > 0 ? `Resend code (${cooldown}s)` : "Resend code"}
+          {cooldown > 0 ? `Gửi lại mã (${cooldown}s)` : "Gửi lại mã"}
         </button>
       </div>
     </AuthLayout>

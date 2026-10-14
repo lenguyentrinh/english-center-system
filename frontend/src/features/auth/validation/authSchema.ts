@@ -3,38 +3,45 @@ import { z } from "zod";
 // Limits mirror the backend DTOs (Constant.java / *Request.java); keep them in sync.
 const passwordRule = z
   .string()
-  .min(6, "Password must be at least 6 characters")
-  .max(100, "Password must be at most 100 characters")
-  .regex(/^(?=.*[A-Za-z])(?=.*\d).+$/, "Password must contain at least one letter and one number");
+  .min(6, "Mật khẩu cần ít nhất 6 ký tự.")
+  .max(100, "Mật khẩu tối đa 100 ký tự.")
+  .regex(/^(?=.*[A-Za-z])(?=.*\d).+$/, "Mật khẩu cần có ít nhất một chữ cái và một chữ số.");
 
-const emailRule = z.string().trim().email("Invalid email").max(255, "Email must be at most 255 characters");
+const emailRule = z
+  .string()
+  .trim()
+  .min(1, "Nhập email.")
+  .email("Email chưa đúng định dạng.")
+  .max(255, "Email tối đa 255 ký tự.");
 
 export const loginSchema = z.object({
   username: z
     .string()
     .trim()
-    .min(1, "Username or email is required")
-    .max(100, "Must be at most 100 characters"),
+    .min(1, "Nhập tên đăng nhập hoặc email.")
+    .max(100, "Tối đa 100 ký tự."),
   password: z
     .string()
-    .min(1, "Password is required")
-    .max(100, "Password must be at most 100 characters"),
+    .min(1, "Nhập mật khẩu.")
+    .max(100, "Mật khẩu tối đa 100 ký tự."),
 });
 
 export const signupSchema = z.object({
   username: z
     .string()
     .trim()
-    .min(3, "Username must be at least 3 characters")
-    .max(50, "Username must be at most 50 characters"),
+    .min(1, "Nhập tên đăng nhập.")
+    .regex(/^\S*$/, "Không dùng khoảng trắng.")
+    .min(3, "Ít nhất 3 ký tự.")
+    .max(50, "Tối đa 50 ký tự."),
   password: passwordRule,
   email: emailRule,
-  fullName: z.string().trim().min(1, "Full name is required"),
+  fullName: z.string().trim().min(1, "Nhập họ và tên."),
   phone: z
     .string()
     .trim()
-    .optional()
-    .or(z.literal("")),
+    .regex(/^(0\d{9})?$/, "Số điện thoại chưa đúng.")
+    .optional(),
 });
 
 export const forgotPasswordSchema = z.object({
@@ -42,31 +49,31 @@ export const forgotPasswordSchema = z.object({
 });
 
 export const otpSchema = z.object({
-  otp: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code"),
+  otp: z.string().trim().regex(/^\d{6}$/, "Mã gồm đúng 6 chữ số."),
 });
 
 export const newPasswordSchema = z
   .object({
     newPassword: passwordRule,
-    confirmPassword: z.string().min(1, "Please confirm your password"),
+    confirmPassword: z.string().min(1, "Nhập lại mật khẩu."),
   })
   .refine((v) => v.newPassword === v.confirmPassword, {
-    message: "Passwords do not match",
+    message: "Hai mật khẩu chưa khớp.",
     path: ["confirmPassword"],
   });
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Current password is required").max(100),
+    currentPassword: z.string().min(1, "Nhập mật khẩu hiện tại.").max(100),
     newPassword: passwordRule,
-    confirmPassword: z.string().min(1, "Please confirm your password"),
+    confirmPassword: z.string().min(1, "Nhập lại mật khẩu."),
   })
   .refine((v) => v.newPassword === v.confirmPassword, {
-    message: "Passwords do not match",
+    message: "Hai mật khẩu chưa khớp.",
     path: ["confirmPassword"],
   })
   .refine((v) => v.newPassword !== v.currentPassword, {
-    message: "New password must be different from the current password",
+    message: "Mật khẩu mới phải khác mật khẩu hiện tại.",
     path: ["newPassword"],
   });
 
