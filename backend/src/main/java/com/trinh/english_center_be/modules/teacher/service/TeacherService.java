@@ -13,4 +13,7 @@ public interface TeacherService {
     Optional<TeacherResponse> findByUserId(String userId);
 
     TeacherResponse upsertByUserId(String userId, TeacherUpsertRequest request);
+
+    /** Replaces the teacher's specialties; every id must be an active category (400 otherwise). */
+    TeacherResponse updateCategories(String teacherId, List<String> categoryIds);
 }

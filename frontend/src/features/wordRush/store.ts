@@ -1,20 +1,22 @@
 import { useMemo, useSyncExternalStore } from "react";
-import { MOCK_TEACHER } from "@/features/mock/common.ts";
-import { BOT_NAMES, SEED_BEST, SEED_RESULTS, SEED_SETS, STUDENTS_TOTAL } from "./mock.ts";
+import { addIsoDays, nowDate } from "@/shared/utils/now.ts";
 import type { WRPlayer, WRQuestion, WRReport, WRResult, WRRoom, WRSet, WRSetSummary } from "./types.ts";
 
 /**
- * Module-level mock store (no backend yet). The live room is shared in-memory and driven by simulated
- * bot players; a WebSocket/SSE feed would replace `tick()` and the room actions later.
+ * In-memory store (no backend for Word Rush yet): starts empty and is lost on reload. The live room lives in
+ * this browser tab only; a WebSocket/SSE feed would replace the local timer and the room actions later.
+ * Reports are built from live sessions that were really played, never from generated numbers.
  */
 type State = {
   sets: WRSet[];
   room: WRRoom | null;
   results: Record<string, WRResult>;
-  best: { score: number; rank: number; players: number; title: string };
+  /** Last finished live session per set. */
+  reports: Record<string, WRReport>;
+  best: { score: number; title: string };
 };
 
-let state: State = { sets: SEED_SETS, room: null, results: SEED_RESULTS, best: SEED_BEST };
+let state: State = { sets: [], room: null, results: {}, reports: {}, best: { score: 0, title: "" } };
 const listeners = new Set<() => void>();
 let timer: number | null = null;
 
@@ -29,8 +31,8 @@ const subscribe = (l: () => void) => {
 const snapshot = () => state;
 export const useWRState = () => useSyncExternalStore(subscribe, snapshot);
 
-export const ME_ID = "me";
-const rnd = (a: number, b: number) => a + Math.random() * (b - a);
+/** Identity of whoever joins a live room (the logged-in student). */
+export type RoomPlayer = { id: string; name: string };
 
 /* ---------- validation / helpers ---------- */
 export const isValidQuestion = (x: WRQuestion) =>
@@ -49,44 +51,60 @@ export function scoreFor(ms: number, durSec: number, streak: number) {
   return Math.max(0, base) + 100 * Math.min(streak, 5);
 }
 
-/* ---------- sets ---------- */
-export function buildReport(s: WRSet, result?: WRResult): WRReport {
-  const seed = [...s.id].reduce((a, c) => a + c.charCodeAt(0), 0);
-  const players = Math.min(STUDENTS_TOTAL[s.classId] ?? 12, 14);
-  const perQuestion = s.questions.map((qq, i) => {
-    const pct = 32 + ((seed * 7 + i * 29) % 64);
-    const wrongIdx = [0, 1, 2, 3].filter((k) => k !== qq.answer)[(i + seed) % 3];
-    return { index: i, pct, wrongOption: qq.options[wrongIdx] ?? null, wrongCount: Math.max(1, Math.round((players * (100 - pct)) / 100 / 1.6)) };
+/* ---------- reports ---------- */
+const emptyReport = (s: WRSet): WRReport => ({
+  hasData: false,
+  players: 0,
+  avgPct: 0,
+  hardest: null,
+  avgSeconds: 0,
+  perQuestion: s.questions.map((_, index) => ({ index, pct: 0, wrongOption: null, wrongCount: 0 })),
+  board: [],
+});
+
+/** Report of the last live session of this set, or an empty one when it was never played. */
+export function buildReport(s: WRSet): WRReport {
+  const saved = state.reports[s.id];
+  return saved ? { ...saved, perQuestion: saved.perQuestion.filter((p) => p.index < s.questions.length) } : emptyReport(s);
+}
+
+function reportOf(r: WRRoom): WRReport {
+  const perQuestion = r.questions.map((q, index) => {
+    const st = r.stats[index] ?? { answered: 0, correct: 0, wrong: [0, 0, 0, 0] };
+    const worst = st.wrong.reduce((best, n, k) => (n > st.wrong[best] ? k : best), 0);
+    return {
+      index,
+      pct: st.answered ? Math.round((st.correct / st.answered) * 100) : 0,
+      wrongOption: st.wrong[worst] > 0 ? q.options[worst] : null,
+      wrongCount: st.wrong[worst] ?? 0,
+    };
   });
-  const avgPct = perQuestion.length ? Math.round(perQuestion.reduce((a, b) => a + b.pct, 0) / perQuestion.length) : 0;
-  const hardest = perQuestion.length ? perQuestion.reduce((a, b) => (b.pct < a.pct ? b : a)) : null;
-  const board = BOT_NAMES.slice(0, Math.max(0, players - 1)).map((name, i) => {
-    const correct = Math.max(0, Math.min(s.questions.length, Math.round((s.questions.length * (avgPct + 22 - i * 4)) / 100)));
-    return { name, score: correct * 760 + ((seed + i * 13) % 140), correct, avgSec: 6 + ((seed + i * 5) % 9) };
-  });
-  if (result && result.setId === s.id) board.push({ name: "Minh Anh", score: result.score, correct: result.correct, avgSec: Math.round(result.seconds / Math.max(1, result.total)) });
-  board.sort((a, b) => b.score - a.score);
+  const answered = r.stats.reduce((a, x) => a + x.answered, 0);
+  const correct = r.stats.reduce((a, x) => a + x.correct, 0);
+  const asked = perQuestion.filter((_, i) => (r.stats[i]?.answered ?? 0) > 0);
+  const hardest = asked.length ? asked.reduce((a, b) => (b.pct < a.pct ? b : a)) : null;
+  const totalMs = r.players.reduce((a, p) => a + p.answerMs, 0);
+  const totalAnswers = r.players.reduce((a, p) => a + p.answered, 0);
   return {
-    players: board.length,
-    avgPct,
+    hasData: answered > 0,
+    players: r.players.length,
+    avgPct: answered ? Math.round((correct / answered) * 100) : 0,
     hardest: hardest ? { index: hardest.index, pct: hardest.pct } : null,
-    avgSeconds: 8 + (seed % 5),
+    avgSeconds: totalAnswers ? Math.round(totalMs / totalAnswers / 1000) : 0,
     perQuestion,
-    board,
+    board: rankOf(r.players).map((p) => ({ name: p.name, score: p.score, correct: p.correctCount, avgSec: p.answered ? Math.round(p.answerMs / p.answered / 1000) : 0 })),
   };
 }
 
-function summarize(s: WRSet, results: Record<string, WRResult>): WRSetSummary {
-  const total = STUDENTS_TOTAL[s.classId] ?? 12;
-  const rep = buildReport(s, results[s.id]);
-  const done = s.selfPaced || s.id === "s1" ? Math.min(total, Math.max(0, rep.players - 3)) : 0;
-  return { ...s, published: s.selfPaced, studentsDone: done, studentsTotal: total, accuracy: s.questions.length ? rep.avgPct : 0 };
+function summarize(s: WRSet): WRSetSummary {
+  // Student participation is not tracked per student yet, so done/total stay 0 (UI shows "—").
+  return { ...s, published: s.selfPaced, studentsDone: 0, studentsTotal: 0, accuracy: state.reports[s.id]?.avgPct ?? 0 };
 }
 
 /** Read API for the admin Library page. */
 export function useWordRushSets(): WRSetSummary[] {
-  const { sets, results } = useWRState();
-  return useMemo(() => sets.map((s) => summarize(s, results)), [sets, results]);
+  const { sets } = useWRState();
+  return useMemo(() => sets.map(summarize), [sets]);
 }
 
 export function useWRSet(id: string | undefined) {
@@ -109,18 +127,19 @@ export function addQuestion(setId: string): string {
 export function deleteQuestion(setId: string, qid: string) {
   set({ sets: state.sets.map((s) => (s.id === setId ? { ...s, questions: s.questions.filter((x) => x.id !== qid) } : s)) });
 }
-export function createSet(): string {
+export function createSet(init: { title?: string; categoryId?: string; classId?: string; author: { id: string; name: string } }): string {
   const id = `s${Date.now()}`;
   const s: WRSet = {
     id,
-    title: "Bộ câu hỏi mới",
-    classId: "c1",
-    authorId: MOCK_TEACHER.id,
-    authorName: MOCK_TEACHER.name,
+    title: init.title?.trim() || "Bộ câu hỏi mới",
+    categoryId: init.categoryId,
+    classId: init.classId ?? "",
+    authorId: init.author.id,
+    authorName: init.author.name,
     selfPaced: false,
     mode: "game",
     testMin: 10,
-    deadline: "2026-10-25",
+    deadline: addIsoDays(nowDate(), 14),
     secPerQ: 20,
     questions: [{ id: `q${Date.now()}a`, sentence: "Viết câu có chỗ trống ___ ở đây.", options: ["", "", "", ""], answer: 0, topic: "Chủ đề mới" }],
   };
@@ -131,7 +150,7 @@ export function createSet(): string {
 /* ---------- student results ---------- */
 export function saveResult(r: WRResult) {
   const prev = state.results[r.setId];
-  const best = r.kind === "game" && r.score > state.best.score ? { ...state.best, score: r.score, title: state.sets.find((s) => s.id === r.setId)?.title ?? state.best.title } : state.best;
+  const best = r.kind === "game" && r.score > state.best.score ? { score: r.score, title: state.sets.find((s) => s.id === r.setId)?.title ?? state.best.title } : state.best;
   set({ results: { ...state.results, [r.setId]: prev && prev.kind === "game" && prev.score > r.score && r.kind === "game" ? prev : r }, best });
 }
 
@@ -140,65 +159,45 @@ function patchRoom(fn: (r: WRRoom) => WRRoom) {
   if (state.room) set({ room: fn(state.room) });
 }
 
-function newPlayer(id: string, name: string, bot: boolean): WRPlayer {
-  return { id, name, bot, score: 0, streak: 0, prevRank: 0, lastGain: 0, lastCorrect: null, correctCount: 0 };
-}
-
-function planBots(r: WRRoom): Record<string, { atMs: number; choice: number }> {
-  const plans: WRRoom["botPlans"] = {};
-  const correct = r.questions[r.qIndex].answer;
-  r.players
-    .filter((p) => p.bot)
-    .forEach((p) => {
-      const ok = Math.random() < 0.68;
-      const wrong = [0, 1, 2, 3].filter((k) => k !== correct);
-      plans[p.id] = { atMs: rnd(1800, r.secPerQ * 1000 * 0.85), choice: ok ? correct : wrong[Math.floor(Math.random() * 3)] };
-    });
-  return plans;
+function newPlayer(id: string, name: string): WRPlayer {
+  return { id, name, score: 0, streak: 0, prevRank: 0, lastGain: 0, lastCorrect: null, correctCount: 0, answerMs: 0, answered: 0 };
 }
 
 function toReveal(r: WRRoom): WRRoom {
   const order = rankOf(r.players);
   const dur = r.secPerQ;
-  const correct = r.questions[r.qIndex].answer;
+  const q = r.questions[r.qIndex];
+  const correct = q.answer;
+  const st = { answered: 0, correct: 0, wrong: [0, 0, 0, 0] };
   const players = r.players.map((p) => {
     const a = r.answers[p.id];
     const prevRank = order.findIndex((x) => x.id === p.id) + 1;
-    if (a && a.choice === correct) {
+    if (!a) return { ...p, streak: 0, lastGain: 0, lastCorrect: null, prevRank };
+    st.answered++;
+    const answerMs = p.answerMs + a.ms;
+    const answered = p.answered + 1;
+    if (a.choice === correct) {
+      st.correct++;
       const streak = p.streak + 1;
       const gain = scoreFor(a.ms, dur, streak);
-      return { ...p, streak, score: p.score + gain, lastGain: gain, lastCorrect: true, correctCount: p.correctCount + 1, prevRank };
+      return { ...p, streak, score: p.score + gain, lastGain: gain, lastCorrect: true, correctCount: p.correctCount + 1, prevRank, answerMs, answered };
     }
-    return { ...p, streak: 0, lastGain: 0, lastCorrect: a ? false : null, prevRank };
+    st.wrong[a.choice]++;
+    return { ...p, streak: 0, lastGain: 0, lastCorrect: false, prevRank, answerMs, answered };
   });
-  return { ...r, phase: "reveal", phaseAt: Date.now(), players };
+  const stats = [...r.stats];
+  stats[r.qIndex] = st;
+  return { ...r, phase: "reveal", phaseAt: Date.now(), players, stats };
 }
 
 function tick() {
   const r = state.room;
   if (!r) return;
   const now = Date.now();
-  if (r.phase === "lobby") {
-    if (r.players.length < 11 && Math.random() < 0.18) {
-      const used = new Set(r.players.map((p) => p.name));
-      const name = BOT_NAMES.find((n) => !used.has(n));
-      if (name) set({ room: { ...r, players: [...r.players, newPlayer(`b-${name}`, name, true)] } });
-    }
-    return;
-  }
   if (r.phase === "question") {
-    const elapsed = now - r.qStartedAt;
-    const answers = { ...r.answers };
-    let changed = false;
-    for (const [id, plan] of Object.entries(r.botPlans)) {
-      if (!answers[id] && plan.atMs <= elapsed) {
-        answers[id] = { choice: plan.choice, ms: plan.atMs };
-        changed = true;
-      }
-    }
-    const next = changed ? { ...r, answers } : r;
-    if (elapsed >= r.secPerQ * 1000) set({ room: toReveal(next) });
-    else if (changed) set({ room: next });
+    // Time is up (or everybody answered): reveal.
+    const everyone = r.players.length > 0 && r.players.every((p) => r.answers[p.id]);
+    if (everyone || now - r.qStartedAt >= r.secPerQ * 1000) set({ room: toReveal(r) });
     return;
   }
   if (r.auto && now - r.phaseAt > 4500) {
@@ -209,8 +208,7 @@ function tick() {
 
 function advance(r: WRRoom): WRRoom {
   if (r.qIndex + 1 >= r.questions.length) return { ...r, phase: "podium", phaseAt: Date.now() };
-  const next: WRRoom = { ...r, qIndex: r.qIndex + 1, phase: "question", qStartedAt: Date.now(), phaseAt: Date.now(), answers: {} };
-  return { ...next, botPlans: planBots(next) };
+  return { ...r, qIndex: r.qIndex + 1, phase: "question", qStartedAt: Date.now(), phaseAt: Date.now(), answers: {} };
 }
 
 function ensureTimer() {
@@ -227,7 +225,6 @@ export const roomActions = {
     if (!s) return;
     const questions = s.questions.filter(isValidQuestion).map((x) => ({ ...x, options: [...x.options] })); // snapshot
     const pin = String(Math.floor(100000 + Math.random() * 900000));
-    const bots = BOT_NAMES.slice(0, 4).map((n) => newPlayer(`b-${n}`, n, true));
     set({
       room: {
         pin,
@@ -240,10 +237,10 @@ export const roomActions = {
         qIndex: 0,
         qStartedAt: 0,
         phaseAt: Date.now(),
-        auto: true,
-        players: bots,
+        auto: false, // design v5: the teacher moves every step manually
+        players: [],
         answers: {},
-        botPlans: {},
+        stats: [],
       },
     });
     ensureTimer();
@@ -251,8 +248,7 @@ export const roomActions = {
   start() {
     patchRoom((r) => {
       if (r.questions.length === 0) return r;
-      const next: WRRoom = { ...r, phase: "question", qIndex: 0, qStartedAt: Date.now(), phaseAt: Date.now(), answers: {} };
-      return { ...next, botPlans: planBots(next) };
+      return { ...r, phase: "question", qIndex: 0, qStartedAt: Date.now(), phaseAt: Date.now(), answers: {}, stats: [] };
     });
   },
   endQuestion() {
@@ -264,27 +260,34 @@ export const roomActions = {
   next() {
     patchRoom(advance);
   },
+  /** Last question revealed -> final standings (design: the end screen is the board titled "Kết quả chung cuộc"). */
+  toFinal() {
+    patchRoom((r) => ({ ...r, phase: "podium", phaseAt: Date.now() }));
+  },
   toggleAuto() {
     patchRoom((r) => ({ ...r, auto: !r.auto, phaseAt: Date.now() }));
   },
+  /** Closing a room that really played saves its report for the Library / set report. */
   close() {
     stopTimer();
-    set({ room: null });
+    const r = state.room;
+    const report = r ? reportOf(r) : null;
+    set({ room: null, reports: r && report?.hasData ? { ...state.reports, [r.setId]: report } : state.reports });
   },
   /** Student side */
-  join(pin: string, name: string): boolean {
+  join(pin: string, who: RoomPlayer): boolean {
     const r = state.room;
     if (!r || r.pin !== pin.replace(/\s/g, "")) return false;
-    if (!r.players.some((p) => p.id === ME_ID)) patchRoom((x) => ({ ...x, players: [...x.players, newPlayer(ME_ID, name.trim() || "Minh Anh", false)] }));
+    if (!r.players.some((p) => p.id === who.id)) patchRoom((x) => ({ ...x, players: [...x.players, newPlayer(who.id, who.name.trim() || "Học viên")] }));
     return true;
   },
-  leave() {
-    patchRoom((r) => ({ ...r, players: r.players.filter((p) => p.id !== ME_ID) }));
+  leave(playerId: string) {
+    patchRoom((r) => ({ ...r, players: r.players.filter((p) => p.id !== playerId) }));
   },
-  answer(choice: number) {
+  answer(choice: number, playerId: string) {
     patchRoom((r) => {
-      if (r.phase !== "question" || r.answers[ME_ID] || !r.players.some((p) => p.id === ME_ID)) return r;
-      return { ...r, answers: { ...r.answers, [ME_ID]: { choice, ms: Date.now() - r.qStartedAt } } };
+      if (r.phase !== "question" || r.answers[playerId] || !r.players.some((p) => p.id === playerId)) return r;
+      return { ...r, answers: { ...r.answers, [playerId]: { choice, ms: Date.now() - r.qStartedAt } } };
     });
   },
 };

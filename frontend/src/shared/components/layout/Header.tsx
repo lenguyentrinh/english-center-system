@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth, useLogout } from "@/features/auth/useAuth.ts";
+import { homePathForRoles } from "@/shared/utils/role.ts";
 
 const navItems = [
   { label: "Course", href: "/courses" },
@@ -11,7 +12,9 @@ const navItems = [
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated: authed, isAdmin } = useAuth();
+  const { user, isAuthenticated: authed } = useAuth();
+  const workspace = homePathForRoles(user?.roles);
+  const hasWorkspace = authed && workspace !== "/";
   const logoutMutation = useLogout();
   const username = user?.fullName?.trim() || user?.username || "";
 
@@ -69,12 +72,12 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {authed && isAdmin ? (
+          {hasWorkspace ? (
             <Link
-              to="/admin/users"
-              className="hidden rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 lg:inline-flex"
+              to={workspace}
+              className="hidden rounded-full bg-[#1f2937] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#0b1220] sm:inline-flex"
             >
-              My Manage
+              Vào trang làm việc
             </Link>
           ) : null}
 
@@ -106,12 +109,12 @@ export default function Header() {
               >
                 My Account
               </Link>
-              {authed && isAdmin ? (
+              {hasWorkspace ? (
                 <Link
-                  to="/admin/users"
-                  className="block rounded-xl px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
+                  to={workspace}
+                  className="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
                 >
-                  My Manage
+                  Vào trang làm việc
                 </Link>
               ) : null}
 

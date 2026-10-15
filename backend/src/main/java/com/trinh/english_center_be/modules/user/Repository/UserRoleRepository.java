@@ -9,6 +9,8 @@ public interface UserRoleRepository extends MongoRepository<UserRole, String> {
 
     List<UserRole> findByUserId(String userId);
 
+    List<UserRole> findByUserIdIn(java.util.Collection<String> userIds);
+
     List<UserRole> findByRoleId(String roleId);
 
     Optional<UserRole> findByUserIdAndRoleId(String userId, String roleId);

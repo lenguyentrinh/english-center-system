@@ -2,10 +2,8 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import StudentLayout from "@/shared/components/layout/StudentLayout";
 import PageHeader from "@/shared/components/PageHeader";
-import { MOCK_STUDENT } from "@/features/mock/common";
 import { useClass } from "@/features/classes";
 import { DocsTable, MatesTable, SessionsTable, Tabs } from "@/features/classes/ClassParts";
-import { TEACHER_NAMES } from "@/features/classes/utils";
 
 type Tab = "sessions" | "docs" | "mates";
 
@@ -13,7 +11,8 @@ export default function StudentClassDetailPage() {
   const { id } = useParams();
   const cls = useClass(id);
   const [tab, setTab] = useState<Tab>("sessions");
-  const allowed = cls?.students.some((s) => s.id === MOCK_STUDENT.id);
+  // useClass() only finds classes the signed-in student is enrolled in.
+  const allowed = !!cls;
 
   return (
     <StudentLayout>
@@ -35,7 +34,7 @@ export default function StudentClassDetailPage() {
             title={cls.name}
           />
           <p className="-mt-3 mb-5 text-sm text-slate-600">
-            {cls.code} · {TEACHER_NAMES[cls.teacherId] ?? "—"} · {cls.room} · {cls.scheduleText}
+            {cls.code} · {cls.teacherName ?? "—"} · {cls.room} · {cls.scheduleText}
           </p>
           <Tabs
             tabs={[

@@ -3,13 +3,12 @@ import StudentLayout from "@/shared/components/layout/StudentLayout";
 import PageHeader, { TableFrame, tdClass, thClass } from "@/shared/components/PageHeader";
 import Pagination from "@/shared/components/Pagination";
 import { usePaged } from "@/shared/hooks/usePaged";
-import { MOCK_STUDENT } from "@/features/mock/common";
 import { useClasses } from "@/features/classes";
 import { StatusPill } from "@/features/classes/ClassParts";
-import { TEACHER_NAMES } from "@/features/classes/utils";
 
 export default function StudentClassesPage() {
-  const mine = useClasses().filter((c) => c.students.some((s) => s.id === MOCK_STUDENT.id));
+  // useClasses() already returns only the classes the signed-in student is enrolled in.
+  const mine = useClasses();
   const paged = usePaged(mine);
 
   return (
@@ -38,14 +37,14 @@ export default function StudentClassesPage() {
                   </td>
                   <td className={`${tdClass} tabular-nums`}>{c.scheduleText}</td>
                   <td className={tdClass}>{c.room}</td>
-                  <td className={`${tdClass} tabular-nums`}>{c.students.length}</td>
-                  <td className={tdClass}>{TEACHER_NAMES[c.teacherId] ?? "—"}</td>
+                  <td className={`${tdClass} tabular-nums`}>{c.enrolled ?? c.students.length}/{c.capacity}</td>
+                  <td className={tdClass}>{c.teacherName ?? "—"}</td>
                   <td className={tdClass}>
                     <StatusPill status={c.status} />
                   </td>
                   <td className={`${tdClass} text-right`}>
                     <Link to={`/student/classes/${c.id}`} className="text-[13px] font-bold text-blue-600 hover:underline">
-                      Vào lớp →
+                      Vào lớp
                     </Link>
                   </td>
                 </tr>
@@ -53,7 +52,7 @@ export default function StudentClassesPage() {
               {paged.rows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-5 py-10 text-center text-sm text-slate-500">
-                    Bạn chưa tham gia lớp nào.
+                    Bạn chưa được ghi danh vào lớp nào. Liên hệ trung tâm để được xếp lớp.
                   </td>
                 </tr>
               ) : null}

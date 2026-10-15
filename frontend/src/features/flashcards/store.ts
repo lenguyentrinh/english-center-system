@@ -1,19 +1,15 @@
 import { useMemo, useSyncExternalStore } from "react";
-import { MOCK_TEACHER } from "@/features/mock/common.ts";
-import {
-  CLASS_STUDENT_COUNT,
-  MOCK_STUDENT_NAMES,
-  SEED_DECKS,
-  SEED_PROGRESS,
-  STUDENT_CLASS_IDS,
-  mockRating,
-  studentsDoneFor,
-} from "./mock.ts";
-import type { Card, Deck, DeckView, Rating, StudentDeckProgress } from "./types.ts";
+import { useAuth } from "@/features/auth/useAuth.ts";
+import { useStudentScope } from "./useStudentScope.ts";
+import type { Actor, Card, Deck, DeckView, StudentDeckProgress } from "./types.ts";
 
+/**
+ * In-memory store (no backend for decks yet): starts empty and is lost on reload.
+ * Authors/owners are passed in from the logged-in user; nothing here is seeded.
+ */
 type State = { decks: Deck[]; progress: Record<string, StudentDeckProgress> };
 
-let state: State = { decks: SEED_DECKS, progress: SEED_PROGRESS };
+let state: State = { decks: [], progress: {} };
 const listeners = new Set<() => void>();
 
 function set(next: Partial<State>) {
@@ -41,22 +37,57 @@ export const blankCard = (): Card => ({
 });
 
 /* ------- teacher actions ------- */
-export function createDeck(classId: string): string {
+export function createDeck(classId: string, init: { title?: string; categoryId?: string; author: Actor }): string {
   const id = newId("deck");
   const deck: Deck = {
     id,
-    title: "Bộ thẻ mới",
+    title: init.title?.trim() || "Bộ thẻ mới",
+    categoryId: init.categoryId,
     classId,
     published: false,
-    authorId: MOCK_TEACHER.id,
-    authorName: MOCK_TEACHER.name,
+    authorId: init.author.id,
+    authorName: init.author.name,
     cards: [],
   };
   set({ decks: [deck, ...state.decks] });
   return id;
 }
 
-export function updateDeck(id: string, patch: Partial<Pick<Deck, "title" | "classId" | "published">>) {
+/** Admin: publish a center-curated deck (source SYSTEM). Returns the new id. */
+export function createCenterDeck(input: {
+  title: string;
+  /** Display label of the audience ("Toàn trung tâm" or the category name). */
+  scope: string;
+  categoryId?: string;
+  scopeCategoryId?: string;
+  /** The logged-in admin who publishes the deck. */
+  author: Actor;
+  cards: Pick<Card, "word" | "meaning" | "example">[];
+}): string {
+  const id = newId("sys");
+  const deck: Deck = {
+    id,
+    title: input.title.trim(),
+    classId: "",
+    source: "SYSTEM",
+    scope: input.scope,
+    categoryId: input.categoryId || undefined,
+    scopeCategoryId: input.scopeCategoryId || undefined,
+    published: true,
+    authorId: input.author.id,
+    authorName: input.author.name,
+    cards: input.cards.map((c) => ({ ...blankCard(), word: c.word.trim(), meaning: c.meaning.trim(), example: c.example.trim() })),
+  };
+  set({ decks: [deck, ...state.decks] });
+  return id;
+}
+
+/** Only center decks can be deleted by an admin; teacher/student decks belong to their owners. */
+export function deleteCenterDeck(id: string) {
+  set({ decks: state.decks.filter((d) => !(d.id === id && d.source === "SYSTEM")) });
+}
+
+export function updateDeck(id: string, patch: Partial<Pick<Deck, "title" | "classId" | "published" | "categoryId">>) {
   set({ decks: state.decks.map((d) => (d.id === id ? { ...d, ...patch } : d)) });
 }
 
@@ -75,51 +106,97 @@ export function markStudied(deckId: string) {
   const prev = state.progress[deckId] ?? emptyProgress(0);
   set({ progress: { ...state.progress, [deckId]: { ...prev, fresh: 0, learning: 0, review: 0, studiedToday: true } } });
 }
+export type StudyOutcome = { hardIds: string[]; studiedIds: string[] };
+
+/** Finish a study run: cards seen and not flagged hard become known; hard flags are replaced by the run's flags for those cards. */
+export function finishStudy(deckId: string, { hardIds, studiedIds }: StudyOutcome) {
+  const deck = state.decks.find((d) => d.id === deckId);
+  if (!deck) return;
+  const prev = state.progress[deckId] ?? emptyProgress(deck.cards.length);
+  const live = new Set(deck.cards.map((c) => c.id));
+  const hard = new Set([...(prev.hard ?? []).filter((id) => !studiedIds.includes(id)), ...hardIds]);
+  const known = new Set([...(prev.known ?? []), ...studiedIds.filter((id) => !hardIds.includes(id))]);
+  hard.forEach((id) => known.delete(id));
+  const k = [...known].filter((id) => live.has(id));
+  set({
+    progress: {
+      ...state.progress,
+      [deckId]: { ...prev, known: k, hard: [...hard].filter((id) => live.has(id)), fresh: 0, learning: 0, review: 0, studiedToday: true },
+    },
+  });
+}
+
+/** Toggle a hard flag outside a study run (also used live while studying). */
+export function setHardCards(deckId: string, hard: string[]) {
+  const deck = state.decks.find((d) => d.id === deckId);
+  if (!deck) return;
+  const prev = state.progress[deckId] ?? emptyProgress(deck.cards.length);
+  set({ progress: { ...state.progress, [deckId]: { ...prev, hard } } });
+}
+
 export function recordTest(deckId: string, test: { correct: number; total: number }) {
   const prev = state.progress[deckId] ?? emptyProgress(0);
   set({ progress: { ...state.progress, [deckId]: { ...prev, test } } });
 }
 
-/* ------- derived data ------- */
-export function classResults(deck: Deck) {
-  const total = CLASS_STUDENT_COUNT[deck.classId] ?? 10;
-  const students = MOCK_STUDENT_NAMES.slice(0, total).map((name, i) => ({
-    name,
-    ratings: deck.cards.map((c) => mockRating(deck, i, c)),
-  }));
-  let rated = 0;
-  let good = 0;
-  const hardPerCard = deck.cards.map(() => ({ rated: 0, hard: 0 }));
-  students.forEach((s) =>
-    s.ratings.forEach((r: Rating | null, ci) => {
-      if (!r) return;
-      rated++;
-      hardPerCard[ci].rated++;
-      if (r === "good" || r === "easy") good++;
-      else hardPerCard[ci].hard++;
-    }),
-  );
-  const hardest = deck.cards
-    .map((card, ci) => ({ card, pct: hardPerCard[ci].rated ? Math.round((hardPerCard[ci].hard / hardPerCard[ci].rated) * 100) : 0 }))
-    .sort((a, b) => b.pct - a.pct);
-  return {
-    students,
-    done: studentsDoneFor(deck),
-    total,
-    retention: rated ? Math.round((good / rated) * 100) : 0,
-    hardest,
+/* ------- student-owned decks (source STUDENT, visible only to ownerId) ------- */
+type OwnCard = Pick<Card, "word" | "meaning" | "example">;
+const ownCards = (cards: OwnCard[]): Card[] =>
+  cards.map((c) => ({ ...blankCard(), word: c.word.trim(), meaning: c.meaning.trim(), example: c.example.trim(), pos: "từ vựng" }));
+
+export function createStudentDeck(input: { title: string; cards: OwnCard[]; owner: Actor }): string {
+  const id = newId("my");
+  const deck: Deck = {
+    id,
+    title: input.title.trim(),
+    classId: "",
+    source: "STUDENT",
+    ownerId: input.owner.id,
+    published: true,
+    authorId: input.owner.id,
+    authorName: "Bạn tự tạo",
+    cards: ownCards(input.cards),
   };
+  set({ decks: [...state.decks, deck] });
+  return id;
 }
 
+/** Only the owner can change a STUDENT deck. Editing the cards restarts the deck's progress. */
+export function updateStudentDeck(id: string, input: { title: string; cards: OwnCard[] }, ownerId: string) {
+  const d = state.decks.find((x) => x.id === id);
+  if (!d || d.source !== "STUDENT" || d.ownerId !== ownerId) return;
+  const progress = { ...state.progress };
+  delete progress[id];
+  set({ decks: state.decks.map((x) => (x.id === id ? { ...x, title: input.title.trim(), cards: ownCards(input.cards) } : x)), progress });
+}
+
+export function deleteStudentDeck(id: string, ownerId: string) {
+  const d = state.decks.find((x) => x.id === id);
+  if (!d || d.source !== "STUDENT" || d.ownerId !== ownerId) return;
+  const progress = { ...state.progress };
+  delete progress[id];
+  set({ decks: state.decks.filter((x) => x.id !== id), progress });
+}
+
+/** Cards still to review today: 0 once studied today; otherwise cards not yet known (or the whole deck when all are known). */
+export function dueCount(deck: Deck, p: StudentDeckProgress): number {
+  if (p.studiedToday || deck.cards.length === 0) return 0;
+  const known = new Set(p.known ?? []);
+  const unknown = deck.cards.filter((c) => !known.has(c.id)).length;
+  return unknown > 0 ? unknown : deck.cards.length;
+}
+
+/* ------- derived data ------- */
 function toView(deck: Deck): DeckView {
-  const r = classResults(deck);
-  return { ...deck, studentsDone: r.done, studentsTotal: r.total, retention: r.retention };
+  // Per-student progress is not collected anywhere yet, so class stats are 0 (shown as "—").
+  return { ...deck, studentsDone: 0, studentsTotal: 0, retention: 0 };
 }
 
 /** All decks (every teacher) with derived class stats. Used by the admin Library page. */
 export function useDecks(): DeckView[] {
   const s = useSyncExternalStore(subscribe, getState);
-  return useMemo(() => s.decks.map(toView), [s.decks]);
+  // Student-owned decks are private: never visible to teachers/admin.
+  return useMemo(() => s.decks.filter((d) => d.source !== "STUDENT").map(toView), [s.decks]);
 }
 
 export function useDeck(id: string | undefined): Deck | undefined {
@@ -127,14 +204,25 @@ export function useDeck(id: string | undefined): Deck | undefined {
   return s.decks.find((d) => d.id === id);
 }
 
+/**
+ * Decks the logged-in student can see: own decks; published teacher decks of the classes they are enrolled in;
+ * published center decks for the whole center or for a category they study.
+ */
 export function useStudentDecks(): { deck: Deck; progress: StudentDeckProgress }[] {
   const s = useSyncExternalStore(subscribe, getState);
+  const { user } = useAuth();
+  const { courseIds, categoryIds } = useStudentScope();
   return useMemo(
     () =>
       s.decks
-        .filter((d) => d.published && STUDENT_CLASS_IDS.includes(d.classId))
+        .filter((d) =>
+          d.source === "STUDENT"
+            ? !!user && d.ownerId === user.id
+            : d.published &&
+              (d.source === "SYSTEM" ? !d.scopeCategoryId || categoryIds.has(d.scopeCategoryId) : courseIds.has(d.classId)),
+        )
         .map((deck) => ({ deck, progress: s.progress[deck.id] ?? emptyProgress(deck.cards.length) })),
-    [s],
+    [s, user, courseIds, categoryIds],
   );
 }
 

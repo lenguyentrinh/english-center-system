@@ -4,6 +4,8 @@ import com.trinh.english_center_be.shared.enums.CourseStatus;
 import com.trinh.english_center_be.shared.enums.Roles;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
 public record CourseResponse(
         String id,
@@ -18,6 +20,15 @@ public record CourseResponse(
         Boolean prerequisitesRequired,
         String teacherId,
         String teacherFullName,
-        Roles availableRoleTeacher
+        Roles availableRoleTeacher,
+        String categoryId,
+        String categoryName,
+        String categoryColor,
+        String room,
+        List<Integer> daysOfWeek,
+        LocalTime startTime,
+        LocalTime endTime,
+        /** Active enrollments (null where the count was not computed). */
+        Long enrolledCount
 ) {
 }

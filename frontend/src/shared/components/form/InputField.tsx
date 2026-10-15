@@ -19,11 +19,11 @@ forwardRef<HTMLInputElement, Props>(function InputField(
         ref={ref}
         {...props}
         className={classNames(
-          "w-full rounded-lg px-3 py-2 text-sm border",
-          error ? "border-red-500" : "border-slate-300",
+          "w-full rounded-xl px-3 py-2.5 text-sm font-semibold border bg-white",
+          error ? "border-rose-300" : "border-slate-200",
           error
-            ? "focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-            : "focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500",
+            ? "focus:border-rose-400 focus:outline-none focus:shadow-[0_0_0_4px_#ffe4e6]"
+            : "focus:border-blue-600 focus:outline-none focus:shadow-[0_0_0_4px_#dbeafe]",
           props.className
         )}
       />

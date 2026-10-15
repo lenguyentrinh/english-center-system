@@ -1,11 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import StudentLayout from "@/shared/components/layout/StudentLayout.tsx";
-import PageHeader, { TableFrame, outlineBtn, primaryBtn, tdClass, thClass } from "@/shared/components/PageHeader.tsx";
+import PageHeader, { surfaceClass } from "@/shared/components/PageHeader.tsx";
 import Pagination from "@/shared/components/Pagination.tsx";
+import SearchInput from "@/shared/components/ui/SearchInput.tsx";
+import Segmented from "@/shared/components/ui/Segmented.tsx";
+import { Tag } from "@/shared/components/ui/Tag.tsx";
 import { usePaged } from "@/shared/hooks/usePaged.ts";
-import { MOCK_CLASS_REFS, MOCK_STUDENT } from "@/features/mock/common.ts";
-import TestRunner from "@/features/test/TestRunner.tsx";
-import { ME_ID, fmtDeadline, rankOf, roomActions, saveResult, scoreFor, useWRState } from "@/features/wordRush/store.ts";
+import { useAuth } from "@/features/auth/useAuth.ts";
+import { nowDate } from "@/shared/utils/now.ts";
+import { useStudentScope } from "@/features/flashcards/useStudentScope.ts";
+import StudentRush from "@/features/wordRush/StudentRush.tsx";
+import { fmtDeadline, rankOf, roomActions, useWRState } from "@/features/wordRush/store.ts";
 import { ANSWER_COLORS, LETTERS, fmtPin } from "@/features/wordRush/constants.ts";
 import { useNow } from "@/features/wordRush/useNow.ts";
 import type { WRQuestion, WRSet } from "@/features/wordRush/types.ts";
@@ -162,16 +167,16 @@ function PlayFrame({ v }: { v: PlayView }) {
   );
 }
 
-function LivePlay() {
+function LivePlay({ playerId }: { playerId: string }) {
   const { room } = useWRState();
   const now = useNow(250);
   if (!room) return null;
-  const me = room.players.find((p) => p.id === ME_ID);
+  const me = room.players.find((p) => p.id === playerId);
   if (!me) return null;
   const ranked = rankOf(room.players);
-  const rank = ranked.findIndex((p) => p.id === ME_ID) + 1;
+  const rank = ranked.findIndex((p) => p.id === playerId) + 1;
   const q = room.questions[room.qIndex];
-  const my = room.answers[ME_ID];
+  const my = room.answers[playerId];
   const above = rank > 1 ? ranked[rank - 2] : null;
   const stage: PlayView["stage"] =
     room.phase === "lobby" ? "wait" : room.phase === "question" ? (my ? "locked" : "question") : room.phase === "reveal" ? "result" : room.phase === "board" ? "board" : "end";
@@ -191,134 +196,58 @@ function LivePlay() {
     result: { correct: me.lastCorrect, gain: me.lastGain, streak: me.streak, answerText: q?.options[q.answer] ?? "" },
     board: { rank, score: me.score, gap: above ? `Kém ${above.name} ${above.score - me.score} điểm` : "Bạn đang dẫn đầu", top: ranked.slice(0, 5).map((p) => ({ name: p.name, score: p.score })) },
     end: { rank, players: room.players.length, score: me.score, correct: me.correctCount, qTotal: room.questions.length },
-    onPick: roomActions.answer,
-    onHome: roomActions.leave,
+    onPick: (i) => roomActions.answer(i, playerId),
+    onHome: () => roomActions.leave(playerId),
   };
   return <PlayFrame v={v} />;
 }
 
-function SoloPlay({ set, onExit }: { set: WRSet; onExit: () => void }) {
-  const qs = useMemo(() => set.questions.filter((x) => x.sentence.includes("___") && x.options.every((o) => o.trim())), [set]);
-  const dur = set.secPerQ || 20;
-  const [i, setI] = useState(0);
-  const [stage, setStage] = useState<"question" | "result" | "end">("question");
-  const [startedAt, setStartedAt] = useState(() => Date.now());
-  const [chosen, setChosen] = useState<number | null>(null);
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [right, setRight] = useState(0);
-  const [gain, setGain] = useState(0);
-  const [correct, setCorrect] = useState<boolean | null>(null);
-  const now = useNow(250);
-  const saved = useRef(false);
-  const q = qs[i];
+type Filter = "all" | "todo" | "game" | "test";
 
-  const answer = (c: number | null) => {
-    if (stage !== "question" || !q) return;
-    const ok = c !== null && c === q.answer;
-    const ns = ok ? streak + 1 : 0;
-    const g = ok ? scoreFor(Date.now() - startedAt, dur, ns) : 0;
-    setChosen(c);
-    setCorrect(c === null ? null : ok);
-    setStreak(ns);
-    setGain(g);
-    setScore((s) => s + g);
-    if (ok) setRight((r) => r + 1);
-    setStage("result");
-  };
-
-  const secLeft = dur - (now - startedAt) / 1000;
-  const answerRef = useRef(answer);
-  useEffect(() => {
-    answerRef.current = answer;
-  });
-  useEffect(() => {
-    if (stage !== "question") return;
-    const t = window.setTimeout(() => answerRef.current(null), Math.max(0, dur * 1000 - (Date.now() - startedAt)));
-    return () => window.clearTimeout(t);
-  }, [stage, startedAt, dur]);
-
-  useEffect(() => {
-    if (stage !== "result") return;
-    const t = window.setTimeout(() => {
-      if (i + 1 >= qs.length) setStage("end");
-      else {
-        setI(i + 1);
-        setChosen(null);
-        setStartedAt(Date.now());
-        setStage("question");
-      }
-    }, 3000);
-    return () => window.clearTimeout(t);
-  }, [stage, i, qs.length]);
-
-  useEffect(() => {
-    if (stage === "end" && !saved.current) {
-      saved.current = true;
-      saveResult({ setId: set.id, score, correct: right, total: qs.length, at: Date.now(), kind: "game", seconds: 0 });
-    }
-  }, [stage, set.id, score, right, qs.length]);
-
-  const v: PlayView = {
-    head: `Tự luyện · ${set.title}`,
-    score,
-    stage: stage === "question" ? (chosen !== null ? "locked" : "question") : stage,
-    name: MOCK_STUDENT.name,
-    qNo: i + 1,
-    qTotal: qs.length,
-    secLeft,
-    durSec: dur,
-    q,
-    chosen,
-    result: { correct, gain, streak, answerText: q?.options[q.answer] ?? "" },
-    end: { score, correct: right, qTotal: qs.length },
-    onPick: answer,
-    onHome: onExit,
-  };
-  return (
-    <div className="flex flex-col gap-3">
-      <PlayFrame v={v} />
-      {stage !== "end" ? (
-        <button type="button" className={`${outlineBtn} self-start`} onClick={onExit}>
-          ← Thoát
-        </button>
-      ) : null}
-    </div>
-  );
+/** Tests are one attempt and close at the deadline (end of that day); practice sets stay playable. */
+function rowState(s: WRSet, done: boolean) {
+  const expired = s.deadline < nowDate();
+  const locked = s.mode === "test" && (done || expired);
+  return { expired, locked };
 }
 
 export default function StudentWordRushPage() {
-  const { sets, room, results, best } = useWRState();
+  const { sets, room, results } = useWRState();
+  const { user } = useAuth();
   const [mode, setMode] = useState<{ kind: "solo" | "test"; id: string } | null>(null);
   const [pin, setPin] = useState("");
-  const [name, setName] = useState<string>(MOCK_STUDENT.name);
-  const [error, setError] = useState("");
-  const myClass = MOCK_CLASS_REFS[0].id;
-  const assigned = useMemo(() => sets.filter((s) => s.selfPaced && s.classId === myClass), [sets, myClass]);
-  const { rows, page, setPage, total, pageSize } = usePaged(assigned);
-  const joined = !!room?.players.some((p) => p.id === ME_ID);
+  const [pinErr, setPinErr] = useState("");
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<Filter>("all");
+  const name = user?.fullName || user?.username || "Học viên";
+  const { courseIds } = useStudentScope();
+  const assigned = useMemo(() => sets.filter((s) => s.selfPaced && courseIds.has(s.classId)), [sets, courseIds]);
+
+  const counts = useMemo(() => {
+    const c: Record<Filter, number> = { all: assigned.length, todo: 0, game: 0, test: 0 };
+    assigned.forEach((s) => {
+      if (!results[s.id]) c.todo += 1;
+      c[s.mode] += 1;
+    });
+    return c;
+  }, [assigned, results]);
+
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return assigned.filter((s) => {
+      if (filter === "todo" ? !!results[s.id] : filter !== "all" && s.mode !== filter) return false;
+      return !needle || `${s.title} ${s.authorName}`.toLowerCase().includes(needle);
+    });
+  }, [assigned, results, q, filter]);
+
+  const { rows, page, setPage, total, pageSize } = usePaged(filtered, `${q}|${filter}`);
+  const joined = !!user && !!room?.players.some((p) => p.id === user.id);
   const active = mode ? sets.find((s) => s.id === mode.id) : undefined;
 
-  if (active && mode?.kind === "test") {
-    const qs = active.questions.filter((x) => x.sentence.includes("___") && x.options.every((o) => o.trim()));
+  if (active) {
     return (
       <StudentLayout>
-        <TestRunner
-          title={active.title}
-          description={`Kiểm tra Word Rush · ${qs.length} câu · ${active.testMin} phút`}
-          questions={qs.map((x) => ({ id: x.id, sentence: x.sentence, options: x.options, answer: x.answer, explain: x.explain }))}
-          minutes={active.testMin}
-          onFinish={(r) => saveResult({ setId: active.id, score: r.correct * 100, correct: r.correct, total: r.total, at: Date.now(), kind: "test", seconds: r.seconds })}
-          onExit={() => setMode(null)}
-        />
-      </StudentLayout>
-    );
-  }
-
-  if (active && mode?.kind === "solo") {
-    return (
-      <StudentLayout>
-        <SoloPlay key={active.id} set={active} onExit={() => setMode(null)} />
+        <StudentRush key={active.id} set={active} prevBest={results[active.id]?.kind === "game" ? results[active.id].score : 0} onExit={() => setMode(null)} />
       </StudentLayout>
     );
   }
@@ -326,130 +255,131 @@ export default function StudentWordRushPage() {
   if (joined) {
     return (
       <StudentLayout>
-        <LivePlay />
+        <LivePlay playerId={user!.id} />
       </StudentLayout>
     );
   }
 
-  const join = () => {
-    if (!roomActions.join(pin, name)) setError("Mã PIN chưa đúng, xem lại màn chiếu nhé.");
-    else setError("");
+  const join = (e: FormEvent) => {
+    e.preventDefault();
+    if (pin.length < 6) return setPinErr("Mã PIN gồm 6 chữ số.");
+    if (!user || !roomActions.join(pin, { id: user.id, name })) return setPinErr("Chưa có phòng nào dùng mã này. Xem lại màn chiếu nhé.");
+    setPinErr("");
+  };
+
+  const start = (s: WRSet) => {
+    if (rowState(s, !!results[s.id]).locked) return;
+    setMode({ kind: s.mode === "test" ? "test" : "solo", id: s.id });
   };
 
   return (
     <StudentLayout>
-      <PageHeader crumb="Thi đấu cùng cả lớp hoặc tự luyện" title="Word Rush" />
+      <div className="flex flex-col gap-6">
+        <PageHeader crumb="Word Rush" title="Điền đúng, điền nhanh" />
 
-      <div className="mb-8 flex flex-wrap items-start gap-8 border-b border-slate-200 pb-8">
-        {room ? (
-          <div className="min-w-0 flex-[999_1_420px]">
-            <p className="text-[13px] font-semibold text-slate-500">Phòng của {room.teacherName} đang mở</p>
-            <h2 className="text-[30px] font-extrabold">Vào phòng Word Rush</h2>
-            <div className="mt-5 flex max-w-md flex-col gap-4">
-              <input
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/[^\d ]/g, "").slice(0, 7))}
-                placeholder="000 000"
-                inputMode="numeric"
-                aria-label="Mã PIN"
-                className="w-full border-0 border-b-[3px] border-slate-950 bg-transparent pb-2 font-black tracking-[.14em] text-slate-950 outline-none placeholder:text-slate-300"
-                style={{ fontSize: 44 }}
-              />
-              <div>
-                <label className="mb-1 block text-xs font-bold text-slate-600">Tên hiển thị</label>
-                <input value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-200" />
-              </div>
-              {error ? <p className="text-sm font-bold text-rose-600">{error}</p> : null}
-              <button type="button" className={`${primaryBtn} self-start px-6 py-2.5`} onClick={join}>
-                Vào phòng
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="min-w-0 flex-[999_1_420px]">
-            <div className="mb-4 flex gap-1.5">
+        <section
+          className="flex flex-wrap items-center justify-between gap-x-7 gap-y-[18px] overflow-hidden rounded-[28px] bg-[#e8f0ff] p-[clamp(20px,3vw,28px)] text-slate-950 shadow-[0_0_0_1px_#c7dafe,0_14px_30px_-18px_rgba(37,99,235,.45)]"
+          style={{ backgroundImage: "radial-gradient(rgba(37,99,235,.12) 1px, transparent 1px)", backgroundSize: "22px 22px" }}
+        >
+          <div className="flex min-w-0 items-center gap-3.5">
+            <div className="grid shrink-0 grid-cols-[repeat(2,22px)] gap-1">
               {ANSWER_COLORS.map((c, i) => (
-                <span key={i} className="grid h-9 w-9 place-items-center rounded-lg text-sm font-black" style={{ background: c.bg, color: c.fg }}>
-                  {LETTERS[i]}
-                </span>
+                <span key={i} className="h-[22px] rounded-md" style={{ background: c.bg }} />
               ))}
             </div>
-            <h2 className="text-[30px] font-extrabold">Chưa có phòng nào đang mở</h2>
-            <p className="mt-2 max-w-lg text-slate-600">Khi giáo viên mở phòng, màn hình này sẽ hiện ô nhập mã PIN. Trong lúc chờ, bạn có thể luyện các bài được giao ở bên dưới.</p>
-          </div>
-        )}
-        <aside className="min-w-0 flex-[1_1_280px]">
-          {room ? (
-            <>
-              <h3 className="mb-2 text-[17px] font-extrabold">Đang trong phòng · {room.players.length}</h3>
-              <div className="flex flex-wrap gap-1.5">
-                {room.players.map((p) => (
-                  <span key={p.id} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{p.name}</span>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="border-t-2 border-slate-950 pt-2.5">
-                <p className="text-[22px] font-black tabular-nums">#{best.rank}</p>
-                <p className="text-xs font-bold text-slate-500">lần chơi trước · trên {best.players} người</p>
-              </div>
-              <div className="border-t-2 border-slate-950 pt-2.5">
-                <p className="text-[22px] font-black tabular-nums">{best.score.toLocaleString("vi-VN")}</p>
-                <p className="text-xs font-bold text-slate-500">kỷ lục</p>
-              </div>
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-lg font-black">Vào phòng của lớp</span>
+              <span className="text-[13px] text-slate-600">
+                Nhập mã PIN đang hiện trên màn chiếu của giáo viên.
+              </span>
             </div>
-          )}
-        </aside>
-      </div>
+          </div>
+          <form onSubmit={join} className="flex min-w-[min(100%,240px)] flex-[0_1_320px] flex-col gap-1.5">
+            <div className="flex gap-2">
+              <input
+                value={pin}
+                onChange={(e) => {
+                  setPin(e.target.value.replace(/\D/g, "").slice(0, 6));
+                  setPinErr("");
+                }}
+                inputMode="numeric"
+                placeholder="Mã PIN"
+                aria-label="Mã PIN"
+                className="h-12 min-w-0 flex-1 rounded-[14px] border-[1.5px] border-blue-600/15 bg-blue-600/[.06] px-4 text-lg font-black tracking-[.18em] text-slate-950 outline-none focus:border-cyan-400"
+              />
+              <button type="submit" className="h-12 rounded-[14px] bg-[#1f2937] px-5 text-[15px] font-black text-white hover:bg-[#0b1220]">
+                Vào
+              </button>
+            </div>
+            {pinErr ? <span className="text-[13px] font-bold text-rose-700">{pinErr}</span> : null}
+          </form>
+        </section>
 
-      <h3 className="mb-2 text-[18px] font-extrabold">Bài được giao</h3>
-      <TableFrame>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b border-slate-200">
-              <th className={thClass}>Bộ câu hỏi</th>
-              <th className={thClass}>Hình thức</th>
-              <th className={thClass}>Số câu</th>
-              <th className={thClass}>Hạn</th>
-              <th className={thClass}>Kết quả của bạn</th>
-              <th className={thClass} />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((s) => {
-              const r = results[s.id];
-              const isTest = s.mode === "test";
-              return (
-                <tr key={s.id} className="border-b border-slate-100 last:border-b-0">
-                  <td className={tdClass}>
-                    <div className="font-extrabold text-slate-950">{s.title}</div>
-                    <div className="text-xs text-slate-500">GV {s.authorName}</div>
-                  </td>
-                  <td className={tdClass}>
-                    {isTest ? (
-                      <span className="whitespace-nowrap rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">Kiểm tra · {s.testMin} phút</span>
-                    ) : (
-                      <span className="whitespace-nowrap rounded-full bg-cyan-100 px-2.5 py-0.5 text-xs font-bold text-cyan-800">Kiểu game</span>
-                    )}
-                  </td>
-                  <td className={`${tdClass} tabular-nums`}>{s.questions.length}</td>
-                  <td className={tdClass}>{fmtDeadline(s.deadline)}</td>
-                  <td className={`${tdClass} tabular-nums text-slate-600`}>
-                    {r ? (r.kind === "test" ? `${r.correct}/${r.total} đúng` : `${r.score.toLocaleString("vi-VN")} điểm · ${r.correct}/${r.total} đúng`) : "Chưa làm"}
-                  </td>
-                  <td className={`${tdClass} text-right`}>
-                    <button type="button" className={r ? outlineBtn : primaryBtn} onClick={() => setMode({ kind: isTest ? "test" : "solo", id: s.id })}>
-                      {isTest ? "Làm bài" : r ? "Luyện lại" : "Bắt đầu"}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <Pagination page={page} total={total} pageSize={pageSize} onChange={setPage} />
-      </TableFrame>
+        <section className="flex flex-col gap-2.5">
+          <div className="flex items-center gap-2.5">
+            <span className="size-2 rounded-full bg-cyan-400 shadow-[0_0_0_4px_#cffafe]" />
+            <h2 className="text-lg font-extrabold">Bài được giao</h2>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2.5">
+            <SearchInput value={q} onChange={setQ} placeholder="Tìm bài theo tên hoặc giáo viên" className="max-w-[380px] flex-1 basis-[260px]" />
+            <Segmented
+              square
+              value={filter}
+              onChange={setFilter}
+              options={[
+                { key: "all", label: "Tất cả", count: counts.all },
+                { key: "todo", label: "Chưa làm", count: counts.todo },
+                { key: "game", label: "Luyện tập", count: counts.game },
+                { key: "test", label: "Kiểm tra", count: counts.test },
+              ]}
+            />
+          </div>
+          <div className={`${surfaceClass} px-5 pt-1`}>
+            {rows.length === 0 ? (
+              <div className="py-6 text-sm text-slate-500">{q.trim() ? `Không tìm thấy bài nào khớp “${q.trim()}”.` : assigned.length === 0 ? "Giáo viên chưa giao bài Word Rush nào cho lớp của bạn. Khi có bài mới, nó sẽ hiện ở đây." : "Không có bài nào trong mục này."}</div>
+            ) : (
+              rows.map((s, i) => {
+                const r = results[s.id];
+                const game = s.mode === "game";
+                const { expired, locked } = rowState(s, !!r);
+                const missed = expired && !r && !game;
+                return (
+                  <div key={s.id} className={`flex flex-wrap items-center gap-x-[18px] gap-y-3 py-[18px] ${i ? "border-t border-dashed border-slate-200" : ""}`}>
+                    <Tag width={86} bg={game ? "#ecfeff" : "#fffbeb"} fg={game ? "#155e75" : "#92400e"} className="!py-[5px]">
+                      {game ? "Luyện tập" : "Kiểm tra"}
+                    </Tag>
+                    <div className="flex min-w-0 flex-[1_1_160px] flex-col gap-[3px]">
+                      <span className="break-words text-base font-extrabold text-slate-950">{s.title}</span>
+                      <span className="text-[13px] text-slate-500">
+                        {s.questions.length} câu{game ? "" : ` · ${s.testMin} phút`} · hạn {fmtDeadline(s.deadline)} · {s.authorName}
+                      </span>
+                    </div>
+                    <div className="ml-auto flex shrink-0 flex-nowrap items-center gap-3">
+                      <div className="flex min-w-[84px] flex-col items-end whitespace-nowrap">
+                        <span className={`text-base font-black ${r ? "text-slate-950" : missed ? "text-rose-600" : "text-slate-400"}`}>
+                          {r ? (game ? r.score.toLocaleString("vi-VN") : `${r.correct}/${r.total}`) : missed ? "Quá hạn" : "Chưa làm"}
+                        </span>
+                        <span className="text-xs font-bold text-slate-400">{r ? (game ? "điểm cao nhất" : "câu đúng") : `hạn ${fmtDeadline(s.deadline)}`}</span>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={locked}
+                        onClick={() => start(s)}
+                        className={`h-10 min-w-24 rounded-full px-[18px] text-sm font-extrabold disabled:cursor-not-allowed ${locked ? "bg-slate-100 text-slate-400" : "bg-[#1f2937] text-white hover:bg-[#111827]"}`}
+                      >
+                        {game ? (r ? "Chơi lại" : "Chơi") : r ? "Đã nộp" : expired ? "Hết hạn" : "Làm bài"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            <div className="-mx-5">
+              <Pagination page={page} total={total} pageSize={pageSize} onChange={setPage} />
+            </div>
+          </div>
+        </section>
+      </div>
     </StudentLayout>
   );
 }

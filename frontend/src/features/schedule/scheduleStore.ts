@@ -1,10 +1,14 @@
 import { useSyncExternalStore } from "react";
-import { INITIAL_EVENTS } from "./mock";
 import type { ScheduleEvent } from "./types";
 
 export type { ScheduleEvent } from "./types";
 
-let events: ScheduleEvent[] = INITIAL_EVENTS.map((e) => ({ ...e }));
+/**
+ * Events the user adds by hand on the calendar (make-up lessons, 1-1 tutoring, meetings, private time).
+ * Class sessions are NOT stored here: they are derived from the classes (see `useScheduleEvents` in ./events).
+ * Starts empty; memory only (there is no backend for personal events yet).
+ */
+let events: ScheduleEvent[] = [];
 const listeners = new Set<() => void>();
 
 function set(next: ScheduleEvent[]) {
@@ -19,14 +23,12 @@ const subscribe = (l: () => void) => {
   };
 };
 
-export const useScheduleEvents = (): ScheduleEvent[] => useSyncExternalStore(subscribe, () => events);
+export const getStoredEvents = (): ScheduleEvent[] => events;
+
+export const useStoredEvents = (): ScheduleEvent[] => useSyncExternalStore(subscribe, () => events);
 
 export function addEvents(list: ScheduleEvent[]): void {
   set([...events, ...list]);
-}
-
-export function removeEventsBySession(sessionId: string): void {
-  set(events.filter((e) => e.sessionId !== sessionId));
 }
 
 export function updateEvent(id: string, patch: Partial<ScheduleEvent>): void {
@@ -35,8 +37,4 @@ export function updateEvent(id: string, patch: Partial<ScheduleEvent>): void {
 
 export function removeEvent(id: string): void {
   set(events.filter((e) => e.id !== id));
-}
-
-export function resetEvents(): void {
-  set(INITIAL_EVENTS.map((e) => ({ ...e })));
 }

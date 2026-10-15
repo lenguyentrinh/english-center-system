@@ -1,150 +1,229 @@
-import { useMemo } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
-import PageHeader, { TableFrame, tdClass, thClass } from "@/shared/components/PageHeader.tsx";
+import PageHeader, { fieldClass, fieldErrClass, labelClass, outlineBtn, primaryBtn, surfaceClass } from "@/shared/components/PageHeader.tsx";
 import Pagination from "@/shared/components/Pagination.tsx";
+import Modal from "@/shared/components/Modal.tsx";
+import SearchInput from "@/shared/components/ui/SearchInput.tsx";
+import Segmented from "@/shared/components/ui/Segmented.tsx";
+import { Tag } from "@/shared/components/ui/Tag.tsx";
 import { usePaged } from "@/shared/hooks/usePaged.ts";
-import { useDecks } from "@/features/flashcards";
-import { useWordRushSets } from "@/features/wordRush/store.ts";
-import { MOCK_CLASS_REFS } from "@/features/mock/common.ts";
+import { useAuth } from "@/features/auth/useAuth.ts";
+import { useCategories } from "@/features/categories/useCategories.ts";
+import { createCenterDeck } from "@/features/flashcards/store.ts";
+import { LIB_SRC, kindStyle, useLibrary, type LibraryItem } from "@/features/flashcards/library.ts";
 
-type Row = {
-  key: string;
-  kind: "FLASHCARD" | "WORD RUSH";
-  title: string;
-  items: number;
-  teacher: string;
-  classId: string;
-  published: boolean;
-  done: number;
-  total: number;
-  effect: string;
-};
+type Filter = "all" | "system" | "teacher" | "rush";
 
-const className = (id: string) => MOCK_CLASS_REFS.find((c) => c.id === id)?.name ?? "—";
+const backColor = (i: LibraryItem) => (i.src === "system" ? "#cbd5e1" : i.kind === "Flashcard" ? "#bfdbfe" : "#a5f3fc");
+
+const PAGE = 9;
 
 export default function AdminLibraryPage() {
-  const decks = useDecks();
-  const sets = useWordRushSets();
+  const navigate = useNavigate();
+  const all = useLibrary();
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<Filter>("all");
+  const [creating, setCreating] = useState(false);
 
-  const rows = useMemo<Row[]>(
-    () => [
-      ...decks.map<Row>((d) => ({
-        key: `d-${d.id}`,
-        kind: "FLASHCARD",
-        title: d.title,
-        items: d.cards.length,
-        teacher: d.authorName,
-        classId: d.classId,
-        published: d.published,
-        done: d.studentsDone,
-        total: d.studentsTotal,
-        effect: d.published ? `${d.retention}% nhớ` : "—",
-      })),
-      ...sets.map<Row>((s) => ({
-        key: `w-${s.id}`,
-        kind: "WORD RUSH",
-        title: s.title,
-        items: s.questions.length,
-        teacher: s.authorName,
-        classId: s.classId,
-        published: s.published,
-        done: s.studentsDone,
-        total: s.studentsTotal,
-        effect: s.published || s.accuracy ? `${s.accuracy}% đúng` : "—",
-      })),
-    ],
-    [decks, sets],
+  const needle = q.trim().toLowerCase();
+  const list = all.filter(
+    (x) =>
+      (filter === "all" || (filter === "rush" ? x.kind === "Word Rush" : x.src === filter)) &&
+      (!needle || `${x.title} ${x.author} ${x.audience}`.toLowerCase().includes(needle)),
   );
-
-  const { rows: pageRows, page, setPage, total, pageSize } = usePaged(rows);
-
-  const publishedDecks = decks.filter((d) => d.published);
-  const avgRetention = publishedDecks.length ? Math.round(publishedDecks.reduce((a, d) => a + d.retention, 0) / publishedDecks.length) : 0;
-  // Mock estimate of this week's review sessions: students who finished x cards in the deck.
-  const weeklyReviews = decks.reduce((a, d) => a + d.studentsDone * Math.min(d.cards.length, 12), 0);
-
-  const stats = [
-    { label: "Bộ flashcard", value: String(decks.length) },
-    { label: "Bộ Word Rush", value: String(sets.length) },
-    { label: "Lượt ôn tuần", value: weeklyReviews.toLocaleString("vi-VN") },
-    { label: "Tỉ lệ nhớ", value: `${avgRetention}%` },
-  ];
+  const { rows, page, setPage, total } = usePaged(list, `${q}|${filter}`, PAGE);
 
   return (
     <AdminLayout>
-      <PageHeader crumb="Trung tâm" title="Học liệu" />
+      <PageHeader
+        crumb={`Trung tâm · ${all.length} bộ`}
+        title="Học liệu toàn trung tâm"
+        actions={
+          <button type="button" className={primaryBtn} onClick={() => setCreating(true)}>
+            + Tạo bộ thẻ trung tâm
+          </button>
+        }
+      />
 
-      <div className="mb-5 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((s) => (
-          <div key={s.label} className="border-t-2 border-slate-950 pt-3">
-            <p className="text-[13px] font-semibold text-slate-500">{s.label}</p>
-            <p className="text-[30px] font-extrabold tabular-nums">{s.value}</p>
-          </div>
-        ))}
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <SearchInput value={q} onChange={setQ} placeholder="Tìm theo tên bộ, giáo viên, lớp" />
+        <Segmented<Filter>
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { key: "all", label: "Tất cả", count: all.length },
+            { key: "system", label: "English Center", count: all.filter((x) => x.src === "system").length },
+            { key: "teacher", label: "Giáo viên", count: all.filter((x) => x.src === "teacher").length },
+            { key: "rush", label: "Word Rush", count: all.filter((x) => x.kind === "Word Rush").length },
+          ]}
+        />
       </div>
 
-      <TableFrame>
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-slate-100">
-                <th className={thClass}>Học liệu</th>
-                <th className={thClass}>Giáo viên</th>
-                <th className={thClass}>Lớp</th>
-                <th className={thClass}>Trạng thái</th>
-                <th className={thClass}>Học viên đã làm</th>
-                <th className={thClass}>Hiệu quả</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {pageRows.map((r) => {
-                const pct = r.total ? Math.round((r.done / r.total) * 100) : 0;
-                const fc = r.kind === "FLASHCARD";
-                return (
-                  <tr key={r.key} className="hover:bg-slate-50/70">
-                    <td className={tdClass}>
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-extrabold"
-                          style={fc ? { background: "#eff6ff", color: "#1e40af" } : { background: "#ecfeff", color: "#155e75" }}
-                        >
-                          {r.kind}
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block truncate font-bold text-slate-950">{r.title}</span>
-                          <span className="block text-xs text-slate-500">
-                            {r.items} {fc ? "thẻ" : "câu"}
-                          </span>
-                        </span>
-                      </div>
-                    </td>
-                    <td className={`${tdClass} text-slate-700`}>{r.teacher}</td>
-                    <td className={`${tdClass} text-slate-700`}>{className(r.classId)}</td>
-                    <td className={tdClass}>
-                      <span
-                        className="rounded-full px-2.5 py-0.5 text-xs font-bold"
-                        style={r.published ? { background: "#d1fae5", color: "#065f46" } : { background: "#e2e8f0", color: "#334155" }}
-                      >
-                        {r.published ? "Đã giao" : "Nháp"}
-                      </span>
-                    </td>
-                    <td className={tdClass}>
-                      <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-100">
-                          <div className="h-full rounded-full bg-blue-600" style={{ width: `${pct}%` }} />
-                        </div>
-                        <span className="text-xs font-bold tabular-nums text-slate-600">{pct}%</span>
-                      </div>
-                    </td>
-                    <td className={`${tdClass} font-bold tabular-nums text-slate-800`}>{r.effect}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      {rows.length === 0 ? (
+        <div className={`${surfaceClass} flex flex-col items-center gap-3 px-6 py-12 text-center`}>
+          <span className="text-sm font-semibold text-slate-500">
+            {all.length === 0 ? "Chưa có học liệu nào. Tạo bộ thẻ trung tâm đầu tiên, hoặc chờ giáo viên giao bộ thẻ và bộ câu hỏi cho lớp." : "Không có học liệu phù hợp."}
+          </span>
+          {all.length === 0 ? (
+            <button type="button" className={primaryBtn} onClick={() => setCreating(true)}>
+              + Tạo bộ thẻ trung tâm
+            </button>
+          ) : null}
         </div>
-        <Pagination page={page} total={total} pageSize={pageSize} onChange={setPage} />
-      </TableFrame>
+      ) : (
+        <div className="grid gap-[22px]" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))" }}>
+          {rows.map((x) => {
+            const src = LIB_SRC[x.src];
+            const k = kindStyle(x.kind);
+            return (
+              <div key={x.id} className="relative">
+                <span aria-hidden className="absolute inset-0 rounded-[22px]" style={{ background: backColor(x), transform: "rotate(1.6deg)" }} />
+                <button
+                  type="button"
+                  onClick={() => navigate(`/admin/library/${x.id}`)}
+                  className={`${surfaceClass} relative flex h-full w-full flex-col gap-2.5 p-[18px] text-left hover:-translate-y-0.5`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Tag bg={src.bg} fg={src.fg} width={124}>{src.label}</Tag>
+                    <Tag bg={k.bg} fg={k.fg} width={84}>{x.kind}</Tag>
+                  </span>
+                  <span className="truncate text-xs font-bold text-slate-500">
+                    {x.src === "system" ? x.audience : `${x.author} · ${x.audience}`}
+                  </span>
+                  <span className="line-clamp-2 text-[18px] font-black leading-snug tracking-tight text-slate-950">{x.title}</span>
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    {x.words.slice(0, 4).map((w, i) => (
+                      <span key={i} className="max-w-[110px] truncate rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">{w}</span>
+                    ))}
+                    {x.words.length > 4 ? <span className="text-xs font-bold text-slate-400">+{x.words.length - 4}</span> : null}
+                  </span>
+                  <span className="mt-auto flex items-center justify-between gap-2 border-t border-dashed border-[#eef2f6] pt-2.5 text-xs font-bold text-slate-500">
+                    <span>{x.count} {x.kind === "Flashcard" ? "thẻ" : "câu"}</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="size-1.5 rounded-full" style={{ background: x.published ? "#10b981" : "#94a3b8" }} />
+                      {x.published ? "Đã giao" : "Đang ẩn"}
+                    </span>
+                    <span>{x.donePct === null ? "—" : `${x.donePct}% đã làm`}</span>
+                  </span>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className={`${surfaceClass} mt-6`}>
+        <Pagination page={page} total={total} pageSize={PAGE} onChange={setPage} />
+      </div>
+
+      {creating ? (
+        <CreateCenterDeckModal
+          onClose={() => setCreating(false)}
+          onCreated={(id, title) => {
+            setCreating(false);
+            toast.success(`Đã phát hành bộ “${title}”`);
+            navigate(`/admin/library/d-${id}`);
+          }}
+        />
+      ) : null}
     </AdminLayout>
+  );
+}
+
+type CardRow = { word: string; meaning: string; example: string };
+const blank = (): CardRow => ({ word: "", meaning: "", example: "" });
+
+function CreateCenterDeckModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string, title: string) => void }) {
+  const [title, setTitle] = useState("");
+  const { categories } = useCategories();
+  const { user } = useAuth();
+  // Categories are admin-managed; "" = no category / whole center.
+  const [categoryId, setCategoryId] = useState("");
+  const [scopeCategoryId, setScopeCategoryId] = useState("");
+  const [cards, setCards] = useState<CardRow[]>([blank(), blank(), blank()]);
+  const [tried, setTried] = useState(false);
+
+  const filled = cards.filter((c) => c.word.trim() || c.meaning.trim());
+  const error = !title.trim()
+    ? "Nhập tên bộ thẻ."
+    : filled.length === 0
+      ? "Thêm ít nhất 1 thẻ."
+      : filled.some((c) => !c.word.trim() || !c.meaning.trim())
+        ? "Mỗi thẻ cần có cả từ và nghĩa."
+        : "";
+
+  const patch = (i: number, p: Partial<CardRow>) => setCards((cs) => cs.map((c, j) => (j === i ? { ...c, ...p } : c)));
+
+  const submit = () => {
+    if (error) return setTried(true);
+    const t = title.trim();
+    const scope = scopeCategoryId ? `Lớp thuộc ${categories.find((c) => c.id === scopeCategoryId)?.name ?? "danh mục"}` : "Toàn trung tâm";
+    onCreated(createCenterDeck({ title: t, scope, categoryId, scopeCategoryId, cards: filled, author: { id: user?.id ?? "", name: user?.fullName || user?.username || "Quản trị viên" } }), t);
+  };
+
+  return (
+    <Modal
+      isOpen
+      title="Tạo bộ thẻ trung tâm"
+      onClose={onClose}
+      widthClassName="max-w-2xl"
+      footer={
+        <div className="flex flex-col gap-2">
+          {tried && error ? <p className="text-[13px] font-bold text-rose-600">{error}</p> : null}
+          <div className="flex justify-end gap-2">
+            <button type="button" className={outlineBtn} onClick={onClose}>Huỷ</button>
+            <button type="button" className={primaryBtn} onClick={submit}>Tạo &amp; phát hành</button>
+          </div>
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-3">
+        <div>
+          <label className={labelClass}>Tên bộ</label>
+          <input className={`${fieldClass} ${tried && !title.trim() ? fieldErrClass : ""}`} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="vd. Oxford 3000 · Chủ đề Du lịch" />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className={labelClass}>Danh mục</label>
+            <select className={fieldClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+              <option value="">Không phân loại</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Áp dụng cho</label>
+            <select className={fieldClass} value={scopeCategoryId} onChange={(e) => setScopeCategoryId(e.target.value)}>
+              <option value="">Toàn trung tâm</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>Lớp thuộc {c.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <span className={labelClass}>Thẻ ({filled.length})</span>
+          {cards.map((c, i) => (
+            <div key={i} className="grid grid-cols-[22px_1fr_28px] items-center gap-2 sm:grid-cols-[22px_1fr_1fr_1.3fr_28px]">
+              <span className="text-xs font-bold text-slate-400">{i + 1}</span>
+              <input className={`${fieldClass} ${tried && c.meaning.trim() && !c.word.trim() ? fieldErrClass : ""}`} value={c.word} onChange={(e) => patch(i, { word: e.target.value })} placeholder="Từ" aria-label="Từ" />
+              <input className={`${fieldClass} col-start-2 sm:col-start-auto ${tried && c.word.trim() && !c.meaning.trim() ? fieldErrClass : ""}`} value={c.meaning} onChange={(e) => patch(i, { meaning: e.target.value })} placeholder="Nghĩa" aria-label="Nghĩa" />
+              <input className={`${fieldClass} col-start-2 sm:col-start-auto`} value={c.example} onChange={(e) => patch(i, { example: e.target.value })} placeholder="Ví dụ (tuỳ chọn)" aria-label="Ví dụ" />
+              <button
+                type="button"
+                aria-label="Xoá thẻ"
+                onClick={() => setCards((cs) => (cs.length > 1 ? cs.filter((_, j) => j !== i) : [blank()]))}
+                className="col-start-3 row-start-1 grid size-7 place-items-center rounded-full text-slate-400 hover:bg-slate-900/5 hover:text-rose-600 sm:col-start-auto sm:row-start-auto"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          <button type="button" className={`${outlineBtn} self-start`} onClick={() => setCards((cs) => [...cs, blank()])}>
+            + Thêm thẻ
+          </button>
+        </div>
+      </div>
+    </Modal>
   );
 }

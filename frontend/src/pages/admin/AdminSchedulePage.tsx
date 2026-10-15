@@ -1,53 +1,96 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import AdminLayout from "@/shared/components/layout/AdminLayout";
-import PageHeader, { TableFrame, tdClass, thClass } from "@/shared/components/PageHeader";
+import PageHeader, { TableFrame, rowClass, tdClass, thClass } from "@/shared/components/PageHeader";
 import Pagination from "@/shared/components/Pagination";
+import { Tag } from "@/shared/components/ui/Tag";
 import { usePaged } from "@/shared/hooks/usePaged";
-import WeekSchedule from "@/features/schedule/WeekSchedule";
-import { TEACHERS } from "@/features/schedule/mock";
-import { useScheduleEvents } from "@/features/schedule/scheduleStore";
-import { H0, H1, NOW_DAY, conflictMap, dur, fmt, toMinEvent } from "@/features/schedule/utils";
+import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage";
+import AdminTeacherWeek from "@/features/schedule/AdminTeacherWeek";
+import { categoryColors, useCategories } from "@/features/categories/useCategories";
+import { getCourseSchedule } from "@/features/courses/courseApi";
+import { addDays, dmy, durText, fmtMin, isoDate, isoWeek, mondayOf, toMin } from "@/features/courses/scheduleUi";
+import type { TeacherSchedule } from "@/features/courses/types";
+
+const NO_ROWS: TeacherSchedule[] = [];
+/** Capacity used for "mức kín lịch": 6 teaching days x 15 hours (07:00-22:00). */
+const CAPACITY_MIN = 6 * 15 * 60;
 
 export default function AdminSchedulePage() {
-  const all = useScheduleEvents();
+  const [offset, setOffset] = useState(0);
   const [teacherId, setTeacherId] = useState<string | null>(null);
+  const { categoryById } = useCategories();
 
-  const staff = all.filter((e) => e.owner === "staff").map(toMinEvent).filter((e) => e.d >= 0);
-  const rows = TEACHERS.map((t) => {
-    const es = staff.filter((e) => e.teacherId === t.id);
-    const cls = es.filter((e) => e.category !== "Cá nhân");
-    const teachMin = cls.reduce((a, e) => a + e.e - e.s, 0);
-    const allMin = es.reduce((a, e) => a + e.e - e.s, 0);
-    const conf = Object.keys(conflictMap(es)).length;
-    const today = cls.filter((e) => e.d === NOW_DAY).sort((a, b) => a.s - b.s);
-    return {
-      ...t,
-      classes: [...new Set(cls.map((e) => e.title))].join(", ") || "—",
-      teach: teachMin ? dur(teachMin) : "—",
-      today: today.length ? `${today.length} buổi · ${today.map((e) => fmt(e.s)).join(", ")}` : "Không có buổi",
-      load: Math.round((allMin / (7 * (H1 - H0))) * 100),
-      conf: Math.floor(conf / 2) || conf,
-    };
-  });
-  const paged = usePaged(rows);
+  const thisMonday = mondayOf(new Date());
+  const weekStart = addDays(thisMonday, offset * 7);
+  const from = isoDate(weekStart);
+  const to = isoDate(addDays(weekStart, 6));
 
-  const picked = TEACHERS.find((t) => t.id === teacherId);
+  const { data, isLoading, error } = useQuery({ queryKey: ["course-schedule", from, to], queryFn: () => getCourseSchedule({ from, to }) });
+  const schedules = data ?? NO_ROWS;
+  const errText = useQueryErrorMessage(error, "Không tải được lịch giáo viên");
+
+  const todayIso = isoDate(new Date());
+  const rows = useMemo(
+    () =>
+      schedules.map((t) => {
+        const mins = t.occurrences.reduce((a, o) => a + toMin(o.endTime) - toMin(o.startTime), 0);
+        const today = t.occurrences.filter((o) => o.date === todayIso).sort((a, b) => a.startTime.localeCompare(b.startTime));
+        return { t, mins, today, load: Math.min(100, Math.round((mins / CAPACITY_MIN) * 100)) };
+      }),
+    [schedules, todayIso],
+  );
+  const { rows: pageRows, page, setPage, total, pageSize } = usePaged(rows, from);
+
+  const picked = schedules.find((t) => t.teacherId === teacherId);
   if (picked) {
     return (
-      <AdminLayout wide>
-        <WeekSchedule role="admin" teacherId={picked.id} teacherName={picked.name} onBack={() => setTeacherId(null)} />
+      <AdminLayout>
+        <AdminTeacherWeek
+          teacher={picked}
+          weekStart={weekStart}
+          isCurrentWeek={offset === 0}
+          onPrev={() => setOffset((o) => o - 1)}
+          onNext={() => setOffset((o) => o + 1)}
+          onNow={() => setOffset(0)}
+          onBack={() => setTeacherId(null)}
+        />
       </AdminLayout>
     );
   }
 
+  const navBtn = "h-[38px] rounded-full bg-white text-[17px] font-black text-slate-700 shadow-[0_0_0_1px_#e2e8f0] hover:bg-slate-100";
+
   return (
     <AdminLayout>
-      <PageHeader crumb={`Tuần 42 · 12 – 18 tháng 10 · ${rows.length} giáo viên`} title="Lịch giáo viên" />
+      <PageHeader
+        crumb={`Tuần ${isoWeek(weekStart)} · ${dmy(weekStart)} – ${dmy(addDays(weekStart, 6))} · ${rows.length} giáo viên`}
+        title="Lịch giáo viên"
+        actions={
+          <div className="flex gap-1">
+            <button type="button" aria-label="Tuần trước" className={`${navBtn} w-[38px]`} onClick={() => setOffset((o) => o - 1)}>
+              ‹
+            </button>
+            <button
+              type="button"
+              disabled={offset === 0}
+              className={`${navBtn} px-3.5 !text-[13px] !font-extrabold disabled:!bg-slate-100 disabled:!text-slate-400`}
+              onClick={() => setOffset(0)}
+            >
+              Tuần này
+            </button>
+            <button type="button" aria-label="Tuần sau" className={`${navBtn} w-[38px]`} onClick={() => setOffset((o) => o + 1)}>
+              ›
+            </button>
+          </div>
+        }
+      />
+      {errText ? <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{errText}</div> : null}
       <TableFrame>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] border-collapse">
+          <table className="w-full min-w-[860px] border-collapse">
             <thead>
-              <tr className="border-b border-slate-200">
+              <tr>
                 <th className={thClass}>Giáo viên</th>
                 <th className={thClass}>Lớp phụ trách</th>
                 <th className={thClass}>Giờ dạy tuần</th>
@@ -58,40 +101,75 @@ export default function AdminSchedulePage() {
               </tr>
             </thead>
             <tbody>
-              {paged.rows.map((r) => (
-                <tr key={r.id} onClick={() => setTeacherId(r.id)} className="cursor-pointer border-b border-slate-100 hover:bg-slate-50">
-                  <td className={tdClass}>
-                    <div className="flex items-center gap-3">
-                      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-blue-100 text-sm font-extrabold text-blue-800">{r.name.split(" ").pop()?.[0]}</span>
-                      <div className="flex flex-col leading-snug">
-                        <span className="font-extrabold text-slate-950">{r.name}</span>
-                        <span className="text-xs text-slate-400">{r.roleCode}</span>
-                      </div>
-                    </div>
+              {isLoading ? (
+                <tr>
+                  <td className={`${tdClass} text-slate-500`} colSpan={7}>
+                    Đang tải…
                   </td>
-                  <td className={`${tdClass} max-w-[280px] text-slate-600`}>{r.classes}</td>
-                  <td className={`${tdClass} font-extrabold tabular-nums text-slate-950`}>{r.teach}</td>
-                  <td className={`${tdClass} text-slate-600`}>{r.today}</td>
-                  <td className={tdClass}>
-                    <div className="flex items-center gap-2.5">
-                      <div className="h-1.5 w-[90px] overflow-hidden rounded-full bg-slate-100">
-                        <div className="h-full rounded-full bg-slate-900" style={{ width: `${r.load}%` }} />
-                      </div>
-                      <span className="text-[13px] font-bold tabular-nums text-slate-700">{r.load}%</span>
-                    </div>
-                  </td>
-                  <td className={tdClass}>
-                    <span className={`rounded-full px-2.5 py-[3px] text-xs font-extrabold ${r.conf ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-600"}`}>
-                      {r.conf ? `${r.conf} trùng` : "Không"}
-                    </span>
-                  </td>
-                  <td className={`${tdClass} whitespace-nowrap text-right font-extrabold text-blue-600`}>Xem lịch →</td>
                 </tr>
-              ))}
+              ) : pageRows.length === 0 ? (
+                <tr>
+                  <td className={`${tdClass} text-slate-500`} colSpan={7}>
+                    Chưa có giáo viên nào. Gán vai trò Giáo viên ở trang Người dùng.
+                  </td>
+                </tr>
+              ) : (
+                pageRows.map(({ t, mins, today, load }) => (
+                  <tr key={t.teacherId} onClick={() => setTeacherId(t.teacherId)} className={`${rowClass} cursor-pointer hover:bg-slate-50`}>
+                    <td className={tdClass}>
+                      <div className="flex items-center gap-3">
+                        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-blue-100 text-sm font-extrabold text-blue-800">
+                          {(t.teacherFullName ?? "?").trim().split(" ").pop()?.[0]?.toUpperCase()}
+                        </span>
+                        <div className="flex min-w-0 flex-col gap-0.5 leading-snug">
+                          <span className="truncate font-extrabold text-slate-950">{t.teacherFullName ?? "—"}</span>
+                          <span className="flex flex-wrap gap-1">
+                            {t.categoryIds.length === 0 ? (
+                              <span className="text-xs text-slate-400">Chưa có chuyên môn</span>
+                            ) : (
+                              t.categoryIds.slice(0, 3).map((cid) => {
+                                const c = categoryById(cid);
+                                if (!c) return null;
+                                const col = categoryColors(c.color);
+                                return (
+                                  <Tag key={cid} bg={col.bg} fg={col.fg} className="!py-0 !text-[11px]">
+                                    {c.name}
+                                  </Tag>
+                                );
+                              })
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={`${tdClass} max-w-[260px] truncate text-slate-600`} title={t.courseCodes.join(", ")}>
+                      {t.courseCodes.join(", ") || "—"}
+                    </td>
+                    <td className={`${tdClass} font-extrabold tabular-nums text-slate-950`}>{mins ? durText(mins) : "—"}</td>
+                    <td className={`${tdClass} text-slate-600`}>
+                      {offset !== 0 ? "—" : today.length ? `${today.length} buổi · ${today.map((o) => fmtMin(toMin(o.startTime))).join(", ")}` : "Không có buổi"}
+                    </td>
+                    <td className={tdClass}>
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-1.5 w-[90px] overflow-hidden rounded-full bg-slate-100">
+                          <div className="h-full rounded-full" style={{ width: `${load}%`, background: load > 40 ? "#f59e0b" : "#2563eb" }} />
+                        </div>
+                        <span className="text-[13px] font-bold tabular-nums text-slate-700">{load}%</span>
+                      </div>
+                    </td>
+                    <td className={tdClass}>
+                      <Tag width={96} bg={t.conflictCount ? "#ffe4e6" : "#f1f5f9"} fg={t.conflictCount ? "#be123c" : "#475569"}>
+                        {t.conflictCount ? `${t.conflictCount} trùng` : "Không"}
+                      </Tag>
+                    </td>
+                    <td className={`${tdClass} whitespace-nowrap text-right font-extrabold text-slate-800 underline underline-offset-4`}>Xem lịch</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
-        <Pagination page={paged.page} total={paged.total} onChange={paged.setPage} />
+        <Pagination page={page} total={total} pageSize={pageSize} onChange={setPage} />
       </TableFrame>
     </AdminLayout>
   );

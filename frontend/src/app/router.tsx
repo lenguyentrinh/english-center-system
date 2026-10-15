@@ -5,16 +5,15 @@ import SignupPage from "@/pages/SignupPage.tsx";
 import CoursesPage from "@/pages/CoursesPage.tsx";
 import CourseDetailPage from "@/pages/CourseDetailPage.tsx";
 import AccountPage from "@/pages/AccountPage.tsx";
-import AdminCoursesPage from "@/pages/admin/AdminCoursesPage.tsx";
-import AdminCourseDetail from "@/pages/admin/AdminCourseDetail.tsx";
-import ManageRolesPage from "@/pages/admin/ManageRolesPage.tsx";
-import ManageBusinessRolesPage from "@/pages/admin/ManageBusinessRolesPage.tsx";
+import AdminCategoriesPage from "@/pages/admin/AdminCategoriesPage.tsx";
+import AdminClassesPage from "@/pages/admin/AdminClassesPage.tsx";
+import AdminClassDetailPage from "@/pages/admin/AdminClassDetailPage.tsx";
 import ManageUsersPage from "@/pages/admin/ManageUsersPage.tsx";
 import UserDetailPage from "@/pages/admin/UserDetailPage.tsx";
 import RequireAuth from "@/shared/components/auth/RequireAuth.tsx";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage.tsx";
 import VerifyEmailPage from "@/pages/VerifyEmailPage.tsx";
-import { Navigate } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { scheduleRoutes } from "@/app/routes/schedule.tsx";
 import { classRoutes } from "@/app/routes/classes.tsx";
 import { flashcardRoutes } from "@/app/routes/flashcards.tsx";
@@ -23,6 +22,8 @@ import { miscRoutes } from "@/app/routes/misc.tsx";
 import PublicLayout from "@/shared/components/layout/PublicLayout.tsx";
 
 const ADMIN_ONLY = ["ADMIN"];
+
+const CourseRedirect = () => <Navigate to={`/admin/classes/${useParams().id ?? ""}`} replace />;
 
 const Placeholder = ({ title }: { title: string }) => (
   <PublicLayout>
@@ -44,13 +45,14 @@ export const router = createBrowserRouter([
   { path: "/courses", element: <CoursesPage /> },
   { path: "/courses/:id", element: <CourseDetailPage /> },
   { path: "/teaching-classes", element: <Navigate to="/courses" replace /> },
-  { path: "/admin", element: <RequireAuth roles={ADMIN_ONLY}><Navigate to="/admin/dashboard" replace /></RequireAuth> },
+  { path: "/admin", element: <RequireAuth roles={ADMIN_ONLY}><Navigate to="/admin/schedule" replace /></RequireAuth> },
   { path: "/admin/users", element: <RequireAuth roles={ADMIN_ONLY}><ManageUsersPage /></RequireAuth> },
   { path: "/admin/users/:id", element: <RequireAuth roles={ADMIN_ONLY}><UserDetailPage /></RequireAuth> },
-  { path: "/admin/courses", element: <RequireAuth roles={ADMIN_ONLY}><AdminCoursesPage /></RequireAuth> },
-  { path: "/admin/courses/:id", element: <RequireAuth roles={ADMIN_ONLY}><AdminCourseDetail /></RequireAuth> },
-  { path: "/admin/roles", element: <RequireAuth roles={ADMIN_ONLY}><ManageRolesPage /></RequireAuth> },
-  { path: "/admin/business-roles", element: <RequireAuth roles={ADMIN_ONLY}><ManageBusinessRolesPage /></RequireAuth> },
+  { path: "/admin/classes", element: <RequireAuth roles={ADMIN_ONLY}><AdminClassesPage /></RequireAuth> },
+  { path: "/admin/classes/:id", element: <RequireAuth roles={ADMIN_ONLY}><AdminClassDetailPage /></RequireAuth> },
+  { path: "/admin/categories", element: <RequireAuth roles={ADMIN_ONLY}><AdminCategoriesPage /></RequireAuth> },
+  { path: "/admin/courses", element: <Navigate to="/admin/classes" replace /> },
+  { path: "/admin/courses/:id", element: <CourseRedirect /> },
   ...scheduleRoutes,
   ...classRoutes,
   ...flashcardRoutes,

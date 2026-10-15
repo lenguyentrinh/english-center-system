@@ -1,23 +1,9 @@
 export type UserStatus = "ACTIVE" | "INACTIVE" | "LOCKED";
 
-export type RoleCode =
-  | "ADMIN"
-  | "TEACHER"
-  | "STUDENT"
-  | "TEACHER_IELTS_6"
-  | "TEACHER_IELTS_7"
-  | "TEACHER_IELTS_8"
-  | "TEACHER_TOEIC_650"
-  | "TEACHER_TOEIC_750"
-  | "TEACHER_TOEIC_850";
+/** Backend role code. Only ADMIN / TEACHER / STUDENT are used by the app; teacher specialties are categories. */
+export type RoleCode = string;
 
-export type BusinessRoleCode =
-  | "TOEIC_TEACHING_INTERMEDIATE"
-  | "TOEIC_TEACHING_ADVANCED"
-  | "IELTS_TEACHING_INTERMEDIATE"
-  | "IELTS_TEACHING_ADVANCED"
-  | "ENGLISH_COMMUNICATION_BASIC"
-  | "ENGLISH_COMMUNICATION_ADVANCED";
+export type BusinessRoleCode = string;
 
 export type RoleResponse = {
   id: string;
@@ -45,6 +31,8 @@ export type UserSummaryResponse = {
   fullName: string | null;
   phone: string | null;
   status: UserStatus | null;
+  /** Effective role codes (all roles incl. those from business roles). */
+  roles?: string[];
   createdAt: string | null;
   updatedAt: string | null;
 };

@@ -5,7 +5,10 @@ import type { UpsertCoursePayload } from "./types.ts";
 /** Create / update / delete mutations for courses; refreshes cached course data on success. */
 export function useCourseMutations() {
   const queryClient = useQueryClient();
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["courses"] });
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ["course-schedule"] });
+    return queryClient.invalidateQueries({ queryKey: ["courses"] });
+  };
 
   const create = useMutation({
     mutationFn: (payload: UpsertCoursePayload) => createCourse(payload),

@@ -54,6 +54,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
+                        // Public catalogue, except the teacher schedule and the enrolled-student list.
+                        .requestMatchers(HttpMethod.GET, "/courses/schedule", "/courses/*/students").authenticated()
                         .requestMatchers(HttpMethod.GET, "/courses/**").permitAll()
                         .anyRequest().authenticated()
                 )

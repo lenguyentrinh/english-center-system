@@ -31,4 +31,9 @@ public record UserRequest(
         @NotNull(message = MessageConstant.USER_STATUS_NOT_NULL)
         UserStatus status
 ) {
+    /** Optional fields are normalised before validation: "0901 234 567" -> "0901234567", "" -> null. */
+    public UserRequest {
+        phone = com.trinh.english_center_be.shared.util.TextUtil.normalizePhone(phone);
+        fullName = com.trinh.english_center_be.shared.util.TextUtil.blankToNull(fullName);
+    }
 }

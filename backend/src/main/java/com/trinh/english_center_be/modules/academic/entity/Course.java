@@ -5,6 +5,8 @@ import com.trinh.english_center_be.shared.BaseEntity;
 import com.trinh.english_center_be.shared.enums.CourseStatus;
 import com.trinh.english_center_be.shared.enums.Roles;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -48,5 +50,18 @@ public class Course extends BaseEntity {
     @DBRef(lazy = true)
     private Teacher teacher;
 
+    /** Legacy teacher-role gate, kept so old data loads; qualification now uses categoryId and Teacher.categoryIds. */
     private Roles availableRoleTeacher;
+
+    /** Optional admin-managed Category id (program/tag). */
+    private String categoryId;
+
+    private String room;
+
+    /** ISO weekdays, 1 = Monday .. 7 = Sunday. Null/empty for legacy courses without a weekly pattern. */
+    private List<Integer> daysOfWeek;
+
+    private LocalTime startTime;
+
+    private LocalTime endTime;
 }

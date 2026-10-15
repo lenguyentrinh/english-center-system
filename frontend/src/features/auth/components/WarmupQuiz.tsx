@@ -131,7 +131,7 @@ export default function WarmupQuiz() {
           onClick={next}
           className="rounded-full border border-white/15 px-4 py-2 text-sm font-extrabold text-slate-300 transition hover:bg-white/5"
         >
-          {answered ? "Câu tiếp theo →" : "Bỏ qua →"}
+          {answered ? "Câu tiếp theo" : "Bỏ qua"}
         </button>
       </div>
     </section>

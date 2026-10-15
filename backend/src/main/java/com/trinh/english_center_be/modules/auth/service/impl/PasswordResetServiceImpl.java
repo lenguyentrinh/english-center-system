@@ -65,6 +65,15 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
     @Override
     public void requestReset(String email) {
+        issueCode(email, false);
+    }
+
+    @Override
+    public void requestInvite(String email) {
+        issueCode(email, true);
+    }
+
+    private void issueCode(String email, boolean invite) {
         Optional<User> found = userService.findByEmail(email.trim())
                 .filter(u -> u.getStatus() == UserStatus.ACTIVE);
         if (found.isEmpty()) return;
@@ -89,7 +98,11 @@ public class PasswordResetServiceImpl implements PasswordResetService {
                         .set("lastSentAt", now),
                 PasswordResetOtp.class);
 
-        mailService.sendPasswordResetOtp(user.getEmail(), user.getFullName(), otp);
+        if (invite) {
+            mailService.sendAccountInviteOtp(user.getEmail(), user.getFullName(), otp);
+        } else {
+            mailService.sendPasswordResetOtp(user.getEmail(), user.getFullName(), otp);
+        }
     }
 
     @Override

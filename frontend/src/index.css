@@ -2,7 +2,7 @@
 
 @theme {
   --font-sans:
-    "Nunito", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Quicksand", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
@@ -17,5 +17,35 @@ body,
   height: 100%;
 }
 body {
-  @apply bg-white font-sans text-slate-800 antialiased;
+  @apply bg-[#f3f6fb] font-sans text-slate-800 antialiased;
+}
+
+/* Thin scrollbars that only show on hover (design v5). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover {
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Every button: pressed feedback + smooth hover. */
+button:not(:disabled) {
+  transition:
+    background-color 0.15s,
+    filter 0.15s,
+    transform 0.1s,
+    opacity 0.15s;
+}
+button:not(:disabled):active {
+  transform: scale(0.97);
 }

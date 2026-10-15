@@ -49,6 +49,8 @@ class UserRoleAssignmentServiceImplTest {
     @Mock private UserRepository userRepository;
     @Mock private CourseRepository courseRepository;
     @Mock private TeacherRepository teacherRepository;
+    @Mock private com.trinh.english_center_be.modules.student.repository.StudentRepository studentRepository;
+    @Mock private com.trinh.english_center_be.modules.academic.repository.EnrollmentRepository enrollmentRepository;
 
     @InjectMocks
     private UserRoleAssignmentServiceImpl service;

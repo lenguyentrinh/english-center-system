@@ -4,7 +4,12 @@ export type ScheduleEvent = {
   start: string; // HH:MM
   end: string;
   title: string;
-  category: "IELTS" | "TOEIC" | "Giao tiếp" | "Cá nhân";
+  /** Admin-defined category id ("" = none). Personal events (meetings, self-study) carry no category. */
+  category: string;
+  /** class = teaching/learning slot of a class; personal = private block (meeting, self-study...). */
+  kind: "class" | "personal";
+  /** Zoom/online link for online slots. */
+  link?: string;
   meta?: string;
   teacherId?: string;
   classId?: string;
@@ -14,5 +19,3 @@ export type ScheduleEvent = {
 };
 
 export type ScheduleRole = "teacher" | "student" | "admin";
-
-export type MockTeacher = { id: string; name: string; roleCode: string };

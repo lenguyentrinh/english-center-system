@@ -118,9 +118,14 @@ export const assignBusinessRoleToUser = async (
 
 export const assignTeacherToCourse = async (
   courseId: string,
-  teacherId: string
+  teacherId: string,
+  force = false
 ): Promise<ApiResponse<unknown>> => {
-  const { data } = await apiClient.post<ApiResponse<unknown>>(`/courses/${courseId}/assign-teacher/${teacherId}`);
+  const { data } = await apiClient.post<ApiResponse<unknown>>(
+    `/courses/${courseId}/assign-teacher/${teacherId}`,
+    null,
+    force ? { params: { force: true } } : undefined
+  );
   return data;
 };
 

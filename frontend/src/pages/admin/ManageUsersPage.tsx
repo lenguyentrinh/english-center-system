@@ -1,71 +1,49 @@
 import { useMemo, useState } from "react";
-import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AdminLayout from "@/shared/components/layout/AdminLayout.tsx";
-import PageHeader, { TableFrame, outlineBtn, primaryBtn, tdClass, thClass } from "@/shared/components/PageHeader.tsx";
+import PageHeader, { TableFrame, fieldClass, fieldErrClass, labelClass, outlineBtn, primaryBtn, rowClass, tdClass, thClass } from "@/shared/components/PageHeader.tsx";
 import Pagination from "@/shared/components/Pagination.tsx";
 import Drawer from "@/shared/components/Drawer.tsx";
+import SearchInput from "@/shared/components/ui/SearchInput.tsx";
+import Segmented from "@/shared/components/ui/Segmented.tsx";
+import { StatusDot, Tag } from "@/shared/components/ui/Tag.tsx";
 import { usePaged } from "@/shared/hooks/usePaged.ts";
 import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
-import { createUser, getUserEffectiveRoles, getUsers, updateUser } from "@/features/admin/adminApi.ts";
+import { useAuth } from "@/features/auth/useAuth.ts";
+import { assignRoleToUser, createUser, getRoles, getUsers, updateUser } from "@/features/admin/adminApi.ts";
 import type { RoleCode, UserStatus, UserSummaryResponse } from "@/features/admin/types.ts";
+import {
+  AVATAR,
+  STATUS_META,
+  emailSchema,
+  formatDate,
+  groupOf,
+  initialOf,
+  nameSchema,
+  normalizePhone,
+  phoneSchema,
+  primaryGroup,
+  roleLabel,
+  roleTagStyle,
+  type RoleGroup,
+} from "@/features/admin/userUi.ts";
 
 const NO_USERS: UserSummaryResponse[] = [];
 const NO_ROLES: RoleCode[] = [];
 
-type RoleGroup = "ALL" | "ADMIN" | "TEACHER" | "STUDENT";
-const GROUPS: { key: RoleGroup; label: string }[] = [
-  { key: "ALL", label: "Tất cả" },
-  { key: "ADMIN", label: "Admin" },
-  { key: "TEACHER", label: "Teacher" },
-  { key: "STUDENT", label: "Student" },
-];
-
-const STATUS_STYLE: Record<UserStatus, { bg: string; text: string; bar: string }> = {
-  ACTIVE: { bg: "#d1fae5", text: "#065f46", bar: "#10b981" },
-  INACTIVE: { bg: "#e2e8f0", text: "#334155", bar: "#94a3b8" },
-  LOCKED: { bg: "#ffe4e6", text: "#be123c", bar: "#f43f5e" },
-};
-
-const groupOf = (code: RoleCode): Exclude<RoleGroup, "ALL"> =>
-  code === "ADMIN" ? "ADMIN" : code === "STUDENT" ? "STUDENT" : "TEACHER";
-
-function roleChipStyle(code: RoleCode): { bg: string; text: string } {
-  if (code === "ADMIN") return { bg: "#020617", text: "#ffffff" };
-  if (code === "STUDENT") return { bg: "#ecfdf5", text: "#065f46" };
-  return { bg: "#eff6ff", text: "#1e40af" };
-}
-
-const formatDate = (v: string | null) => (v ? new Date(v).toLocaleDateString("vi-VN") : "-");
-
 export default function ManageUsersPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data, isLoading, error: queryError } = useQuery({ queryKey: ["users"], queryFn: getUsers });
   const users = data?.data ?? NO_USERS;
-  const error = useQueryErrorMessage(queryError, "Failed to load users");
+  const error = useQueryErrorMessage(queryError, "Không tải được danh sách người dùng");
 
-  // Roles are not part of UserSummaryResponse: one /users/{id}/roles call per user (cached, loaded in the background).
-  const roleQueries = useQueries({
-    queries: users.map((u) => ({
-      queryKey: ["users", u.id, "effective-roles"],
-      queryFn: () => getUserEffectiveRoles(u.id),
-      staleTime: 60_000,
-    })),
-  });
-  const rolesKey = roleQueries.map((q) => q.dataUpdatedAt).join(",");
-  const rolesById = useMemo(() => {
-    const map = new Map<string, RoleCode[]>();
-    users.forEach((u, i) => {
-      const r = roleQueries[i]?.data?.data;
-      if (r) map.set(u.id, [...new Set(r.effectiveRoles.map((x) => x.code))]);
-    });
-    return map;
-    // roleQueries is a fresh array each render; rolesKey tracks real changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [users, rolesKey]);
-  const rolesLoading = roleQueries.some((q) => q.isLoading);
+  const { user: me } = useAuth();
+  // UserResponse carries the effective role codes, so no per-user role request is needed.
+  const rolesById = useMemo(() => new Map(users.map((u) => [u.id, (u.roles ?? NO_ROLES) as RoleCode[]])), [users]);
 
   const [search, setSearch] = useState("");
   const [group, setGroup] = useState<RoleGroup>("ALL");
@@ -80,14 +58,6 @@ export default function ManageUsersPage() {
     });
     return c;
   }, [users, rolesById]);
-
-  const statusCounts = useMemo(() => {
-    const c: Record<UserStatus, number> = { ACTIVE: 0, INACTIVE: 0, LOCKED: 0 };
-    users.forEach((u) => {
-      if (u.status) c[u.status] += 1;
-    });
-    return c;
-  }, [users]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -110,8 +80,9 @@ export default function ManageUsersPage() {
         status,
       }),
     onSuccess: (_d, v) => {
-      toast.success(v.status === "LOCKED" ? "Đã khoá tài khoản" : "Đã mở khoá tài khoản");
+      toast.success(`${v.status === "LOCKED" ? "Đã khoá" : "Đã mở khoá"} ${v.user.fullName || v.user.username}`);
       void queryClient.invalidateQueries({ queryKey: ["users"] });
+      void queryClient.invalidateQueries({ queryKey: ["user-detail", v.user.id] });
     },
     onError: (e) => toast.error(getApiErrorMessage(e, "Không cập nhật được trạng thái")),
   });
@@ -130,47 +101,25 @@ export default function ManageUsersPage() {
 
       {error ? <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
 
-      <div className="mb-5 grid gap-3 sm:grid-cols-3">
-        {(Object.keys(STATUS_STYLE) as UserStatus[]).map((s) => {
-          const st = STATUS_STYLE[s];
-          const pct = users.length ? (statusCounts[s] / users.length) * 100 : 0;
-          return (
-            <div key={s} className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
-              <p className="text-[13px] font-semibold text-slate-500">{s}</p>
-              <p className="text-[26px] font-black tabular-nums">{statusCounts[s]}</p>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full rounded-full" style={{ width: `${pct}%`, background: st.bar }} />
-              </div>
-            </div>
-          );
-        })}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <SearchInput value={search} onChange={setSearch} placeholder="Tìm theo tên, username, email" />
+        <Segmented
+          value={group}
+          onChange={setGroup}
+          options={[
+            { key: "ALL", label: "Tất cả", count: counts.ALL },
+            { key: "ADMIN", label: "Admin", count: counts.ADMIN },
+            { key: "TEACHER", label: "Giáo viên", count: counts.TEACHER },
+            { key: "STUDENT", label: "Học viên", count: counts.STUDENT },
+          ]}
+        />
       </div>
 
       <TableFrame>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm theo tên, username, email"
-            className="w-full max-w-xs rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300"
-          />
-          <div className="flex items-center gap-1 rounded-full bg-slate-100 p-1" title={rolesLoading ? "Đang tải vai trò…" : undefined}>
-            {GROUPS.map((g) => (
-              <button
-                key={g.key}
-                type="button"
-                onClick={() => setGroup(g.key)}
-                className={`rounded-full px-3 py-1 text-[13px] font-bold ${group === g.key ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"}`}
-              >
-                {g.label} <span className="opacity-60">{counts[g.key]}</span>
-              </button>
-            ))}
-          </div>
-        </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full">
+          <table className="w-full min-w-[960px] border-collapse">
             <thead>
-              <tr className="border-b border-slate-100">
+              <tr>
                 <th className={thClass}>Người dùng</th>
                 <th className={thClass}>Vai trò</th>
                 <th className={thClass}>Liên hệ</th>
@@ -179,7 +128,7 @@ export default function ManageUsersPage() {
                 <th className={thClass} />
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody>
               {isLoading ? (
                 <tr>
                   <td className={`${tdClass} text-slate-500`} colSpan={6}>
@@ -195,59 +144,75 @@ export default function ManageUsersPage() {
               ) : (
                 rows.map((u) => {
                   const roles = rolesById.get(u.id);
-                  const st = u.status ? STATUS_STYLE[u.status] : null;
+                  const st = u.status ? STATUS_META[u.status] : null;
                   const locked = u.status === "LOCKED";
+                  const av = AVATAR[primaryGroup(roles ?? [])];
+                  const display = u.fullName || u.username;
+                  const open = () => navigate(`/admin/users/${u.id}`);
                   return (
-                    <tr key={u.id} className="hover:bg-slate-50/70">
+                    <tr
+                      key={u.id}
+                      tabIndex={0}
+                      onClick={open}
+                      onKeyDown={(e) => e.key === "Enter" && open()}
+                      className={`${rowClass} cursor-pointer hover:bg-slate-50`}
+                    >
                       <td className={tdClass}>
-                        <Link to={`/admin/users/${u.id}`} className="flex items-center gap-3">
-                          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-blue-100 text-sm font-extrabold text-blue-800">
-                            {(u.fullName || u.username).charAt(0).toUpperCase()}
+                        <div className="flex items-center gap-3">
+                          <span style={{ background: av.bg, color: av.fg }} className="grid size-9 shrink-0 place-items-center rounded-full text-sm font-black">
+                            {initialOf(display)}
                           </span>
                           <span className="min-w-0">
-                            <span className="block truncate font-bold text-slate-950">{u.fullName || u.username}</span>
+                            <span className="block truncate font-extrabold text-slate-950">{display}</span>
                             <span className="block truncate text-xs text-slate-500">@{u.username}</span>
                           </span>
-                        </Link>
+                        </div>
                       </td>
                       <td className={tdClass}>
-                        {roles === undefined ? (
-                          <span className="text-xs text-slate-400">…</span>
-                        ) : roles.length === 0 ? (
+                        {roles === undefined || roles.length === 0 ? (
                           <span className="text-xs text-slate-400">—</span>
                         ) : (
-                          <div className="flex flex-wrap gap-1">
-                            {roles.map((r) => {
-                              const c = roleChipStyle(r);
+                          <div className="flex items-center gap-1">
+                            {roles.slice(0, 2).map((r) => {
+                              const c = roleTagStyle(r);
                               return (
-                                <span key={r} className="rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: c.bg, color: c.text }}>
-                                  {r}
-                                </span>
+                                <Tag key={r} width={108} bg={c.bg} fg={c.fg} title={r}>
+                                  {roleLabel(r)}
+                                </Tag>
                               );
                             })}
+                            {roles.length > 2 ? (
+                              <Tag width={44} bg="#f1f5f9" fg="#334155" title={roles.slice(2).join(", ")}>
+                                +{roles.length - 2}
+                              </Tag>
+                            ) : null}
                           </div>
                         )}
                       </td>
                       <td className={tdClass}>
-                        <span className="block text-slate-800">{u.email ?? "-"}</span>
+                        <span className="block text-slate-800">{u.email ?? "—"}</span>
                         <span className="block text-xs text-slate-500">{u.phone ?? ""}</span>
                       </td>
                       <td className={tdClass}>
-                        {st && u.status ? (
-                          <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: st.bg, color: st.text }}>
-                            {u.status}
-                          </span>
+                        {st ? (
+                          <StatusDot bg={st.bg} fg={st.fg} dot={st.dot}>
+                            {st.label}
+                          </StatusDot>
                         ) : (
-                          "-"
+                          "—"
                         )}
                       </td>
-                      <td className={`${tdClass} text-slate-600`}>{formatDate(u.createdAt)}</td>
+                      <td className={`${tdClass} whitespace-nowrap text-slate-600`}>{formatDate(u.createdAt)}</td>
                       <td className={`${tdClass} text-right`}>
                         <button
                           type="button"
-                          className={outlineBtn}
-                          disabled={statusMutation.isPending}
-                          onClick={() => statusMutation.mutate({ user: u, status: locked ? "ACTIVE" : "LOCKED" })}
+                          disabled={statusMutation.isPending || u.id === me?.id}
+                          title={u.id === me?.id ? "Bạn không thể tự khoá tài khoản của mình" : undefined}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            statusMutation.mutate({ user: u, status: locked ? "ACTIVE" : "LOCKED" });
+                          }}
+                          className={`${outlineBtn} !px-3.5 !py-1.5 ${locked ? "!border-emerald-200 !text-emerald-600" : "!border-rose-200 !text-rose-600"}`}
                         >
                           {locked ? "Mở khoá" : "Khoá"}
                         </button>
@@ -262,78 +227,125 @@ export default function ManageUsersPage() {
         <Pagination page={page} total={total} pageSize={pageSize} onChange={setPage} />
       </TableFrame>
 
-      {drawer ? <CreateUserDrawer onClose={() => setDrawer(false)} /> : null}
+      {drawer ? <CreateUserDrawer existing={users} onClose={() => setDrawer(false)} /> : null}
     </AdminLayout>
   );
 }
 
-function CreateUserDrawer({ onClose }: { onClose: () => void }) {
+const NEW_ROLES: { key: "STUDENT" | "TEACHER" | "ADMIN"; label: string }[] = [
+  { key: "STUDENT", label: "Học viên" },
+  { key: "TEACHER", label: "Giáo viên" },
+  { key: "ADMIN", label: "Admin" },
+];
+
+/** Username is not asked in the design: derive it from the email local part, unique, >= 5 chars. */
+function deriveUsername(email: string, taken: Set<string>): string {
+  let base = email.split("@")[0].toLowerCase().replace(/[^a-z0-9._]/g, "");
+  if (base.length < 5) base = (base + "user").slice(0, 8);
+  base = base.slice(0, 44);
+  let name = base;
+  for (let i = 2; taken.has(name); i++) name = `${base}${i}`;
+  return name;
+}
+
+/** 12 chars, always has a letter and a digit (backend PASSWORD_PATTERN). */
+function tempPassword(): string {
+  const letters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  const digits = "23456789";
+  const all = letters + digits;
+  const buf = crypto.getRandomValues(new Uint32Array(12));
+  const chars = Array.from(buf, (n) => all[n % all.length]);
+  chars[0] = letters[buf[0] % letters.length];
+  chars[1] = digits[buf[1] % digits.length];
+  return chars.sort(() => 0.5 - Math.random()).join("");
+}
+
+function CreateUserDrawer({ existing, onClose }: { existing: UserSummaryResponse[]; onClose: () => void }) {
   const queryClient = useQueryClient();
-  const [form, setForm] = useState({ username: "", password: "", email: "", fullName: "", phone: "", status: "ACTIVE" as UserStatus });
-  const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const [form, setForm] = useState({ name: "", email: "", phone: "", role: "STUDENT" as (typeof NEW_ROLES)[number]["key"] });
+  const [tried, setTried] = useState(false);
+
+  const emailTaken = existing.some((u) => u.email?.toLowerCase() === form.email.trim().toLowerCase());
+  const errs = {
+    name: nameSchema.safeParse(form.name).error?.issues[0]?.message ?? "",
+    email: emailSchema.safeParse(form.email).error?.issues[0]?.message || (emailTaken ? "Email đã được dùng cho tài khoản khác." : ""),
+    phone: phoneSchema.safeParse(form.phone).error?.issues[0]?.message ?? "",
+  };
 
   const mutation = useMutation({
-    mutationFn: () =>
-      createUser({
-        username: form.username.trim(),
-        password: form.password,
-        email: form.email.trim(),
-        fullName: form.fullName.trim() || undefined,
-        phone: form.phone.trim() || undefined,
-        status: form.status,
-      }),
-    onSuccess: () => {
-      toast.success("Đã tạo người dùng");
+    mutationFn: async () => {
+      const email = form.email.trim().toLowerCase();
+      const taken = new Set(existing.map((u) => u.username.toLowerCase()));
+      const created = await createUser({
+        username: deriveUsername(email, taken),
+        password: tempPassword(),
+        email,
+        fullName: form.name.trim(),
+        phone: normalizePhone(form.phone) || undefined,
+        status: "ACTIVE",
+      });
+      const roles = await getRoles();
+      const role = roles.data?.find((r) => r.code === form.role);
+      let roleAssigned = Boolean(role);
+      if (role) {
+        try {
+          await assignRoleToUser(created.data.id, role.id);
+        } catch {
+          roleAssigned = false;
+        }
+      }
+      return { created, roleAssigned };
+    },
+    onSuccess: ({ roleAssigned }) => {
+      toast.success(`Đã tạo tài khoản cho ${form.name.trim()}. Đã gửi mã đặt mật khẩu tới ${form.email.trim()}.`);
+      if (!roleAssigned) toast.warning("Chưa gán được vai trò, hãy gán ở trang Quản lý vai trò.");
       void queryClient.invalidateQueries({ queryKey: ["users"] });
       onClose();
     },
     onError: (e) => toast.error(getApiErrorMessage(e, "Không tạo được người dùng")),
   });
 
-  const input = "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300";
-  const label = "mb-1 block text-xs font-bold text-slate-600";
-  const valid = Boolean(form.username.trim() && form.password && form.email.trim());
+  const set = (k: "name" | "email" | "phone") => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const hasErr = Boolean(errs.name || errs.email || errs.phone);
+
+  const fields: { k: "name" | "email" | "phone"; label: string; ph: string; type?: string }[] = [
+    { k: "name", label: "Họ và tên", ph: "vd. Nguyễn Văn A" },
+    { k: "email", label: "Email", ph: "vd. vana@gmail.com", type: "email" },
+    { k: "phone", label: "Số điện thoại (tuỳ chọn)", ph: "vd. 0912345678", type: "tel" },
+  ];
 
   return (
     <Drawer title="Thêm người dùng" onClose={onClose} accent>
       <form
-        className="flex flex-col gap-3"
+        className="flex flex-col gap-3.5"
+        noValidate
         onSubmit={(e) => {
           e.preventDefault();
-          if (valid) mutation.mutate();
+          if (hasErr) return setTried(true);
+          mutation.mutate();
         }}
       >
+        {fields.map((f) => (
+          <div key={f.k}>
+            <label className={labelClass}>{f.label}</label>
+            <input
+              className={`${fieldClass} ${tried && errs[f.k] ? fieldErrClass : ""}`}
+              type={f.type ?? "text"}
+              placeholder={f.ph}
+              value={form[f.k]}
+              onChange={set(f.k)}
+              autoComplete="off"
+            />
+            {tried && errs[f.k] ? <p className="mt-1 text-xs font-semibold text-rose-600">{errs[f.k]}</p> : null}
+          </div>
+        ))}
         <div>
-          <label className={label}>Username *</label>
-          <input className={input} value={form.username} onChange={set("username")} autoComplete="off" />
+          <label className={labelClass}>Vai trò</label>
+          <Segmented value={form.role} onChange={(role) => setForm((f) => ({ ...f, role }))} options={NEW_ROLES} />
         </div>
-        <div>
-          <label className={label}>Mật khẩu *</label>
-          <input className={input} type="password" value={form.password} onChange={set("password")} autoComplete="new-password" />
-        </div>
-        <div>
-          <label className={label}>Email *</label>
-          <input className={input} type="email" value={form.email} onChange={set("email")} />
-        </div>
-        <div>
-          <label className={label}>Họ tên</label>
-          <input className={input} value={form.fullName} onChange={set("fullName")} />
-        </div>
-        <div>
-          <label className={label}>Điện thoại</label>
-          <input className={input} value={form.phone} onChange={set("phone")} />
-        </div>
-        <div>
-          <label className={label}>Trạng thái</label>
-          <select className={input} value={form.status} onChange={set("status")}>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="INACTIVE">INACTIVE</option>
-            <option value="LOCKED">LOCKED</option>
-          </select>
-        </div>
-        <p className="text-xs text-slate-500">Vai trò gán sau ở trang chi tiết người dùng.</p>
-        <div className="flex gap-2">
-          <button type="submit" disabled={!valid || mutation.isPending} className={`${primaryBtn} disabled:opacity-50`}>
+        <p className="text-xs text-slate-500">Tài khoản được tạo ở trạng thái hoạt động và hệ thống gửi mã đặt mật khẩu tới email này (người dùng nhập mã ở màn “Quên mật khẩu”). Chuyên môn giáo viên gán ở trang chi tiết người dùng.</p>
+        <div className="mt-1 flex gap-2">
+          <button type="submit" disabled={mutation.isPending} className={primaryBtn}>
             {mutation.isPending ? "Đang lưu…" : "Tạo người dùng"}
           </button>
           <button type="button" onClick={onClose} className={outlineBtn}>

@@ -53,6 +53,13 @@ public class MailService {
     }
 
     @Async
+    public void sendAccountInviteOtp(String to, String fullName, String otp) {
+        send(to, fullName, otp, "account setup code",
+                "An account was created for you. Use this code on the Forgot password screen to choose your password: %s",
+                "If you were not expecting this, ignore this email.");
+    }
+
+    @Async
     public void sendEmailVerificationOtp(String to, String fullName, String otp) {
         send(to, fullName, otp, "email verification code", "Your email verification code is: %s",
                 "If you did not create an account, ignore this email.");

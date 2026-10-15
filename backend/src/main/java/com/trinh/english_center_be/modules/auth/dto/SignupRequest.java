@@ -32,4 +32,8 @@ public record SignupRequest(
 
         @Pattern(regexp = Constant.PHONE_PATTERN, message = MessageConstant.PHONE_INVALID)
         String phone
-) {}
+) {
+    public SignupRequest {
+        phone = com.trinh.english_center_be.shared.util.TextUtil.normalizePhone(phone);
+    }
+}

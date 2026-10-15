@@ -25,13 +25,19 @@ class UserServiceImplUpdateTest {
 
     @Mock UserRepository userRepository;
     @Mock PasswordEncoder passwordEncoder;
+    @Mock com.trinh.english_center_be.modules.user.Repository.UserRoleRepository userRoleRepository;
+    @Mock com.trinh.english_center_be.modules.user.Repository.RoleRepository roleRepository;
+    @Mock com.trinh.english_center_be.modules.auth.service.RefreshTokenService refreshTokenService;
+    @Mock com.trinh.english_center_be.modules.auth.service.EmailVerificationService emailVerificationService;
+    @Mock com.trinh.english_center_be.modules.auth.service.PasswordResetService passwordResetService;
 
     UserServiceImpl service;
     User user;
 
     @BeforeEach
     void setUp() {
-        service = new UserServiceImpl(userRepository, passwordEncoder);
+        service = new UserServiceImpl(userRepository, passwordEncoder, userRoleRepository, roleRepository,
+                refreshTokenService, emailVerificationService, passwordResetService);
         user = User.builder().id("u1").username("alice").email("a@b.com").password("existing-hash")
                 .fullName("Alice Old").phone("0123456789").status(UserStatus.ACTIVE).emailVerified(true).build();
         when(userRepository.findById("u1")).thenReturn(Optional.of(user));

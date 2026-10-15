@@ -11,4 +11,6 @@ public interface TeacherRepository extends MongoRepository<Teacher, String> {
     Optional<Teacher> findByUser(User user);
 
     List<Teacher> findByUserIn(List<User> users);
+
+    List<Teacher> findByCategoryIdsContaining(String categoryId);
 }

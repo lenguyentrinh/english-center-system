@@ -32,11 +32,11 @@ export const signupSchema = z.object({
     .trim()
     .min(1, "Nhập tên đăng nhập.")
     .regex(/^\S*$/, "Không dùng khoảng trắng.")
-    .min(3, "Ít nhất 3 ký tự.")
+    .min(5, "Ít nhất 5 ký tự.")
     .max(50, "Tối đa 50 ký tự."),
   password: passwordRule,
   email: emailRule,
-  fullName: z.string().trim().min(1, "Nhập họ và tên."),
+  fullName: z.string().trim().min(1, "Nhập họ và tên.").min(5, "Họ và tên cần 5–50 ký tự.").max(50, "Họ và tên cần 5–50 ký tự."),
   phone: z
     .string()
     .trim()

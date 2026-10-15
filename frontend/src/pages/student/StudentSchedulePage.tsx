@@ -1,10 +1,10 @@
 import StudentLayout from "@/shared/components/layout/StudentLayout";
-import WeekSchedule from "@/features/schedule/WeekSchedule";
+import StudentWeek from "@/features/schedule/StudentWeek";
 
 export default function StudentSchedulePage() {
   return (
-    <StudentLayout wide>
-      <WeekSchedule role="student" />
+    <StudentLayout>
+      <StudentWeek />
     </StudentLayout>
   );
 }

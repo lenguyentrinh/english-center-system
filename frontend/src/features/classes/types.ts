@@ -1,5 +1,3 @@
-import type { Category } from "@/features/mock/common";
-
 export type ClassStatus = "OPEN" | "ACTIVE" | "CLOSED";
 export type DocType = "PDF" | "AUDIO" | "VIDEO" | "LINK";
 
@@ -8,13 +6,16 @@ export type ClassStudent = {
   name: string;
   email: string;
   phone: string;
-  /** attendance % */
-  att: number;
-  /** flashcards mastered % */
-  fc: number;
-  /** Word Rush best score */
-  rush: number;
+  /** Attendance % from marked sessions (null = nothing marked yet). */
+  att: number | null;
+  /** Flashcards mastered % (null = no data: there is no per-student progress API yet). */
+  fc: number | null;
+  /** Word Rush best score (null = no data yet). */
+  rush: number | null;
+  /** Last activity label ("—" when unknown). */
   last: string;
+  /** Date (YYYY-MM-DD) the student joined the class; sessions before it do not count for attendance. */
+  joined?: string;
 };
 
 export type ClassDoc = {
@@ -41,19 +42,34 @@ export type ClassSession = {
   topic: string;
   no: number;
   docIds: string[];
+  /** Zoom/online link (required when the room is online). */
+  link?: string;
+  /** studentId -> present. Students without an entry are "not marked yet" and do not count for attendance. */
+  attendance?: Record<string, boolean>;
+  /** Homework assigned after the session: flashcard decks / Word Rush sets. */
+  homework?: Array<{ kind: "deck" | "set"; id: string }>;
 };
 
 export type ClassItem = {
   id: string;
   name: string;
   code: string;
+  /** Auth user id of the teacher who owns the class (the signed-in user for their own classes). */
   teacherId: string;
+  teacherName?: string;
+  /** True for classes created in this browser only (the API only lets admins create courses). */
+  local?: boolean;
   room: string;
   scheduleText: string;
   startDate: string;
   endDate: string;
   status: ClassStatus;
-  category: Category;
+  /** Admin-defined category id ("" = none). */
+  category: string;
+  /** Max students. */
+  capacity: number;
+  /** Active enrolment count (from the API; students[] is only filled for the owning teacher). */
+  enrolled?: number;
   students: ClassStudent[];
   docs: ClassDoc[];
   sessions: ClassSession[];
@@ -61,13 +77,15 @@ export type ClassItem = {
 
 export type ClassDraft = {
   name: string;
-  code: string;
   room: string;
   startDate: string;
-  endDate: string;
   days: number[];
   startPeriod: number;
   periods: number;
+  /** Course length in weeks, counted from `startDate`. */
+  weeks: number;
+  category: string;
+  link: string;
 };
 
 export type SessionDraft = {
@@ -77,6 +95,7 @@ export type SessionDraft = {
   room: string;
   topic: string;
   docIds: string[];
+  link: string;
 };
 
 export type DocDraft = {

@@ -29,4 +29,9 @@ public record UserUpdateRequest(
 
         UserStatus status
 ) {
+    /** Optional fields are normalised before validation: "0901 234 567" -> "0901234567", "" -> null. */
+    public UserUpdateRequest {
+        phone = com.trinh.english_center_be.shared.util.TextUtil.normalizePhone(phone);
+        fullName = com.trinh.english_center_be.shared.util.TextUtil.blankToNull(fullName);
+    }
 }

@@ -10,7 +10,7 @@ type Props = {
 const statusClasses: Record<Course["status"], string> = {
   OPEN: "bg-emerald-100 text-emerald-800",
   ACTIVE: "bg-indigo-100 text-indigo-800",
-  CLOSED: "bg-slate-200 text-slate-700",
+  CLOSE: "bg-slate-200 text-slate-700",
 };
 
 const formatDate = (value: string) =>

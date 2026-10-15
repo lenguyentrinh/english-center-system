@@ -4,6 +4,10 @@ import com.trinh.english_center_be.modules.academic.dto.CourseSuggestionResponse
 import com.trinh.english_center_be.modules.academic.entity.Course;
 import com.trinh.english_center_be.modules.academic.mapper.CourseMapper;
 import com.trinh.english_center_be.modules.academic.repository.CourseRepository;
+import com.trinh.english_center_be.modules.academic.entity.Enrollment;
+import com.trinh.english_center_be.modules.academic.repository.EnrollmentRepository;
+import com.trinh.english_center_be.modules.student.entity.Student;
+import com.trinh.english_center_be.modules.student.repository.StudentRepository;
 import com.trinh.english_center_be.modules.teacher.entity.Teacher;
 import com.trinh.english_center_be.modules.teacher.repository.TeacherRepository;
 import com.trinh.english_center_be.modules.user.Repository.BRoleRepository;
@@ -57,6 +61,8 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
     private final TeacherRepository teacherRepository;
+    private final StudentRepository studentRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     @Override
     public void assignRole(String userId, String roleId) {
@@ -80,18 +86,25 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
         if (isTeacherRole(role.getCode())) {
             createTeacherIfNotExists(user);
         }
+        if (role.getCode() == Roles.STUDENT) {
+            createOrReviveStudent(user);
+        }
     }
 
     @Override
     public void removeRole(String userId, String roleId) {
         UserRole link = userRoleRepository.findByUserIdAndRoleId(userId, roleId)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.USER_DOES_NOT_VALUE, Constant.ROLE)));
+        guardLastAdmin(roleId);
         userRoleRepository.delete(link);
 
         // If removed role is a teacher role and user no longer has any teacher roles, delete teacher record
         roleRepository.findById(roleId).ifPresent(role -> {
             if (isTeacherRole(role.getCode())) {
                 deleteTeacherIfNoTeacherRoles(userId, role.getCode());
+            }
+            if (role.getCode() == Roles.STUDENT) {
+                deactivateStudent(userId);
             }
         });
     }
@@ -208,6 +221,22 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
 
     // Helper methods
 
+    /** The last active admin must keep the ADMIN role, otherwise nobody can manage the center. */
+    private void guardLastAdmin(String roleId) {
+        Role role = roleRepository.findById(roleId).orElse(null);
+        if (role == null || role.getCode() != Roles.ADMIN) return;
+        long activeAdmins = userRoleRepository.findByRoleId(roleId).stream()
+                .map(UserRole::getUserId)
+                .distinct()
+                .map(userRepository::findById)
+                .flatMap(Optional::stream)
+                .filter(u -> !Boolean.FALSE.equals(u.getActive()) && (u.getStatus() == null || u.getStatus() == com.trinh.english_center_be.shared.enums.UserStatus.ACTIVE))
+                .count();
+        if (activeAdmins <= 1) {
+            throw new BusinessException("Cannot remove the ADMIN role from the last active admin", HttpStatus.CONFLICT);
+        }
+    }
+
     private boolean isTeacherRole(Roles code) {
         return code != null && code.name().startsWith("TEACHER");
     }
@@ -278,6 +307,31 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
             throw new BusinessException(String.format(MessageConstant.ENTITY_INACTIVE_CAN_NOT_ASSIGN, Constant.ROLE), HttpStatus.BAD_REQUEST);
         }
         return role;
+    }
+
+    /** The Student profile is created with the role; a profile that was deactivated earlier is revived. */
+    private void createOrReviveStudent(User user) {
+        Student student = studentRepository.findByUser(user).orElse(null);
+        if (student == null) {
+            studentRepository.save(Student.builder().user(user).build());
+        } else if (Boolean.FALSE.equals(student.getActive())) {
+            student.setActive(true);
+            studentRepository.save(student);
+        }
+    }
+
+    /**
+     * Losing the STUDENT role deactivates the profile and cancels active enrollments instead of deleting
+     * anything, so enrollment history (and its DBRefs) stays intact.
+     */
+    private void deactivateStudent(String userId) {
+        userRepository.findById(userId).flatMap(studentRepository::findByUser).ifPresent(student -> {
+            List<Enrollment> active = enrollmentRepository.findByStudentAndStatus(student, Enrollment.ACTIVE);
+            active.forEach(e -> e.setStatus(Enrollment.CANCELLED));
+            if (!active.isEmpty()) enrollmentRepository.saveAll(active);
+            student.setActive(false);
+            studentRepository.save(student);
+        });
     }
 
     private void createTeacherIfNotExists(User user) {

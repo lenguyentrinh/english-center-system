@@ -1,19 +1,22 @@
 import type { ReactNode } from "react";
 import { toast } from "react-toastify";
 import Pagination from "@/shared/components/Pagination";
+import { Tag } from "@/shared/components/ui/Tag";
 import { TableFrame, outlineBtn, tdClass, thClass } from "@/shared/components/PageHeader";
 import { usePaged } from "@/shared/hooks/usePaged";
-import { MOCK_STUDENT } from "@/features/mock/common";
+import { useAuth } from "@/features/auth/useAuth";
 import { attachDoc, detachDoc, removeDoc, removeSession } from "./store";
 import type { ClassDoc, ClassItem, ClassSession, ClassStatus, ClassStudent, DocType } from "./types";
-import { DOC_STYLE, SESSION_STATE_LABEL, STATUS_STYLE, TEACHER_NAMES, dayLabel, initials, sessionState } from "./utils";
+import { DOC_STYLE, SESSION_STATE_LABEL, STATUS_STYLE, dayLabel, initials, sessionState } from "./utils";
+
+const STATUS_LABEL: Record<ClassStatus, string> = { OPEN: "Đang tuyển sinh", ACTIVE: "Đang học", CLOSED: "Đã kết thúc" };
 
 export function StatusPill({ status }: { status: ClassStatus }) {
   const s = STATUS_STYLE[status];
   return (
-    <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: s.bg, color: s.text }}>
-      {status}
-    </span>
+    <Tag bg={s.bg} fg={s.text} width={124}>
+      {STATUS_LABEL[status]}
+    </Tag>
   );
 }
 
@@ -88,7 +91,7 @@ export function DocActionButton({ doc }: { doc: ClassDoc }) {
     );
   }
   return (
-    <button type="button" className={`${outlineBtn} !px-3 !py-1 !text-xs`} onClick={() => toast.info(`${label}: ${doc.name} (bản demo)`)}>
+    <button type="button" className={`${outlineBtn} !px-3 !py-1 !text-xs`} onClick={() => toast.info(`${label}: ${doc.name} (tệp chưa được lưu trên máy chủ)`)}>
       {label}
     </button>
   );
@@ -301,8 +304,8 @@ export function StudentsTable({ students, resetKey }: { students: ClassStudent[]
                 <td className={tdClass}>
                   <AttBar value={s.att} />
                 </td>
-                <td className={`${tdClass} tabular-nums`}>{s.fc}% thẻ đã thuộc</td>
-                <td className={`${tdClass} tabular-nums`}>{s.rush.toLocaleString("vi-VN")} điểm</td>
+                <td className={`${tdClass} tabular-nums`}>{s.fc === null ? "—" : `${s.fc}% thẻ đã thuộc`}</td>
+                <td className={`${tdClass} tabular-nums`}>{s.rush === null ? "—" : `${s.rush.toLocaleString("vi-VN")} điểm`}</td>
                 <td className={`${tdClass} text-slate-600`}>{s.last}</td>
               </tr>
             ))}
@@ -324,9 +327,12 @@ export function StudentsTable({ students, resetKey }: { students: ClassStudent[]
 type Mate = { key: string; name: string; role: "Giáo viên" | "Học viên"; email: string; me: boolean };
 
 export function MatesTable({ cls }: { cls: ClassItem }) {
+  const { user } = useAuth();
+  // A student only receives their own row from the API; the full roster is visible to the teacher and admins.
+  const mates = cls.students.length ? cls.students : user ? [{ id: user.id, name: user.fullName || user.username, email: user.email }] : [];
   const rows: Mate[] = [
-    { key: "teacher", name: TEACHER_NAMES[cls.teacherId] ?? "Giáo viên", role: "Giáo viên", email: "", me: false },
-    ...cls.students.map((s) => ({ key: s.id, name: s.name, role: "Học viên" as const, email: s.email, me: s.id === MOCK_STUDENT.id })),
+    { key: "teacher", name: cls.teacherName ?? "Giáo viên", role: "Giáo viên", email: "", me: false },
+    ...mates.map((s) => ({ key: s.id, name: s.name, role: "Học viên" as const, email: s.email, me: s.id === user?.id })),
   ];
   const paged = usePaged(rows, cls.id);
   return (

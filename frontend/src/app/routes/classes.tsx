@@ -5,7 +5,7 @@ import TeacherClassDetailPage from "@/pages/teacher/TeacherClassDetailPage";
 import StudentClassesPage from "@/pages/student/StudentClassesPage";
 import StudentClassDetailPage from "@/pages/student/StudentClassDetailPage";
 
-const TEACHER_ROLES = ["TEACHER", "TEACHER_IELTS_6", "TEACHER_IELTS_7", "TEACHER_IELTS_8", "TEACHER_TOEIC_650", "TEACHER_TOEIC_750", "TEACHER_TOEIC_850"];
+const TEACHER_ROLES = ["TEACHER"];
 const STUDENT_ROLES = ["STUDENT"];
 
 export const classRoutes: RouteObject[] = [

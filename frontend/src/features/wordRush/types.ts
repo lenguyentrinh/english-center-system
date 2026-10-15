@@ -14,6 +14,8 @@ export type WRSet = {
   id: string;
   title: string;
   classId: string;
+  /** Admin-defined category id; missing/unknown renders as "Chưa phân loại". */
+  categoryId?: string;
   authorId: string;
   authorName: string;
   /** Assigned to students for self-study (game or test). */
@@ -30,7 +32,7 @@ export type WRSetSummary = WRSet & {
   published: boolean;
   studentsDone: number;
   studentsTotal: number;
-  /** 0-100, last session */
+  /** 0-100, last live session (0 when none was played) */
   accuracy: number;
 };
 
@@ -39,13 +41,15 @@ export type WRPhase = "lobby" | "question" | "reveal" | "board" | "podium";
 export type WRPlayer = {
   id: string;
   name: string;
-  bot: boolean;
   score: number;
   streak: number;
   prevRank: number;
   lastGain: number;
   lastCorrect: boolean | null; // null = no answer
   correctCount: number;
+  /** Sum of answer times (ms) and number of answers, for the average-seconds report. */
+  answerMs: number;
+  answered: number;
 };
 
 export type WRRoom = {
@@ -64,12 +68,15 @@ export type WRRoom = {
   players: WRPlayer[];
   /** playerId -> answer for the current question */
   answers: Record<string, { choice: number; ms: number }>;
-  botPlans: Record<string, { atMs: number; choice: number }>;
+  /** Per question index: how the room answered (feeds the saved report). */
+  stats: { answered: number; correct: number; wrong: number[] }[];
 };
 
 export type WRResult = { setId: string; score: number; correct: number; total: number; at: number; kind: "game" | "test"; seconds: number };
 
 export type WRReport = {
+  /** false until at least one live session has been played with this set. */
+  hasData: boolean;
   players: number;
   avgPct: number;
   hardest: { index: number; pct: number } | null;

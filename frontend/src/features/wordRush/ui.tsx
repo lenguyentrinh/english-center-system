@@ -55,3 +55,17 @@ export function Tabs<T extends string>({ value, items, onChange }: { value: T; i
     </div>
   );
 }
+
+/** Design v5 blank chip in the editor: green chip with a bottom border, "?" while no answer is set. */
+export function DesignSentence({ text, answer }: { text: string; answer?: string }) {
+  const parts = text.split("___");
+  return (
+    <>
+      {parts[0]}
+      {parts.length > 1 ? (
+        <span className="mx-[3px] inline-block rounded-[7px] border-b-2 border-[#10b981] bg-[#ecfdf5] px-2.5 text-[#065f46]">{answer || "?"}</span>
+      ) : null}
+      {parts.slice(1).join("___")}
+    </>
+  );
+}

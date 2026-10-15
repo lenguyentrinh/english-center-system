@@ -46,7 +46,7 @@ Backend follows a **modular architecture** organized by domain. Each module unde
 - **dto/**: Data transfer objects (Request/Response)
 - **mapper/**: Entity ↔ DTO conversion
 
-Current modules: `academic`, `attendance`, `auth`, `student`, `teacher`, `user`
+Current modules: `academic`, `attendance`, `auth`, `category`, `student`, `teacher`, `user`
 
 **Shared utilities** in `backend/src/main/java/com/trinh/english_center_be/shared/`:
 - `BaseEntity`: Abstract base for documents (createdAt, updateAt, active)
@@ -55,6 +55,12 @@ Current modules: `academic`, `attendance`, `auth`, `student`, `teacher`, `user`
 - `response/`: Standard API response wrappers
 - `util/`: Common utilities
 - `enums/`: Shared enumerations
+
+### Backend Domain Rules
+- **Categories** (`/categories`, any authenticated user reads, ADMIN writes): admin-managed tags (name unique case-insensitively, hex color). Delete is soft and returns 409 while a live course uses it. `Course.categoryId` is optional; a teacher can be assigned only if `Teacher.categoryIds` contains it (`PUT /teachers/{id}/categories`); a course without a category accepts any teacher. `Course.availableRoleTeacher` is legacy and no longer used for qualification. Only ADMIN/TEACHER/STUDENT (+ legacy TEACHER_* codes) are fixed roles. `DataSeeder` seeds IELTS/TOEIC/Giao tiếp only into an empty categories collection.
+- **Enrollment**: `GET/POST /courses/{id}/students`, `DELETE /courses/{id}/students/{userId}` (cancel = status `CANCELLED`, history kept), `GET /users/{id}/enrollments`. Enrolling requires an ACTIVE user with the STUDENT role, a non-CLOSE course, no active duplicate (409) and room left (`maxStudent`, else 409 "Class is full"). Assigning/removing the STUDENT role creates/deactivates the `Student` profile (removal cancels active enrollments). `CourseResponse.enrolledCount` = active enrollments.
+- **Course schedule**: `Course` has `room`, `daysOfWeek` (ISO 1=Mon..7=Sun), `startTime`/`endTime` (07:00–22:00). Assigning a teacher (create/update/`assign-teacher`) returns 409 naming the clashing course codes when another live non-CLOSE course of that teacher overlaps in dates + weekday + time, unless `force=true` (admin confirmed). `GET /courses/schedule?teacherId&from&to` returns per-teacher dated sessions and `conflictCount` (default current week, max 62 days; non-admins only get their own row). Course create/update/delete/assign are ADMIN-only; `startDate` must not be in the past only on create.
+- **Users**: admin email change sets `emailVerified=false` and mails a code to the new address (login is blocked until verified); locking/deactivating/deleting revokes all refresh tokens and is refused for yourself and for the last active admin; admin-created ACTIVE users get a password-setup code by email (use "Forgot password"); `phone` is normalised (spaces stripped, blank → null), `fullName` min 2 chars; `UserResponse.roles` lists effective role codes; `GET /users/search?q&role&status&page&size` returns `{items,total,page,size}`.
 
 ### Frontend Structure
 - **`src/app/`**: Core app setup (routing, providers, state, hooks)
