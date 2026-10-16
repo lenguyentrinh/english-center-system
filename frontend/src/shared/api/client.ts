@@ -54,7 +54,7 @@ const handleSessionExpired = (url: string) => {
   // Not logged in is a normal state for /auth/me (guest), so it is never an "expiry".
   if (url.includes("/auth/me")) return;
   if (queryClient.getQueryData(AUTH_QUERY_KEY)) {
-    toast.info("Your session has expired. Please log in again.");
+    toast.info("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
   }
   // Soft logout: guards see no user and navigate to /auth/login without a page reload, so unsaved form
   // state elsewhere on the page is not thrown away by a hard redirect.

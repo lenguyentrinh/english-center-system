@@ -58,6 +58,6 @@ export const router = createBrowserRouter([
   ...flashcardRoutes,
   ...wordRushRoutes,
   ...miscRoutes,
-  { path: "/contact", element: <Placeholder title="Contact page (todo)" /> },
-  { path: "*", element: <Placeholder title="404 - Not found" /> },
+  { path: "/contact", element: <Placeholder title="Trang liên hệ (đang cập nhật)" /> },
+  { path: "*", element: <Placeholder title="404 - Không tìm thấy trang" /> },
 ]);

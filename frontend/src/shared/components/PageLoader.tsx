@@ -1,4 +1,4 @@
-export default function PageLoader({ label = "Loading" }: { label?: string }) {
+export default function PageLoader({ label = "Đang tải" }: { label?: string }) {
   return (
     <div
       role="status"

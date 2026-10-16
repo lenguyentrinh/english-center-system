@@ -19,8 +19,8 @@ export default function ConfirmDialog({
   onCancel,
   onConfirm,
   isLoading,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText = "Xác nhận",
+  cancelText = "Huỷ",
   isDangerous = false,
 }: ConfirmDialogProps) {
   if (!isOpen) return null;
@@ -56,7 +56,7 @@ export default function ConfirmDialog({
                 : "bg-indigo-600 hover:bg-indigo-700"
             }`}
           >
-            {isLoading ? "Processing..." : confirmText}
+            {isLoading ? "Đang xử lý..." : confirmText}
           </button>
         </div>
       </div>

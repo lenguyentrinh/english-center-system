@@ -8,24 +8,24 @@ import type { Course } from "@/features/courses/types.ts";
 import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage.ts";
 
 const whyChooseUs = [
-  "Native and Vietnamese teachers working together",
-  "IELTS, TOEIC, and communication tracks",
-  "Small courses, consistent feedback, and checkpoints",
-  "Supportive placement guidance for new learners",
+  "Giáo viên bản ngữ và giáo viên Việt Nam cùng giảng dạy",
+  "Lộ trình IELTS, TOEIC và Giao tiếp",
+  "Lớp nhỏ, nhận xét đều đặn và có bài kiểm tra định kỳ",
+  "Tư vấn xếp lớp tận tình cho học viên mới",
 ];
 
 const testimonials = [
   {
     quote:
-      "The course structure made it easier to stay consistent. I could see progress every week.",
+      "Lộ trình khoá học rõ ràng giúp em học đều đặn hơn. Tuần nào em cũng thấy mình tiến bộ.",
     name: "Minh Anh",
-    role: "IELTS learner",
+    role: "Học viên IELTS",
   },
   {
     quote:
-              "The speaking practice and course rhythm gave me confidence for interviews and exams.",
+              "Các buổi luyện nói và nhịp học hợp lý giúp em tự tin hơn khi phỏng vấn và đi thi.",
     name: "Hoang Nam",
-    role: "TOEIC learner",
+    role: "Học viên TOEIC",
   },
 ];
 
@@ -54,10 +54,10 @@ export default function HomePage() {
               English Center
             </p>
             <h1 className="mt-4 text-5xl font-semibold tracking-tight sm:text-6xl">
-              Learn English with structure, momentum, and visible progress.
+              Học tiếng Anh bài bản, tiến bộ thấy rõ từng tuần.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-              Explore live courses, compare schedules, and find the learning track that fits your goals.
+              Chọn khoá học, xem lịch học và bắt đầu lộ trình đúng với mục tiêu của bạn.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -65,23 +65,23 @@ export default function HomePage() {
                 to="/courses"
                 className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
               >
-                View All Courses
+                Xem tất cả khoá học
               </Link>
               <a
                 href="#why-us"
                 className="rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
               >
-                Why Choose Us
+                Vì sao chọn chúng tôi
               </a>
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             {[
-              ["4", "Featured course picks"],
-              ["3", "Study tracks"],
-              ["24/7", "Access to the catalog"],
-              ["1", "Simple place to start"],
+              ["4", "Khoá học đang mở"],
+              ["3", "Lộ trình học"],
+              ["24/7", "Xem khoá học mọi lúc"],
+              ["1", "Điểm khởi đầu của bạn"],
             ].map(([value, label]) => (
               <article
                 key={label}
@@ -99,36 +99,36 @@ export default function HomePage() {
         <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">
-              About Us
+              Giới thiệu
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-              A focused center for exam prep and practical communication.
+              Luyện thi hiệu quả, giao tiếp tự tin.
             </h2>
             <p className="mt-4 text-base leading-7 text-slate-600">
-              We keep the learning journey clear: choose a course, review the schedule, and progress with regular checkpoints.
+              Chọn khoá học, xem lịch học, rồi cùng giáo viên chinh phục từng cột mốc. Mọi bước đều rõ ràng, dễ theo.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 to="/courses"
                 className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
-                Browse courses
+                Xem khoá học
               </Link>
               <Link
                 to="/contact"
                 className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950"
               >
-                Contact us
+                Liên hệ với chúng tôi
               </Link>
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             {[
-              ["Expert guidance", "Teachers who focus on speaking, strategy, and test structure."],
-              ["Practical pace", "Courses designed for consistency rather than overload."],
-              ["Clear goals", "Track progress with visible milestones and course schedules."],
-              ["Supportive environment", "Learn in a setting that keeps you moving forward."],
+              ["Thầy cô tận tâm", "Chú trọng luyện nói, mẹo làm bài và nắm chắc cấu trúc đề thi."],
+              ["Nhịp học vừa sức", "Học đều mỗi tuần, không áp lực, không bị quá tải."],
+              ["Mục tiêu rõ ràng", "Biết mình đang ở đâu qua từng cột mốc và lịch học cụ thể."],
+              ["Lớp học thân thiện", "Môi trường vui, gần gũi để bạn luôn có hứng thú đến lớp."],
             ].map(([title, description]) => (
               <article key={title} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h3 className="text-lg font-semibold text-slate-950">{title}</h3>
@@ -144,10 +144,10 @@ export default function HomePage() {
           <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">
-                Why Choose Us
+                Vì sao chọn chúng tôi
               </p>
               <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
-                Learn in a way that is easy to follow and easy to stick with.
+                Học dễ theo, dễ giữ nhịp, càng học càng có động lực.
               </h2>
             </div>
 
@@ -166,17 +166,17 @@ export default function HomePage() {
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">
-              Featured Courses
+              Khoá học nổi bật
             </p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-              Latest courses from the catalog
+              Khoá học mới, mở lớp thường xuyên
             </h2>
           </div>
           <Link
             to="/courses"
             className="inline-flex rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950"
           >
-            View All Courses
+            Xem tất cả khoá học
           </Link>
         </div>
 
@@ -188,11 +188,11 @@ export default function HomePage() {
 
         {loading ? (
           <div className="rounded-3xl border border-slate-200 bg-white px-6 py-10 text-slate-500 shadow-sm">
-            Loading featured courses...
+            Đang tải các khoá học nổi bật...
           </div>
         ) : featuredCourses.length === 0 ? (
           <div className="rounded-3xl border border-slate-200 bg-white px-6 py-10 text-slate-500 shadow-sm">
-            No featured courses available right now.
+            Hiện chưa có khoá học nổi bật.
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -207,10 +207,10 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[
-              ["Flexible", "Explore courses any time"],
-              ["Transparent", "See schedules and capacity upfront"],
-              ["Practical", "Focus on measurable milestones"],
-              ["Guided", "Start with a clean, simple next step"],
+              ["Linh hoạt", "Xem khoá học bất cứ lúc nào, ở đâu"],
+              ["Minh bạch", "Lịch học, sĩ số rõ ràng ngay từ đầu"],
+              ["Thiết thực", "Mỗi giai đoạn đều có mục tiêu cụ thể để đạt được"],
+              ["Được đồng hành", "Luôn có người chỉ cho bạn bước tiếp theo"],
             ].map(([title, description]) => (
               <article key={title} className="rounded-3xl border border-white/10 bg-white/5 p-5">
                 <h3 className="text-lg font-semibold text-white">{title}</h3>

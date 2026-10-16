@@ -16,11 +16,11 @@ export default function SessionList({ courseId }: Props) {
   const sessions = data?.data ?? NO_SESSIONS;
 
   if (loading) {
-    return <div className="text-sm text-slate-500">Loading sessions...</div>;
+    return <div className="text-sm text-slate-500">Đang tải các buổi học...</div>;
   }
 
   if (sessions.length === 0) {
-    return <div className="text-sm text-slate-500">No sessions found for this course.</div>;
+    return <div className="text-sm text-slate-500">Khoá học này chưa có buổi học nào.</div>;
   }
 
   return (
@@ -29,11 +29,11 @@ export default function SessionList({ courseId }: Props) {
         <thead>
           <tr className="border-b border-slate-200 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
             <th className="px-3 py-2">#</th>
-            <th className="px-3 py-2">Title</th>
-            <th className="px-3 py-2">Date</th>
-            <th className="px-3 py-2">Start</th>
-            <th className="px-3 py-2">End</th>
-            <th className="px-3 py-2">Topic</th>
+            <th className="px-3 py-2">Tiêu đề</th>
+            <th className="px-3 py-2">Ngày</th>
+            <th className="px-3 py-2">Bắt đầu</th>
+            <th className="px-3 py-2">Kết thúc</th>
+            <th className="px-3 py-2">Chủ đề</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">

@@ -28,10 +28,10 @@ export default function CoursesPage() {
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">
-              Available courses
+              Khoá học đang mở
             </p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-              All courses in one place
+              Chọn khoá học phù hợp với bạn
             </h2>
           </div>
 
@@ -39,7 +39,7 @@ export default function CoursesPage() {
             to="/"
             className="inline-flex rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950"
           >
-            Back to home
+            Về trang chủ
           </Link>
         </div>
 
@@ -51,11 +51,11 @@ export default function CoursesPage() {
 
         {loading ? (
           <div className="rounded-3xl border border-slate-200 bg-white px-6 py-10 text-slate-500 shadow-sm">
-            Loading courses...
+            Đang tải khoá học...
           </div>
         ) : sortedCourses.length === 0 ? (
           <div className="rounded-3xl border border-slate-200 bg-white px-6 py-10 text-slate-500 shadow-sm">
-            No courses are available right now.
+            Hiện chưa có khoá học nào.
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

@@ -17,7 +17,7 @@ export const NAV_ICON_PATH: Record<NavIcon, string> = {
 
 export const NAV: Record<"admin" | "teacher" | "student", { console: string; roleLabel: string; items: NavItem[] }> = {
   admin: {
-    console: "Admin console",
+    console: "Bảng quản trị",
     roleLabel: "Quản trị viên",
     items: [
       { to: "/admin/schedule", label: "Lịch giáo viên", short: "Lịch", icon: "cal" },
@@ -29,7 +29,7 @@ export const NAV: Record<"admin" | "teacher" | "student", { console: string; rol
     ],
   },
   teacher: {
-    console: "Teacher workspace",
+    console: "Không gian giáo viên",
     roleLabel: "Giáo viên",
     items: [
       { to: "/teacher/classes", label: "Lớp học", short: "Lớp", icon: "classes" },
@@ -40,7 +40,7 @@ export const NAV: Record<"admin" | "teacher" | "student", { console: string; rol
     ],
   },
   student: {
-    console: "Student portal",
+    console: "Cổng học viên",
     roleLabel: "Học viên",
     items: [
       { to: "/student/flashcards", label: "Ôn thẻ", short: "Thẻ", icon: "cards" },

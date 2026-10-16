@@ -13,7 +13,7 @@ export default function RequireAuth({ roles, children }: Props) {
   const location = useLocation();
 
   // Wait for /auth/me so a reload on a protected page does not bounce to login before we know.
-  if (isLoading) return <PageLoader label="Checking session" />;
+  if (isLoading) return <PageLoader label="Đang kiểm tra phiên đăng nhập" />;
 
   if (!isAuthenticated) {
     const target = `${location.pathname}${location.search}${location.hash}`;

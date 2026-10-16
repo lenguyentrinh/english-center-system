@@ -4,9 +4,9 @@ import { useAuth, useLogout } from "@/features/auth/useAuth.ts";
 import { homePathForRoles } from "@/shared/utils/role.ts";
 
 const navItems = [
-  { label: "Course", href: "/courses" },
-  { label: "About Us", href: "/#about-us" },
-  { label: "Why Us", href: "/#why-us" },
+  { label: "Khoá học", href: "/courses" },
+  { label: "Giới thiệu", href: "/#about-us" },
+  { label: "Vì sao chọn chúng tôi", href: "/#why-us" },
 ];
 
 export default function Header() {
@@ -37,7 +37,7 @@ export default function Header() {
     logoutMutation.mutate(undefined, {
       // Local state is cleared even when the API call fails (e.g. the session had already expired).
       onSettled: () => {
-        toast.success("Logged out");
+        toast.success("Đã đăng xuất");
         navigate("/");
       },
     });
@@ -57,7 +57,7 @@ export default function Header() {
           </div>
         </Link>
 
-        <nav aria-label="Primary" className="hidden items-center gap-6 lg:flex">
+        <nav aria-label="Điều hướng chính" className="hidden items-center gap-6 lg:flex">
           {navItems.map((item) =>
             item.href.startsWith("/") && !item.href.startsWith("/#") ? (
               <Link key={item.label} to={item.href} className={activeLinkClass(item.href)}>
@@ -89,17 +89,17 @@ export default function Header() {
               <span className="grid h-7 w-7 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">
                 {(authed ? username || "A" : "G").slice(0, 1).toUpperCase()}
               </span>
-              <span className="max-w-[8rem] truncate">{authed ? username : "Account"}</span>
+              <span className="max-w-[8rem] truncate">{authed ? username : "Tài khoản"}</span>
               <span className="text-slate-400">▾</span>
             </button>
 
             <div className="invisible absolute right-0 top-full z-50 mt-2 w-52 translate-y-1 rounded-2xl border border-slate-200 bg-white p-2 opacity-0 shadow-xl shadow-slate-950/10 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
               <div className="border-b border-slate-100 px-3 py-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                  Signed in
+                  Đã đăng nhập
                 </p>
                 <p className="mt-1 truncate text-sm font-semibold text-slate-900">
-                  {authed ? username || "Signed in user" : "Guest"}
+                  {authed ? username || "Người dùng" : "Khách"}
                 </p>
               </div>
 
@@ -107,7 +107,7 @@ export default function Header() {
                 to="/account"
                 className="block rounded-xl px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
               >
-                My Account
+                Tài khoản của tôi
               </Link>
               {hasWorkspace ? (
                 <Link
@@ -125,14 +125,14 @@ export default function Header() {
                     onClick={handleLogout}
                     className="block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
                   >
-                    Logout
+                    Đăng xuất
                   </button>
                 ) : (
                   <Link
                     to="/auth/login"
                     className="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
                   >
-                    Login
+                    Đăng nhập
                   </Link>
                 )}
               </div>

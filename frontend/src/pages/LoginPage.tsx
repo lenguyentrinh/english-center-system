@@ -54,7 +54,7 @@ export default function LoginPage() {
       // Correct password but unverified email: continue on the verification page, which sends a fresh code.
       if (axios.isAxiosError(error) && error.response?.data?.origin === "email-not-verified") {
         const email = values.username.includes("@") ? values.username.trim() : "";
-        toast.info("Please verify your email to continue.");
+        toast.info("Vui lòng xác nhận email để tiếp tục.");
         navigate("/auth/verify-email", { state: { email, autoSend: true } });
         return;
       }
