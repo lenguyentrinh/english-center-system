@@ -15,7 +15,7 @@ export default function CoursesPage() {
     queryFn: getCourses,
   });
   const courses = data?.data ?? NO_COURSES;
-  const error = useQueryErrorMessage(queryError, "Failed to load courses");
+  const error = useQueryErrorMessage(queryError, "Không tải được danh sách khoá học. Vui lòng thử lại.");
 
   const sortedCourses = useMemo(
     () => [...courses].sort((left, right) => right.id.localeCompare(left.id)),

@@ -39,7 +39,7 @@ export default function CourseDetailPage() {
     enabled: isValidId,
   });
   const course: Course | null = data?.data ?? null;
-  const loadError = useQueryErrorMessage(queryError, "Failed to load course detail");
+  const loadError = useQueryErrorMessage(queryError, "Không tải được thông tin khoá học. Vui lòng thử lại.");
   const error = isValidId ? loadError : "Invalid course id";
 
   const durationLabel = useMemo(

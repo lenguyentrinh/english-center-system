@@ -1,4 +1,5 @@
 import { apiClient } from "@/shared/api/client.ts";
+import { translateApiMessage } from "@/shared/api/error.ts";
 import type { ApiResponse } from "@/shared/types/api-response.type";
 import type { Course, CourseStudent, ServerCourse, Session, StudentEnrollment, TeacherSchedule, UpsertCoursePayload } from "./types.ts";
 
@@ -96,5 +97,5 @@ export const getCourseSchedule = async (params: { from: string; to: string; teac
 export function conflictMessage(err: unknown): string | null {
   const e = err as { response?: { status?: number; data?: { message?: string } } };
   const msg = e?.response?.data?.message;
-  return e?.response?.status === 409 && msg && /conflict/i.test(msg) ? msg : null;
+  return e?.response?.status === 409 && msg && /conflict/i.test(msg) ? translateApiMessage(msg) ?? msg : null;
 }

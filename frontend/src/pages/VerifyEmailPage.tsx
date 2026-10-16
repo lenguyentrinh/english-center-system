@@ -62,7 +62,7 @@ export default function VerifyEmailPage() {
       setCooldown(RESEND_SECONDS);
       toast.success(res.message);
     } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, "Could not send the code"));
+      toast.error(getApiErrorMessage(error, "Không gửi được mã xác nhận. Vui lòng thử lại."));
     }
   };
 
@@ -83,7 +83,7 @@ export default function VerifyEmailPage() {
         state: { notice: { type: "success", title: "Email đã được xác thực", text: "Bạn có thể đăng nhập ngay bây giờ." } },
       });
     } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, "Invalid or expired code"));
+      toast.error(getApiErrorMessage(error, "Mã xác nhận không đúng hoặc đã hết hạn."));
     }
   };
 

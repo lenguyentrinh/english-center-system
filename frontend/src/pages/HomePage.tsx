@@ -37,7 +37,7 @@ export default function HomePage() {
     queryFn: getCourses,
   });
   const courses = data?.data ?? NO_COURSES;
-  const error = useQueryErrorMessage(queryError, "Failed to load featured courses");
+  const error = useQueryErrorMessage(queryError, "Không tải được các khoá học nổi bật. Vui lòng thử lại.");
 
   const featuredCourses = useMemo(
     () => [...courses].sort((left, right) => right.id.localeCompare(left.id)).slice(0, 4),

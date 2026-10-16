@@ -58,7 +58,7 @@ export default function LoginPage() {
         navigate("/auth/verify-email", { state: { email, autoSend: true } });
         return;
       }
-      toast.error(getApiErrorMessage(error, "Login failed"));
+      toast.error(getApiErrorMessage(error, "Đăng nhập không thành công. Vui lòng thử lại."));
     }
   };
 

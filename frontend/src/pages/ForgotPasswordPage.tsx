@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
       setEmail(address);
       setStep("otp");
     } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, "Could not send the code"));
+      toast.error(getApiErrorMessage(error, "Không gửi được mã xác nhận. Vui lòng thử lại."));
     }
   };
 
@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
     try {
       await sendCode(email);
     } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, "Could not send the code"));
+      toast.error(getApiErrorMessage(error, "Không gửi được mã xác nhận. Vui lòng thử lại."));
     }
   };
 
@@ -88,7 +88,7 @@ export default function ForgotPasswordPage() {
       setOtp(code);
       setStep("password");
     } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, "Invalid or expired code"));
+      toast.error(getApiErrorMessage(error, "Mã xác nhận không đúng hoặc đã hết hạn."));
     }
   };
 
@@ -103,7 +103,7 @@ export default function ForgotPasswordPage() {
         },
       });
     } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, "Could not reset the password"));
+      toast.error(getApiErrorMessage(error, "Không đặt lại được mật khẩu. Vui lòng thử lại."));
       // The code may have been consumed or expired: go back so the user can request a new one.
       setStep("otp");
       otpForm.reset();

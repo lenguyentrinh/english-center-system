@@ -42,7 +42,7 @@ export default function SignupPage() {
       toast.success(res.message);
       navigate("/auth/verify-email", { state: { email } });
     } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, "Signup failed"));
+      toast.error(getApiErrorMessage(error, "Đăng ký không thành công. Vui lòng thử lại."));
     }
   };
 
