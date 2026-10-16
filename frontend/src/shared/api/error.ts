@@ -89,7 +89,8 @@ const RULES: Array<[RegExp, string | ((m: RegExpMatchArray) => string)]> = [
   [/^Category '(.+)' already exists/i, (m) => `Danh mục "${m[1]}" đã tồn tại.`],
   [/^Category is used by a course/i, "Không thể xoá danh mục vì đang có khoá học sử dụng."],
   [/^Entity already exists by/i, "Thông tin này đã tồn tại trong hệ thống."],
-  [/^(\w+(?: \w+)*) '(.+)' already exists/i, (m) => `${FIELD_NAMES_IN_MESSAGE[m[1]] ?? m[1]} "${m[2]}" đã được sử dụng.`],
+  [/^(\w+(?: \w+)*) '(.+)' already exists/i, (m) => `${FIELD_NAMES_IN_MESSAGE[m[1][0].toUpperCase() + m[1].slice(1)] ?? "Thông tin"} "${m[2]}" đã được sử dụng.`],
+  [/^Cannot remove because User does not have/i, "Người dùng không có vai trò này nên không thể gỡ."],
   [/already exists by (\w+)/i, (m) => `${FIELD_NAMES_IN_MESSAGE[m[1][0].toUpperCase() + m[1].slice(1)] ?? "Thông tin"} này đã được sử dụng.`],
   [/^User already has this/i, "Người dùng đã có vai trò này rồi."],
 
@@ -186,6 +187,8 @@ export const getApiErrorMessage = (error: unknown, fallback: string): string => 
 
   if (typeof error === "string" && error.trim()) return translateApiMessage(error) ?? fallback;
 
-  // Lỗi lập trình (TypeError, ...) không có ý nghĩa với người dùng.
+  // Lỗi do giao diện chủ động ném ra bằng tiếng Việt thì giữ nguyên; lỗi lập trình (TypeError, ...) thì dùng câu dự phòng.
+  if (error instanceof Error) return translateApiMessage(error.message) ?? fallback;
+
   return fallback;
 };

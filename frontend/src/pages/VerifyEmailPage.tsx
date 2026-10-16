@@ -58,9 +58,9 @@ export default function VerifyEmailPage() {
 
   const sendCode = async (address: string = email) => {
     try {
-      const res = await resendVerification(address);
+      await resendVerification(address);
       setCooldown(RESEND_SECONDS);
-      toast.success(res.message);
+      toast.success("Đã gửi mã mới. Vui lòng kiểm tra email của bạn.");
     } catch (error: unknown) {
       toast.error(getApiErrorMessage(error, "Không gửi được mã xác nhận. Vui lòng thử lại."));
     }
@@ -76,8 +76,8 @@ export default function VerifyEmailPage() {
 
   const onSubmit = async (values: OtpForm) => {
     try {
-      const res = await verifyEmail({ email, otp: values.otp.trim() });
-      toast.success(res.message);
+      await verifyEmail({ email, otp: values.otp.trim() });
+      toast.success("Email đã được xác nhận. Bạn có thể đăng nhập ngay.");
       navigate("/auth/login", {
         replace: true,
         state: { notice: { type: "success", title: "Email đã được xác thực", text: "Bạn có thể đăng nhập ngay bây giờ." } },

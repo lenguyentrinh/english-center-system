@@ -56,9 +56,9 @@ export default function ForgotPasswordPage() {
   });
 
   const sendCode = async (address: string) => {
-    const res = await forgotPassword(address);
+    await forgotPassword(address);
     setCooldown(RESEND_SECONDS);
-    toast.success(res.message);
+    toast.success("Nếu email này đã đăng ký, mã xác nhận đã được gửi. Vui lòng kiểm tra hộp thư.");
   };
 
   const onEmail = async (values: ForgotPasswordForm) => {
@@ -94,8 +94,8 @@ export default function ForgotPasswordPage() {
 
   const onPassword = async (values: NewPasswordForm) => {
     try {
-      const res = await resetPassword({ email, otp, newPassword: values.newPassword });
-      toast.success(res.message);
+      await resetPassword({ email, otp, newPassword: values.newPassword });
+      toast.success("Đã đặt lại mật khẩu. Hãy đăng nhập bằng mật khẩu mới.");
       navigate("/auth/login", {
         replace: true,
         state: {

@@ -42,13 +42,13 @@ export default function LoginPage() {
 
   const onSubmit = async (values: LoginForm) => {
     try {
-      const res = await login({
+      await login({
         username: values.username.trim(),
         password: values.password,
       });
       // Fetch the session now so the destination page already knows who is signed in.
       const user = await queryClient.fetchQuery({ queryKey: AUTH_QUERY_KEY, queryFn: fetchMe, staleTime: 0 });
-      toast.success(res.message);
+      toast.success("Đăng nhập thành công");
       navigate(user ? (returnParam ?? homePathForRoles(user.roles)) : "/", { replace: true });
     } catch (error: unknown) {
       // Correct password but unverified email: continue on the verification page, which sends a fresh code.

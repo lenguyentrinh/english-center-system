@@ -32,14 +32,14 @@ export default function SignupPage() {
   const onSubmit = async (values: SignupForm) => {
     try {
       const email = values.email.trim();
-      const res = await signup({
+      await signup({
         username: values.username.trim(),
         password: values.password,
         email,
         fullName: values.fullName.trim(),
         phone: values.phone?.trim() ? values.phone.trim() : undefined,
       });
-      toast.success(res.message);
+      toast.success("Tạo tài khoản thành công. Vui lòng nhập mã xác nhận đã gửi về email của bạn.");
       navigate("/auth/verify-email", { state: { email } });
     } catch (error: unknown) {
       toast.error(getApiErrorMessage(error, "Đăng ký không thành công. Vui lòng thử lại."));
