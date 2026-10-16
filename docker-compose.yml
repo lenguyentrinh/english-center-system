@@ -24,7 +24,8 @@ services:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
-      MONGODB_URI: mongodb://mongo:27017/english_center_db
+      # Defaults to the bundled mongo container; set MONGODB_URI in .env to use Atlas instead (see .env.example)
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/english_center_db}
       JWT_SECRET: ${JWT_SECRET:-secret}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
       TIMEZONE: Asia/Ho_Chi_Minh
@@ -42,6 +43,11 @@ services:
       ADMIN_USERNAME:
       ADMIN_EMAIL:
       ADMIN_PASSWORD:
+      # Dev only: SEED_DEMO_USERS=true creates admin/teacher/student demo accounts (needs the dev profile)
+      SEED_DEMO_USERS:
+      DEMO_USER_PASSWORD:
+      # Dev only: SEED_CURRICULUM=true creates the grade 1-12 courses from seed/curriculum.json
+      SEED_CURRICULUM:
       MAIL_FROM: ${MAIL_FROM:-no-reply@english-center.local}
       OTP_TTL_MINUTES: ${OTP_TTL_MINUTES:-5}
       AUTH_RATE_LIMIT_MAX: ${AUTH_RATE_LIMIT_MAX:-10}

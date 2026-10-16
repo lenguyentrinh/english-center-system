@@ -12,6 +12,8 @@ public interface CourseRepository extends MongoRepository<Course, String> {
 
     List<Course> findByTeacher(Teacher teacher);
 
+    boolean existsByCode(String code);
+
     /** Live = active is not explicitly false (legacy rows carry no flag). */
     boolean existsByCategoryIdAndActiveNot(String categoryId, Boolean active);
 

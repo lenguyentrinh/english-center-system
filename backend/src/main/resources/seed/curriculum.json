@@ -1,0 +1,76 @@
+{
+  "_readme": "Source of truth for grade 1-12 courses and flashcard vocabulary, kept in the repo so the data can be migrated to any database by re-running the seeder. Textbook: Tieng Anh Global Success (Ket noi tri thuc, NXB Giao duc Viet Nam). verified=true means the unit title was read from a web source (see 'source'); it is NOT checked against the printed book. Units with verified=false or missing units must be completed from the textbook. Vocabulary (cards) is not filled in yet.",
+  "textbook": "Global Success",
+  "grades": [
+    { "grade": 1, "level": "primary", "units": [], "status": "todo: unit list exists on 2048.vn but not read yet" },
+    { "grade": 2, "level": "primary", "units": [], "status": "todo: unit list exists on 2048.vn but not read yet" },
+    { "grade": 3, "level": "primary", "units": [], "status": "todo: only semester 2 (Unit 11-20: family, jobs, house, pets, toys) seen, titles incomplete" },
+    { "grade": 4, "level": "primary", "units": [], "status": "todo: no unit list found" },
+    { "grade": 5, "level": "primary", "units": [], "status": "todo: only Unit 1 (All about me) and Unit 9 (Our outdoor activities) seen" },
+    {
+      "grade": 6, "level": "lower-secondary", "status": "todo: only Unit 7-8 seen",
+      "units": [
+        { "no": 7, "title": "Television", "verified": true, "source": "https://loigiaihay.com/tap-2-tieng-anh-6-moi-e20791.html", "cards": [] },
+        { "no": 8, "title": "Sports and Games", "verified": true, "source": "https://loigiaihay.com/tap-2-tieng-anh-6-moi-e20791.html", "cards": [] }
+      ]
+    },
+    {
+      "grade": 7, "level": "lower-secondary", "status": "todo: 4 of 12 units seen",
+      "units": [
+        { "no": 1, "title": "Hobbies", "verified": true, "source": "https://ila.edu.vn/bai-tap-tieng-anh-lop-7", "cards": [] },
+        { "no": 2, "title": "Healthy Living", "verified": true, "source": "https://ila.edu.vn/bai-tap-tieng-anh-lop-7", "cards": [] },
+        { "no": 3, "title": "Community Service", "verified": true, "source": "https://ila.edu.vn/bai-tap-tieng-anh-lop-7", "cards": [] },
+        { "no": 4, "title": "Music and Arts", "verified": true, "source": "https://ila.edu.vn/bai-tap-tieng-anh-lop-7", "cards": [] }
+      ]
+    },
+    { "grade": 8, "level": "lower-secondary", "units": [], "status": "todo: no unit list found" },
+    {
+      "grade": 9, "level": "lower-secondary", "status": "12 unit titles read from web, not checked against the book",
+      "units": [
+        { "no": 1, "title": "Local community", "verified": true, "source": "https://2048.vn/tieng-anh-lop-9-global-success-c484?page=1", "cards": [] },
+        { "no": 2, "title": "City life", "verified": true, "source": "https://2048.vn/tieng-anh-lop-9-global-success-c484?page=1", "cards": [] },
+        { "no": 3, "title": "Healthy living for teens", "verified": true, "source": "https://2048.vn/tieng-anh-lop-9-global-success-c484?page=1", "cards": [] },
+        { "no": 4, "title": "Remembering the past", "verified": true, "source": "https://2048.vn/tieng-anh-lop-9-global-success-c484?page=1", "cards": [] },
+        { "no": 5, "title": "Our experiences", "verified": true, "source": "https://2048.vn/tieng-anh-lop-9-global-success-c484?page=1", "cards": [] },
+        { "no": 6, "title": "Vietnamese lifestyle: then and now", "verified": true, "source": "https://2048.vn/tieng-anh-lop-9-global-success-c484?page=1", "cards": [] },
+        { "no": 7, "title": "Natural wonders of the world", "verified": true, "source": "https://2048.vn/tieng-anh-lop-9-global-success-c484?page=1", "cards": [] },
+        { "no": 8, "title": "Tourism", "verified": true, "source": "https://2048.vn/tieng-anh-lop-9-global-success-c484?page=1", "cards": [] },
+        { "no": 9, "title": "World Englishes", "verified": true, "source": "https://2048.vn/tieng-anh-lop-9-global-success-c484?page=1", "cards": [] },
+        { "no": 10, "title": "Planet Earth", "verified": true, "source": "https://2048.vn/tieng-anh-lop-9-global-success-c484?page=1", "cards": [] },
+        { "no": 11, "title": "Electronic devices", "verified": true, "source": "https://2048.vn/tieng-anh-lop-9-global-success-c484?page=1", "cards": [] },
+        { "no": 12, "title": "Career choices", "verified": true, "source": "https://2048.vn/tieng-anh-lop-9-global-success-c484?page=1", "cards": [] }
+      ]
+    },
+    {
+      "grade": 10, "level": "upper-secondary", "status": "10 unit titles read from web, not checked against the book",
+      "units": [
+        { "no": 1, "title": "Family life", "verified": true, "source": "https://2048.vn/tieng-anh-lop-10-global-success-c202?page=12", "cards": [] },
+        { "no": 2, "title": "Humans and the environment", "verified": true, "source": "https://2048.vn/tieng-anh-lop-10-global-success-c202?page=12", "cards": [] },
+        { "no": 3, "title": "Music", "verified": true, "source": "https://2048.vn/tieng-anh-lop-10-global-success-c202?page=12", "cards": [] },
+        { "no": 4, "title": "For a better community", "verified": true, "source": "https://2048.vn/tieng-anh-lop-10-global-success-c202?page=12", "cards": [] },
+        { "no": 5, "title": "Inventions", "verified": true, "source": "https://2048.vn/tieng-anh-lop-10-global-success-c202?page=12", "cards": [] },
+        { "no": 6, "title": "Gender equality", "verified": true, "source": "https://2048.vn/tieng-anh-lop-10-global-success-c202?page=12", "cards": [] },
+        { "no": 7, "title": "Viet Nam and international organisations", "verified": true, "source": "https://2048.vn/tieng-anh-lop-10-global-success-c202?page=12", "cards": [] },
+        { "no": 8, "title": "New ways to learn", "verified": true, "source": "https://2048.vn/tieng-anh-lop-10-global-success-c202?page=12", "cards": [] },
+        { "no": 9, "title": "Protecting the environment", "verified": true, "source": "https://2048.vn/tieng-anh-lop-10-global-success-c202?page=12", "cards": [] },
+        { "no": 10, "title": "Ecotourism", "verified": true, "source": "https://2048.vn/tieng-anh-lop-10-global-success-c202?page=12", "cards": [] }
+      ]
+    },
+    { "grade": 11, "level": "upper-secondary", "units": [], "status": "todo: 10 units exist but titles not found" },
+    {
+      "grade": 12, "level": "upper-secondary", "status": "10 unit titles read from web, not checked against the book",
+      "units": [
+        { "no": 1, "title": "Life stories we admire", "verified": true, "source": "https://2048.vn/tieng-anh-lop-12-global-success-c491", "cards": [] },
+        { "no": 2, "title": "A multicultural world", "verified": true, "source": "https://2048.vn/tieng-anh-lop-12-global-success-c491", "cards": [] },
+        { "no": 3, "title": "Green living", "verified": true, "source": "https://2048.vn/tieng-anh-lop-12-global-success-c491", "cards": [] },
+        { "no": 4, "title": "Urbanisation", "verified": true, "source": "https://2048.vn/tieng-anh-lop-12-global-success-c491", "cards": [] },
+        { "no": 5, "title": "The world of work", "verified": true, "source": "https://2048.vn/tieng-anh-lop-12-global-success-c491", "cards": [] },
+        { "no": 6, "title": "Artificial intelligence", "verified": true, "source": "https://2048.vn/tieng-anh-lop-12-global-success-c491", "cards": [] },
+        { "no": 7, "title": "The world of mass media", "verified": true, "source": "https://2048.vn/tieng-anh-lop-12-global-success-c491", "cards": [] },
+        { "no": 8, "title": "Wildlife conservation", "verified": true, "source": "https://2048.vn/tieng-anh-lop-12-global-success-c491", "cards": [] },
+        { "no": 9, "title": "Career paths", "verified": true, "source": "https://2048.vn/tieng-anh-lop-12-global-success-c491", "cards": [] },
+        { "no": 10, "title": "Lifelong learning", "verified": true, "source": "https://2048.vn/tieng-anh-lop-12-global-success-c491", "cards": [] }
+      ]
+    }
+  ]
+}
