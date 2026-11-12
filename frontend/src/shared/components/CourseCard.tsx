@@ -40,26 +40,26 @@ const getDurationLabel = (startDate: string, endDate: string) => {
 export default function CourseCard({ course, className = "", showDetailButton = true }: Props) {
   return (
     <article
-      className={`group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-950/10 ${className}`}
+      className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-950/10 ${className}`}
     >
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-slate-950 via-indigo-600 to-cyan-500" />
 
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
-            Khoá học #{course.id}
+        <div className="min-w-0">
+          <p className="truncate text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Mã khoá học: {course.code}
           </p>
-          <h3 className="mt-2 text-xl font-semibold tracking-tight text-slate-950">
+          <h3 className="mt-2 line-clamp-2 min-h-14 text-xl font-semibold tracking-tight text-slate-950" title={course.name}>
             {course.name}
           </h3>
         </div>
 
-        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClasses[course.status]}`}>
+        <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${statusClasses[course.status]}`}>
           {STATUS_VI[course.status]}
         </span>
       </div>
 
-      <p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-600">
+      <p className="mt-4 line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-slate-600">
         Lớp {course.code} học từ {formatDate(course.startDate)} đến {formatDate(course.endDate)}.
       </p>
 
@@ -74,18 +74,22 @@ export default function CourseCard({ course, className = "", showDetailButton = 
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-        <div>Giáo viên: {course.teacher?.fullName ?? "—"}</div>
-        <div>Tuổi tối thiểu: {course.minimumAge ?? "—"}</div>
+      <div className="mt-4 flex items-center justify-between gap-3 text-sm text-slate-600">
+        <div className="min-w-0 truncate" title={course.teacher?.fullName ?? undefined}>
+          Giáo viên: {course.teacher?.fullName ?? "—"}
+        </div>
+        <div className="shrink-0">Tuổi tối thiểu: {course.minimumAge ?? "—"}</div>
       </div>
 
       {showDetailButton ? (
-        <Link
-          to={`/courses/${course.id}`}
-          className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-slate-950 px-4 py-3 text-sm font-semibold text-white opacity-0 transition hover:bg-slate-800 group-hover:opacity-100"
-        >
-          Xem chi tiết
-        </Link>
+        <div className="mt-auto pt-5">
+          <Link
+            to={`/courses/${course.id}`}
+            className="inline-flex w-full items-center justify-center rounded-full bg-slate-950 px-4 py-3 text-sm font-semibold text-white opacity-0 transition hover:bg-slate-800 group-hover:opacity-100"
+          >
+            Xem chi tiết
+          </Link>
+        </div>
       ) : null}
     </article>
   );

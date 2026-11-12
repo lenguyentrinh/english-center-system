@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import com.trinh.english_center_be.modules.auth.dto.ResetPasswordRequest;
 import com.trinh.english_center_be.modules.auth.entity.PasswordResetOtp;
+import com.trinh.english_center_be.modules.auth.repository.PasswordResetOtpRepository;
 import com.trinh.english_center_be.modules.auth.service.MailService;
 import com.trinh.english_center_be.modules.auth.service.RefreshTokenService;
 import com.trinh.english_center_be.modules.user.entity.User;
@@ -25,10 +26,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -39,7 +36,7 @@ class PasswordResetServiceImplTest {
     @Mock MailService mailService;
     @Mock RefreshTokenService refreshTokenService;
     @Mock PasswordEncoder passwordEncoder;
-    @Mock MongoTemplate mongoTemplate;
+    @Mock PasswordResetOtpRepository repository;
 
     PasswordResetServiceImpl service;
     User user;
@@ -47,7 +44,7 @@ class PasswordResetServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new PasswordResetServiceImpl(userService, mailService, refreshTokenService, passwordEncoder, mongoTemplate);
+        service = new PasswordResetServiceImpl(userService, mailService, refreshTokenService, passwordEncoder, repository);
         ReflectionTestUtils.setField(service, "ttlMinutes", 5L);
         ReflectionTestUtils.setField(service, "otpSecret", "unit-test-secret-unit-test-secret!!");
 
@@ -62,9 +59,9 @@ class PasswordResetServiceImplTest {
         ArgumentCaptor<String> otp = ArgumentCaptor.forClass(String.class);
         verify(mailService).sendPasswordResetOtp(eq("a@b.com"), eq("A B"), otp.capture());
 
-        ArgumentCaptor<Update> update = ArgumentCaptor.forClass(Update.class);
-        verify(mongoTemplate).upsert(any(Query.class), update.capture(), eq(PasswordResetOtp.class));
-        lastHash = (String) update.getValue().getUpdateObject().get("$set", org.bson.Document.class).get("otpHash");
+        ArgumentCaptor<PasswordResetOtp> saved = ArgumentCaptor.forClass(PasswordResetOtp.class);
+        verify(repository).save(saved.capture());
+        lastHash = saved.getValue().getOtpHash();
         return otp.getValue();
     }
 
@@ -79,7 +76,7 @@ class PasswordResetServiceImplTest {
         service.requestReset("x@y.com");
 
         verify(mailService, never()).sendPasswordResetOtp(anyString(), anyString(), anyString());
-        verify(mongoTemplate, never()).upsert(any(Query.class), any(Update.class), eq(PasswordResetOtp.class));
+        verify(repository, never()).save(any(PasswordResetOtp.class));
     }
 
     @Test
@@ -95,8 +92,7 @@ class PasswordResetServiceImplTest {
     @Test
     void requestWithinCooldownDoesNotSendAgain() {
         when(userService.findByEmail("a@b.com")).thenReturn(Optional.of(user));
-        when(mongoTemplate.findOne(any(Query.class), eq(PasswordResetOtp.class)))
-                .thenReturn(PasswordResetOtp.builder().lastSentAt(Instant.now().minusSeconds(10)).build());
+        when(repository.findByUserId(anyString())).thenReturn(Optional.of(PasswordResetOtp.builder().lastSentAt(Instant.now().minusSeconds(10)).build()));
 
         service.requestReset("a@b.com");
 
@@ -114,20 +110,20 @@ class PasswordResetServiceImplTest {
     @Test
     void verifyAcceptsTheCorrectCodeWithoutConsumingIt() {
         String otp = requestCode();
-        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class),
-                eq(PasswordResetOtp.class))).thenReturn(row(otp, 1, Instant.now().plusSeconds(60)));
+        when(repository.incrementAttempts(anyString())).thenReturn(1);
+        when(repository.findByUserId(anyString())).thenReturn(Optional.of(row(otp, 1, Instant.now().plusSeconds(60))));
 
         service.verifyOtp("a@b.com", otp);
 
-        verify(mongoTemplate, never()).findAndRemove(any(Query.class), eq(PasswordResetOtp.class));
+        verify(repository, never()).consume(anyString(), anyString());
     }
 
     @Test
     void verifyRejectsAWrongCode() {
         String otp = requestCode();
         String wrong = otp.equals("000000") ? "000001" : "000000";
-        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class),
-                eq(PasswordResetOtp.class))).thenReturn(row(otp, 1, Instant.now().plusSeconds(60)));
+        when(repository.incrementAttempts(anyString())).thenReturn(1);
+        when(repository.findByUserId(anyString())).thenReturn(Optional.of(row(otp, 1, Instant.now().plusSeconds(60))));
 
         assertThatThrownBy(() -> service.verifyOtp("a@b.com", wrong)).isInstanceOf(BusinessException.class);
     }
@@ -135,8 +131,8 @@ class PasswordResetServiceImplTest {
     @Test
     void codeIsDeadOnceAttemptsAreExhaustedEvenIfCorrect() {
         String otp = requestCode();
-        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class),
-                eq(PasswordResetOtp.class))).thenReturn(row(otp, 6, Instant.now().plusSeconds(60)));
+        when(repository.incrementAttempts(anyString())).thenReturn(1);
+        when(repository.findByUserId(anyString())).thenReturn(Optional.of(row(otp, 6, Instant.now().plusSeconds(60))));
 
         assertThatThrownBy(() -> service.verifyOtp("a@b.com", otp)).isInstanceOf(BusinessException.class);
     }
@@ -144,8 +140,8 @@ class PasswordResetServiceImplTest {
     @Test
     void expiredCodeIsRejected() {
         String otp = requestCode();
-        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class),
-                eq(PasswordResetOtp.class))).thenReturn(row(otp, 1, Instant.now().minusSeconds(1)));
+        when(repository.incrementAttempts(anyString())).thenReturn(1);
+        when(repository.findByUserId(anyString())).thenReturn(Optional.of(row(otp, 1, Instant.now().minusSeconds(1))));
 
         assertThatThrownBy(() -> service.verifyOtp("a@b.com", otp)).isInstanceOf(BusinessException.class);
     }
@@ -163,11 +159,11 @@ class PasswordResetServiceImplTest {
     void resetConsumesTheCodeChangesThePasswordAndRevokesSessions() {
         String otp = requestCode();
         PasswordResetOtp stored = row(otp, 1, Instant.now().plusSeconds(60));
-        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class),
-                eq(PasswordResetOtp.class))).thenReturn(stored);
+        when(repository.incrementAttempts(anyString())).thenReturn(1);
+        when(repository.findByUserId(anyString())).thenReturn(Optional.of(stored));
         when(passwordEncoder.matches("newpass1", "old-hash")).thenReturn(false);
         when(passwordEncoder.encode("newpass1")).thenReturn("new-hash");
-        when(mongoTemplate.findAndRemove(any(Query.class), eq(PasswordResetOtp.class))).thenReturn(stored);
+        when(repository.consume(anyString(), anyString())).thenReturn(1);
 
         service.resetPassword(new ResetPasswordRequest("a@b.com", otp, "newpass1"));
 
@@ -179,10 +175,10 @@ class PasswordResetServiceImplTest {
     @Test
     void resetFailsWhenAConcurrentRequestAlreadyConsumedTheCode() {
         String otp = requestCode();
-        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class),
-                eq(PasswordResetOtp.class))).thenReturn(row(otp, 1, Instant.now().plusSeconds(60)));
+        when(repository.incrementAttempts(anyString())).thenReturn(1);
+        when(repository.findByUserId(anyString())).thenReturn(Optional.of(row(otp, 1, Instant.now().plusSeconds(60))));
         when(passwordEncoder.matches("newpass1", "old-hash")).thenReturn(false);
-        when(mongoTemplate.findAndRemove(any(Query.class), eq(PasswordResetOtp.class))).thenReturn(null);
+        when(repository.consume(anyString(), anyString())).thenReturn(0);
 
         assertThatThrownBy(() -> service.resetPassword(new ResetPasswordRequest("a@b.com", otp, "newpass1")))
                 .isInstanceOf(BusinessException.class);
@@ -194,13 +190,13 @@ class PasswordResetServiceImplTest {
     @Test
     void resetRejectsReusingTheCurrentPassword() {
         String otp = requestCode();
-        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class),
-                eq(PasswordResetOtp.class))).thenReturn(row(otp, 1, Instant.now().plusSeconds(60)));
+        when(repository.incrementAttempts(anyString())).thenReturn(1);
+        when(repository.findByUserId(anyString())).thenReturn(Optional.of(row(otp, 1, Instant.now().plusSeconds(60))));
         when(passwordEncoder.matches("samepass1", "old-hash")).thenReturn(true);
 
         assertThatThrownBy(() -> service.resetPassword(new ResetPasswordRequest("a@b.com", otp, "samepass1")))
                 .isInstanceOf(BusinessException.class);
 
-        verify(mongoTemplate, never()).findAndRemove(any(Query.class), eq(PasswordResetOtp.class));
+        verify(repository, never()).consume(anyString(), anyString());
     }
 }

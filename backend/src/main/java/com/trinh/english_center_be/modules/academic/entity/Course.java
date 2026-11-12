@@ -1,5 +1,7 @@
 package com.trinh.english_center_be.modules.academic.entity;
 
+import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 import com.trinh.english_center_be.modules.teacher.entity.Teacher;
 import com.trinh.english_center_be.shared.BaseEntity;
 import com.trinh.english_center_be.shared.enums.CourseStatus;
@@ -12,12 +14,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "courses")
+@Entity
+@Table(name = "courses")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,9 +25,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Course extends BaseEntity {
 
     @Id
+    @UuidGenerator
+    @Column(length = 36)
     private String id;
 
-    @Indexed(unique = true, sparse = true)
+    @Column(unique = true)
     private String code;
 
     private String name;
@@ -39,6 +40,8 @@ public class Course extends BaseEntity {
 
     private Integer maxStudent;
 
+    @Enumerated(EnumType.STRING)
+
     private CourseStatus status;
 
     private Integer minimumAge;
@@ -47,10 +50,12 @@ public class Course extends BaseEntity {
 
     private Boolean prerequisitesRequired;
 
-    @DBRef(lazy = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "teacher_id")
     private Teacher teacher;
 
     /** Legacy teacher-role gate, kept so old data loads; qualification now uses categoryId and Teacher.categoryIds. */
+    @Enumerated(EnumType.STRING)
     private Roles availableRoleTeacher;
 
     /** Optional admin-managed Category id (program/tag). */
@@ -59,6 +64,9 @@ public class Course extends BaseEntity {
     private String room;
 
     /** ISO weekdays, 1 = Monday .. 7 = Sunday. Null/empty for legacy courses without a weekly pattern. */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "course_days_of_week", joinColumns = @JoinColumn(name = "course_id"))
+    @Column(name = "day_of_week")
     private List<Integer> daysOfWeek;
 
     private LocalTime startTime;

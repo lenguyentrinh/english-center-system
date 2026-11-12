@@ -3,9 +3,9 @@ package com.trinh.english_center_be.modules.user.Repository;
 import com.trinh.english_center_be.modules.user.entity.UserRole;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRoleRepository extends MongoRepository<UserRole, String> {
+public interface UserRoleRepository extends JpaRepository<UserRole, String> {
 
     List<UserRole> findByUserId(String userId);
 

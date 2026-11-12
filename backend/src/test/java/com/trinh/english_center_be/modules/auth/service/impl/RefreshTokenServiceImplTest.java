@@ -3,6 +3,7 @@ package com.trinh.english_center_be.modules.auth.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -22,24 +23,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class RefreshTokenServiceImplTest {
 
     @Mock RefreshTokenRepository repository;
-    @Mock MongoTemplate mongoTemplate;
     @Mock UserService userService;
 
     RefreshTokenServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new RefreshTokenServiceImpl(repository, mongoTemplate, userService);
+        service = new RefreshTokenServiceImpl(repository, userService);
         ReflectionTestUtils.setField(service, "refreshExpirationMs", 60_000L);
     }
 
@@ -68,8 +64,7 @@ class RefreshTokenServiceImplTest {
         String raw = issueAndCapture("u1", stored);
         when(repository.findById(stored[0].getId())).thenReturn(Optional.of(stored[0]));
         when(userService.isUserActive("u1")).thenReturn(true);
-        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class),
-                eq(RefreshToken.class))).thenReturn(stored[0]);
+        when(repository.claim(eq(stored[0].getId()), any(Instant.class), anyString())).thenReturn(1);
 
         RefreshTokenService.Rotated rotated = service.rotate(raw);
 
@@ -88,7 +83,7 @@ class RefreshTokenServiceImplTest {
 
         assertThatThrownBy(() -> service.rotate(stored[0].getId() + ".not-the-secret"))
                 .isInstanceOf(UnauthorizedException.class);
-        verify(mongoTemplate, never()).updateMulti(any(Query.class), any(Update.class), eq(RefreshToken.class));
+        verify(repository, never()).revokeAllByUserId(anyString(), any(Instant.class));
     }
 
     @Test
@@ -108,7 +103,7 @@ class RefreshTokenServiceImplTest {
 
         assertThatThrownBy(() -> service.rotate(raw)).isInstanceOf(UnauthorizedException.class);
 
-        verify(mongoTemplate).updateMulti(any(Query.class), any(Update.class), eq(RefreshToken.class));
+        verify(repository).revokeAllByUserId(eq("u1"), any(Instant.class));
     }
 
     @Test
@@ -121,7 +116,7 @@ class RefreshTokenServiceImplTest {
 
         assertThatThrownBy(() -> service.rotate(raw)).isInstanceOf(UnauthorizedException.class);
 
-        verify(mongoTemplate, never()).updateMulti(any(Query.class), any(Update.class), eq(RefreshToken.class));
+        verify(repository, never()).revokeAllByUserId(anyString(), any(Instant.class));
     }
 
     @Test
@@ -130,8 +125,7 @@ class RefreshTokenServiceImplTest {
         String raw = issueAndCapture("u1", stored);
         when(repository.findById(stored[0].getId())).thenReturn(Optional.of(stored[0]));
         when(userService.isUserActive("u1")).thenReturn(true);
-        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class),
-                eq(RefreshToken.class))).thenReturn(null);
+        when(repository.claim(eq(stored[0].getId()), any(Instant.class), anyString())).thenReturn(0);
 
         assertThatThrownBy(() -> service.rotate(raw)).isInstanceOf(UnauthorizedException.class);
 
@@ -157,7 +151,7 @@ class RefreshTokenServiceImplTest {
 
         assertThatThrownBy(() -> service.rotate(raw)).isInstanceOf(UnauthorizedException.class);
 
-        verify(mongoTemplate).updateMulti(any(Query.class), any(Update.class), eq(RefreshToken.class));
+        verify(repository).revokeAllByUserId(eq("u1"), any(Instant.class));
     }
 
     @Test

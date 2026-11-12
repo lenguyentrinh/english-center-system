@@ -11,6 +11,14 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  // build: {
+  //    sourcemap: true,
+  //   minify: "terser",
+  //   manulChunks: (id) => {
+  //     if (id.includes("")) {
+  //       return id.toString().split("node_modules/")[1].split("/")[0].toString();
+  //     }, 
+  // },
   // Same-origin /api in dev (set VITE_API_BASE_URL=/api) so cookies behave like behind a reverse proxy.
   server: {
     proxy: {

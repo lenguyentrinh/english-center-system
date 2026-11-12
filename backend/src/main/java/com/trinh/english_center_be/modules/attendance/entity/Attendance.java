@@ -1,5 +1,7 @@
 package com.trinh.english_center_be.modules.attendance.entity;
 
+import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 import com.trinh.english_center_be.modules.academic.entity.CourseSession;
 import com.trinh.english_center_be.modules.student.entity.Student;
 import com.trinh.english_center_be.shared.BaseEntity;
@@ -8,11 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "attendance")
+@Entity
+@Table(name = "attendance")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,12 +21,16 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Attendance extends BaseEntity {
 
     @Id
+    @UuidGenerator
+    @Column(length = 36)
     private String id;
 
-    @DBRef(lazy = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "session_id")
     private CourseSession session;
 
-    @DBRef(lazy = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id")
     private Student student;
 
     private String status;

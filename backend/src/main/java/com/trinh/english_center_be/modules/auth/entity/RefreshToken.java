@@ -1,21 +1,20 @@
 package com.trinh.english_center_be.modules.auth.entity;
 
+import jakarta.persistence.*;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * One row per issued refresh token. The client holds an opaque {@code <id>.<secret>} string; only the
- * SHA-256 of the secret is stored. Timestamps are {@link Instant} (stored as BSON dates, unlike the
- * ISO-string LocalDateTime mapping in MongoConfig) so the TTL index can purge expired rows.
+ * SHA-256 of the secret is stored. Expired rows are purged by {@code ExpiredAuthRowsCleaner}.
  */
-@Document(collection = "refresh_tokens")
+@Entity
+@Table(name = "refresh_tokens",
+        indexes = {@Index(name = "idx_refresh_user", columnList = "user_id"), @Index(name = "idx_refresh_expires", columnList = "expires_at")})
 @Getter
 @Setter
 @Builder
@@ -24,14 +23,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class RefreshToken {
 
     @Id
+    @Column(length = 32)
     private String id;
-
-    @Indexed
     private String userId;
 
     private String tokenHash;
-
-    @Indexed(expireAfter = "0s")
     private Instant expiresAt;
 
     private boolean revoked;

@@ -5,11 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.trinh.english_center_be.shared.enums.ErrorCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 
-class GlobalExceptionHandlerMongoTest {
+class GlobalExceptionHandlerDatabaseTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
@@ -17,7 +17,7 @@ class GlobalExceptionHandlerMongoTest {
     void duplicateKeyMapsToEntityExistsError() {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/users");
 
-        ResponseEntity<ErrorResponse> response = handler.handleDuplicateKey(new DuplicateKeyException("E11000"), request);
+        ResponseEntity<ErrorResponse> response = handler.handleDuplicateKey(new DataIntegrityViolationException("Duplicate entry"), request);
 
         assertThat(response.getStatusCode()).isEqualTo(ErrorCode.ENTITY_EXISTS.getStatus());
         assertThat(response.getBody()).isNotNull();

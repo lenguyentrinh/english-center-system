@@ -322,7 +322,7 @@ public class UserRoleAssignmentServiceImpl implements UserRoleAssignmentService 
 
     /**
      * Losing the STUDENT role deactivates the profile and cancels active enrollments instead of deleting
-     * anything, so enrollment history (and its DBRefs) stays intact.
+     * anything, so enrollment history (and its foreign keys) stays intact.
      */
     private void deactivateStudent(String userId) {
         userRepository.findById(userId).flatMap(studentRepository::findByUser).ifPresent(student -> {

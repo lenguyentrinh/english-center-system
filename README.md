@@ -10,23 +10,25 @@ This repository contains two separate applications:
 - Java 24 or compatible JDK
 - Maven or use the included Maven wrapper
 - Node.js and `pnpm`
-- MongoDB (version 7 or higher)
+- MySQL (version 8 or higher)
 - IntelliJ IDEA (for backend development)
 - Visual Studio Code (for frontend development)
 
 ## Database Setup
 
-1. Start a MongoDB instance (the database is created automatically on first use), for example with Docker:
+1. Start a MySQL instance (the database and tables are created automatically on first use), for example with Docker:
 
 ```bash
-docker run -d --name english-center-mongo -p 27017:27017 mongo:7
+docker run -d --name english-center-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=english_center_db mysql:8.4
 ```
 
 2. Create `.env` file in `backend/` folder. Copy from `backend/.env.example` and update with your values:
 
 ```
 SERVER_PORT=8080
-MONGODB_URI=mongodb://localhost:27017/english_center_db
+MYSQL_URL=jdbc:mysql://localhost:3306/english_center_db
+MYSQL_USER=root
+MYSQL_PASSWORD=root
 JWT_SECRET=your_secret_key_here_min_32_chars
 JWT_EXPIRATION=86400000
 TIMEZONE=UTC
@@ -40,7 +42,7 @@ VITE_API_BASE_URL=http://localhost:8080/api
 
 ## Run the backend
 
-1. Ensure MongoDB is running (see Database Setup section).
+1. Ensure MySQL is running (see Database Setup section).
 2. Create `.env` files in both `backend/` and `frontend/` folders (see Database Setup section).
 3. Open IntelliJ IDEA and choose `Open`. (Install the Lombok extension for better IDE support)
 4. Select the `backend/` folder.
@@ -88,6 +90,6 @@ pnpm run dev
 
 ## Troubleshooting
 
-- **Backend won't start**: Ensure MongoDB is running and `.env` file is properly configured in the `backend/` folder.
+- **Backend won't start**: Ensure MySQL is running and `.env` file is properly configured in the `backend/` folder.
 - **Frontend won't load**: Make sure port 5173 is not in use, or check the terminal output for the actual port.
 - **Lombok errors in IDE**: Install the Lombok extension in IntelliJ or your preferred Java IDE.

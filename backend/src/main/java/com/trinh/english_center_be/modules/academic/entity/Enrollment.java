@@ -1,5 +1,7 @@
 package com.trinh.english_center_be.modules.academic.entity;
 
+import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 import com.trinh.english_center_be.modules.student.entity.Student;
 import com.trinh.english_center_be.shared.BaseEntity;
 import java.time.LocalDate;
@@ -9,15 +11,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "enrollments")
-// A student can hold at most one ACTIVE enrollment per course; cancelled rows are history and may repeat.
-@CompoundIndex(name = "enrollment_course_student_active_idx", def = "{'course': 1, 'student': 1}", unique = true,
-        partialFilter = "{'status': 'ACTIVE'}")
+@Entity
+@Table(name = "enrollments",
+        indexes = @Index(name = "enrollment_course_student_idx", columnList = "course_id, student_id, status"))
+// A student can hold at most one ACTIVE enrollment per course (enforced in EnrollmentServiceImpl, MySQL has no
+// partial unique index); cancelled rows are history and may repeat.
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,12 +28,16 @@ public class Enrollment extends BaseEntity {
     public static final String CANCELLED = "CANCELLED";
 
     @Id
+    @UuidGenerator
+    @Column(length = 36)
     private String id;
 
-    @DBRef(lazy = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id")
     private Student student;
 
-    @DBRef(lazy = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id")
     private Course course;
 
     private LocalDate enrollDate;

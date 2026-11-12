@@ -1,16 +1,19 @@
 services:
-  mongo:
-    image: mongo:7
-    container_name: english-center-mongo
+  mysql:
+    image: mysql:8.4
+    container_name: english-center-mysql
     restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
       TZ: Asia/Ho_Chi_Minh
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: english_center_db
     ports:
-      - "27017:27017"
+      - "3306:3306"
     volumes:
-      - mongo_data:/data/db
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -20,12 +23,14 @@ services:
     container_name: english-center-backend
     restart: unless-stopped
     depends_on:
-      mongo:
+      mysql:
         condition: service_healthy
     environment:
       SERVER_PORT: 8080
-      # Defaults to the bundled mongo container; set MONGODB_URI in .env to use Atlas instead (see .env.example)
-      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/english_center_db}
+      # Defaults to the bundled mysql container; set MYSQL_URL/MYSQL_USER/MYSQL_PASSWORD in .env to use an external MySQL (see .env.example)
+      MYSQL_URL: ${MYSQL_URL:-jdbc:mysql://mysql:3306/english_center_db?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&connectionTimeZone=Asia/Ho_Chi_Minh}
+      MYSQL_USER: ${MYSQL_USER:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-${MYSQL_ROOT_PASSWORD:-root}}
       JWT_SECRET: ${JWT_SECRET:-secret}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
       TIMEZONE: Asia/Ho_Chi_Minh
@@ -49,6 +54,7 @@ services:
       # Dev only: SEED_CURRICULUM=true creates the grade 1-12 courses from seed/curriculum.json
       SEED_CURRICULUM:
       MAIL_FROM: ${MAIL_FROM:-no-reply@english-center.local}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
       OTP_TTL_MINUTES: ${OTP_TTL_MINUTES:-5}
       AUTH_RATE_LIMIT_MAX: ${AUTH_RATE_LIMIT_MAX:-10}
       AUTH_RATE_LIMIT_WINDOW_SECONDS: ${AUTH_RATE_LIMIT_WINDOW_SECONDS:-60}
@@ -68,4 +74,4 @@ services:
       - "5173:5173"
 
 volumes:
-  mongo_data:
+  mysql_data:

@@ -1,5 +1,7 @@
 package com.trinh.english_center_be.modules.student.entity;
 
+import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 import com.trinh.english_center_be.modules.user.entity.User;
 import com.trinh.english_center_be.shared.BaseEntity;
 import com.trinh.english_center_be.shared.enums.EntryLevel;
@@ -10,12 +12,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "students")
+@Entity
+@Table(name = "students")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,13 +23,17 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Student extends BaseEntity {
 
     @Id
+    @UuidGenerator
+    @Column(length = 36)
     private String id;
 
-    @Indexed(unique = true)
-    @DBRef(lazy = true)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", unique = true)
     private User user;
 
     private LocalDate dateOfBirth;
+
+    @Enumerated(EnumType.STRING)
 
     private Gender gender;
 
@@ -39,6 +42,8 @@ public class Student extends BaseEntity {
     private String parentName;
 
     private String parentPhone;
+
+    @Enumerated(EnumType.STRING)
 
     private EntryLevel entryLevel;
 

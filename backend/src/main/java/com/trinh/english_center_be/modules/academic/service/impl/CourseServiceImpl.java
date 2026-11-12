@@ -214,7 +214,7 @@ public class CourseServiceImpl implements CourseService {
         return teacher;
     }
 
-    /** Course -> Teacher is a DBRef, so course lookups by user go user -> teacher -> courses. */
+    /** Course -> Teacher is a foreign key, so course lookups by user go user -> teacher -> courses. */
     private Optional<Teacher> findTeacherByUserId(String userId) {
         return userRepository.findById(userId).flatMap(teacherRepository::findByUser);
     }

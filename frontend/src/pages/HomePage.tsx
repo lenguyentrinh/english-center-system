@@ -53,7 +53,7 @@ export default function HomePage() {
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
               English Center
             </p>
-            <h1 className="mt-4 text-5xl font-semibold tracking-tight sm:text-6xl">
+            <h1 className="mt-4 text-4xl font-black leading-tight sm:text-5xl lg:text-[56px]">
               Học tiếng Anh bài bản, tiến bộ thấy rõ từng tuần.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
@@ -87,7 +87,7 @@ export default function HomePage() {
                 key={label}
                 className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur"
               >
-                <p className="text-4xl font-semibold tracking-tight text-white">{value}</p>
+                <p className="font-serif text-4xl font-bold text-white">{value}</p>
                 <p className="mt-3 text-sm leading-6 text-slate-300">{label}</p>
               </article>
             ))}
@@ -101,7 +101,7 @@ export default function HomePage() {
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">
               Giới thiệu
             </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+            <h2 className="mt-3 text-3xl font-bold text-slate-950 sm:text-4xl">
               Luyện thi hiệu quả, giao tiếp tự tin.
             </h2>
             <p className="mt-4 text-base leading-7 text-slate-600">
@@ -146,7 +146,7 @@ export default function HomePage() {
               <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">
                 Vì sao chọn chúng tôi
               </p>
-              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
+              <h2 className="mt-3 text-3xl font-bold text-slate-950">
                 Học dễ theo, dễ giữ nhịp, càng học càng có động lực.
               </h2>
             </div>
@@ -168,7 +168,7 @@ export default function HomePage() {
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">
               Khoá học nổi bật
             </p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+            <h2 className="mt-2 text-3xl font-bold text-slate-950">
               Khoá học mới, mở lớp thường xuyên
             </h2>
           </div>
@@ -225,7 +225,7 @@ export default function HomePage() {
         <div className="grid gap-6 lg:grid-cols-2">
           {testimonials.map((item) => (
             <article key={item.name} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <p className="text-sm leading-7 text-slate-600">“{item.quote}”</p>
+              <p className="font-serif text-sm italic leading-7 text-slate-600">“{item.quote}”</p>
               <div className="mt-5">
                 <p className="font-semibold text-slate-950">{item.name}</p>
                 <p className="text-sm text-slate-500">{item.role}</p>

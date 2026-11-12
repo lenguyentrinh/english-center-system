@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
 import PublicLayout from "@/shared/components/layout/PublicLayout.tsx";
 import { getCourseById } from "@/features/courses/courseApi.ts";
+import { useSelfEnrollment } from "@/features/courses/useSelfEnrollment.ts";
 import type { Course } from "@/features/courses/types.ts";
 import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage.ts";
 import { useAuth } from "@/features/auth/useAuth.ts";
@@ -36,7 +36,9 @@ export default function CourseDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const courseId = id ?? "";
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isAdmin, isTeacher, hasAnyRole } = useAuth();
+  const isStudent = hasAnyRole(["STUDENT"]);
+  const { enrolled, loading: enrollmentLoading, register, cancel } = useSelfEnrollment(courseId, user?.id, isStudent);
 
   const isValidId = courseId.length > 0;
   const { data, isLoading: loading, error: queryError } = useQuery({
@@ -53,13 +55,86 @@ export default function CourseDetailPage() {
     [course]
   );
 
-  const handleEnroll = () => {
-    if (!isAuthenticated) {
-      navigate(`/auth/login?return=${encodeURIComponent(`/courses/${courseId}`)}`);
-      return;
-    }
+  const goLogin = () => navigate(`/auth/login?return=${encodeURIComponent(`/courses/${courseId}`)}`);
 
-    toast.info("Tính năng đăng ký khoá học đang được hoàn thiện. Vui lòng liên hệ trung tâm để được hỗ trợ.");
+  const handleCancel = () => {
+    if (window.confirm("Bạn chắc chắn muốn huỷ đăng ký khoá học này?")) cancel.mutate();
+  };
+
+  const seatsLeft = course ? Math.max(0, course.maxStudent - (course.enrolledCount ?? 0)) : 0;
+  const isFull = !!course && seatsLeft === 0;
+  const primaryBtn =
+    "mt-6 inline-flex w-full items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-slate-950";
+  const secondaryBtn =
+    "mt-3 inline-flex w-full items-center justify-center rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-50";
+
+  const enrollPanel = () => {
+    if (!course) return null;
+    if (!isAuthenticated) {
+      return (
+        <>
+          <p className="mt-3 text-sm leading-6 text-slate-600">Đăng nhập bằng tài khoản học viên để đăng ký khoá học này.</p>
+          <button type="button" onClick={goLogin} className={primaryBtn}>
+            Đăng nhập để đăng ký
+          </button>
+        </>
+      );
+    }
+    if (!isStudent) {
+      return (
+        <>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Chỉ tài khoản học viên mới tự đăng ký được.
+            {isAdmin ? " Bạn có thể thêm học viên vào lớp trong trang quản lý." : ""}
+          </p>
+          {isAdmin ? (
+            <Link to={`/admin/classes/${course.id}`} className={primaryBtn}>
+              Quản lý lớp học
+            </Link>
+          ) : isTeacher ? (
+            <Link to="/teacher/classes" className={primaryBtn}>
+              Lớp của tôi
+            </Link>
+          ) : null}
+        </>
+      );
+    }
+    if (enrollmentLoading) return <p className="mt-3 text-sm text-slate-500">Đang kiểm tra đăng ký của bạn...</p>;
+    if (enrolled) {
+      return (
+        <>
+          <p className="mt-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+            Bạn đã đăng ký khoá học này.
+          </p>
+          <Link to={`/student/classes/${course.id}`} className={primaryBtn}>
+            Vào lớp của tôi
+          </Link>
+          <button type="button" onClick={handleCancel} disabled={cancel.isPending} className={secondaryBtn}>
+            {cancel.isPending ? "Đang huỷ..." : "Huỷ đăng ký"}
+          </button>
+        </>
+      );
+    }
+    const closed = course.status !== "OPEN";
+    return (
+      <>
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          {closed
+            ? "Khoá học hiện không nhận đăng ký."
+            : isFull
+              ? "Lớp đã đủ học viên."
+              : `Còn ${seatsLeft}/${course.maxStudent} chỗ.`}
+        </p>
+        <button
+          type="button"
+          onClick={() => register.mutate()}
+          disabled={closed || isFull || register.isPending}
+          className={primaryBtn}
+        >
+          {register.isPending ? "Đang đăng ký..." : "Đăng ký"}
+        </button>
+      </>
+    );
   };
 
   return (
@@ -123,17 +198,7 @@ export default function CourseDetailPage() {
                 <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
                   Đăng ký khi bạn đã sẵn sàng.
                 </h2>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
-                  Đăng nhập bằng tài khoản học viên để đăng ký khoá học này.
-                </p>
-
-                <button
-                  type="button"
-                  onClick={handleEnroll}
-                  className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-                >
-                  Đăng ký
-                </button>
+                {enrollPanel()}
               </div>
 
               <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">

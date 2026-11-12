@@ -1,5 +1,7 @@
 package com.trinh.english_center_be.modules.user.entity;
 
+import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 import com.trinh.english_center_be.shared.BaseEntity;
 import com.trinh.english_center_be.shared.enums.Roles;
 import lombok.AllArgsConstructor;
@@ -8,12 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "roles")
+@Entity
+@Table(name = "roles")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,13 +22,17 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Role extends BaseEntity {
 
     @Id
+    @UuidGenerator
+    @Column(length = 36)
     private String id;
 
-    @Indexed(unique = true, sparse = true)
+    @Column(unique = true)
+    @Enumerated(EnumType.STRING)
     private Roles code;
 
     private String description;
 
-    @DBRef(lazy = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "business_role_id")
     private BusinessRole businessRole;
 }

@@ -1,5 +1,7 @@
 package com.trinh.english_center_be.modules.academic.entity;
 
+import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 import com.trinh.english_center_be.shared.BaseEntity;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -8,13 +10,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "course_sessions")
-@CompoundIndex(name = "course_session_no_idx", def = "{'course': 1, 'sessionNo': 1}")
+@Entity
+@Table(name = "course_sessions",
+        indexes = @Index(name = "course_session_no_idx", columnList = "course_id, session_no"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,9 +22,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class CourseSession extends BaseEntity {
 
     @Id
+    @UuidGenerator
+    @Column(length = 36)
     private String id;
 
-    @DBRef(lazy = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id")
     private Course course;
 
     // Teacher assignment lives on Course (one teacher per course).
@@ -40,5 +42,6 @@ public class CourseSession extends BaseEntity {
 
     private LocalTime endTime;
 
+    @Column(length = 1000)
     private String topic;
 }

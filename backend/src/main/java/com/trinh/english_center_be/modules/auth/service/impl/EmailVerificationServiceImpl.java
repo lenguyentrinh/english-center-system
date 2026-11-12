@@ -1,6 +1,7 @@
 package com.trinh.english_center_be.modules.auth.service.impl;
 
 import com.trinh.english_center_be.modules.auth.entity.EmailVerificationOtp;
+import com.trinh.english_center_be.modules.auth.repository.EmailVerificationOtpRepository;
 import com.trinh.english_center_be.modules.auth.service.EmailVerificationService;
 import com.trinh.english_center_be.modules.auth.service.MailService;
 import com.trinh.english_center_be.modules.user.entity.User;
@@ -19,11 +20,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +39,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 
     private final UserService userService;
     private final MailService mailService;
-    private final MongoTemplate mongoTemplate;
+    private final EmailVerificationOtpRepository repository;
 
     @Value("${auth.otp.ttl-minutes:5}")
     private long ttlMinutes;
@@ -60,22 +56,20 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         User user = found.get();
         Instant now = Instant.now();
 
-        EmailVerificationOtp existing = mongoTemplate.findOne(
-                Query.query(Criteria.where("userId").is(user.getId())), EmailVerificationOtp.class);
+        EmailVerificationOtp existing = repository.findByUserId(user.getId()).orElse(null);
         if (existing != null && existing.getLastSentAt() != null
                 && existing.getLastSentAt().plus(RESEND_COOLDOWN).isAfter(now)) {
             return;
         }
 
         String otp = String.format("%06d", RANDOM.nextInt(1_000_000));
-        mongoTemplate.upsert(
-                Query.query(Criteria.where("userId").is(user.getId())),
-                new Update()
-                        .set("otpHash", hmac(user.getId(), otp))
-                        .set("expiresAt", now.plus(Duration.ofMinutes(ttlMinutes)))
-                        .set("attempts", 0)
-                        .set("lastSentAt", now),
-                EmailVerificationOtp.class);
+        EmailVerificationOtp row = existing != null ? existing : new EmailVerificationOtp();
+        row.setUserId(user.getId());
+        row.setOtpHash(hmac(user.getId(), otp));
+        row.setExpiresAt(now.plus(Duration.ofMinutes(ttlMinutes)));
+        row.setAttempts(0);
+        row.setLastSentAt(now);
+        repository.save(row);
 
         mailService.sendEmailVerificationOtp(user.getEmail(), user.getFullName(), otp);
     }
@@ -86,11 +80,9 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
                 .filter(u -> u.getStatus() == UserStatus.ACTIVE && !u.isEmailVerified())
                 .orElseThrow(EmailVerificationServiceImpl::invalidCode);
 
-        EmailVerificationOtp row = mongoTemplate.findAndModify(
-                Query.query(Criteria.where("userId").is(user.getId())),
-                new Update().inc("attempts", 1),
-                FindAndModifyOptions.options().returnNew(true),
-                EmailVerificationOtp.class);
+        EmailVerificationOtp row = repository.incrementAttempts(user.getId()) == 0
+                ? null
+                : repository.findByUserId(user.getId()).orElse(null);
         if (row == null || !row.getExpiresAt().isAfter(Instant.now()) || row.getAttempts() > MAX_ATTEMPTS) {
             throw invalidCode();
         }
@@ -101,11 +93,8 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             throw invalidCode();
         }
 
-        // Atomic consume: of two concurrent requests with the right code only one gets the document.
-        EmailVerificationOtp consumed = mongoTemplate.findAndRemove(
-                Query.query(Criteria.where("userId").is(user.getId()).and("otpHash").is(expected)),
-                EmailVerificationOtp.class);
-        if (consumed == null) throw invalidCode();
+        // Atomic consume: of two concurrent requests with the right code only one deletes the row.
+        if (repository.consume(user.getId(), expected) == 0) throw invalidCode();
 
         user.setEmailVerified(true);
         userService.save(user);

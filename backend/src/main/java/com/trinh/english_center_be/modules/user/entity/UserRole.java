@@ -1,5 +1,7 @@
 package com.trinh.english_center_be.modules.user.entity;
 
+import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 import com.trinh.english_center_be.shared.BaseEntity;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -8,17 +10,15 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Join document between a user and a role. Stores ids (not DBRefs) so lookups are simple
+ * Join entity between a user and a role. Stores ids (not @ManyToOne relations) so lookups are simple
  * equality queries; the (userId, roleId) pair is unique.
  */
-@Document(collection = "user_roles")
-@CompoundIndex(name = "uk_user_role", def = "{'userId': 1, 'roleId': 1}", unique = true)
+@Entity
+@Table(name = "user_roles",
+        uniqueConstraints = @UniqueConstraint(name = "uk_user_role", columnNames = {"user_id", "role_id"}),
+        indexes = @Index(name = "idx_user_role_role", columnList = "role_id"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,12 +27,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class UserRole extends BaseEntity {
 
     @Id
+    @UuidGenerator
+    @Column(length = 36)
     private String id;
-
-    @Indexed
     private String userId;
-
-    @Indexed
     private String roleId;
 
     @CreatedDate

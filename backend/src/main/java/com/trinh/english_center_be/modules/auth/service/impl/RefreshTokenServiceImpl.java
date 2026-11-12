@@ -13,15 +13,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.UUID;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 /**
@@ -30,7 +26,7 @@ import org.springframework.stereotype.Service;
  * high-entropy value) and keeps the hot refresh path cheap.
  *
  * <p>Rotation uses a conditional update ({@code revoked:false -> true}) so exactly one concurrent
- * request wins; this needs no Mongo transaction (works on a standalone mongod).
+ * request wins; the single UPDATE needs no explicit transaction.
  */
 @Slf4j
 @Service
@@ -40,9 +36,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     /** Several browser tabs refreshing at once is normal; losers inside this window are not an attack. */
     private static final Duration REUSE_GRACE_WINDOW = Duration.ofSeconds(10);
     private static final SecureRandom RANDOM = new SecureRandom();
+    /** Row ids are random UUIDs without dashes (32 hex chars). */
+    private static final Pattern ID_FORMAT = Pattern.compile("[0-9a-f]{32}");
 
     private final RefreshTokenRepository repository;
-    private final MongoTemplate mongoTemplate;
     private final UserService userService;
 
     @Value("${jwt.refresh-expiration-ms}")
@@ -50,7 +47,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     public String issue(String userId) {
-        String id = new ObjectId().toHexString();
+        String id = newId();
         String secret = newSecret();
         Instant now = Instant.now();
 
@@ -82,14 +79,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
             throw invalid();
         }
 
-        String newId = new ObjectId().toHexString();
-        RefreshToken claimed = mongoTemplate.findAndModify(
-                Query.query(Criteria.where("id").is(row.getId()).and("revoked").is(false)),
-                new Update().set("revoked", true).set("revokedAt", now).set("replacedBy", newId),
-                FindAndModifyOptions.options().returnNew(false),
-                RefreshToken.class);
-
-        if (claimed == null) {
+        String newId = newId();
+        if (repository.claim(row.getId(), now, newId) == 0) {
             // Lost the race against a concurrent refresh of the same token.
             RefreshToken fresh = repository.findById(row.getId()).orElseThrow(RefreshTokenServiceImpl::invalid);
             handleRevoked(fresh, now);
@@ -113,10 +104,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     public void revoke(String raw) {
         try {
             RefreshToken row = findValid(raw);
-            mongoTemplate.updateFirst(
-                    Query.query(Criteria.where("id").is(row.getId()).and("revoked").is(false)),
-                    new Update().set("revoked", true).set("revokedAt", Instant.now()),
-                    RefreshToken.class);
+            repository.revokeById(row.getId(), Instant.now());
         } catch (UnauthorizedException ignored) {
             // Logging out with a bad or already-dead token is fine.
         }
@@ -124,10 +112,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     public void revokeAllForUser(String userId) {
-        mongoTemplate.updateMulti(
-                Query.query(Criteria.where("userId").is(userId).and("revoked").is(false)),
-                new Update().set("revoked", true).set("revokedAt", Instant.now()),
-                RefreshToken.class);
+        repository.revokeAllByUserId(userId, Instant.now());
     }
 
     /** A revoked token presented again: inside the grace window it is a lost race, outside it is replay. */
@@ -148,7 +133,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
         String id = raw.substring(0, dot);
         String secret = raw.substring(dot + 1);
-        if (!ObjectId.isValid(id)) throw invalid();
+        if (!ID_FORMAT.matcher(id).matches()) throw invalid();
 
         RefreshToken row = repository.findById(id).orElseThrow(RefreshTokenServiceImpl::invalid);
         boolean matches = MessageDigest.isEqual(
@@ -156,6 +141,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 row.getTokenHash().getBytes(StandardCharsets.UTF_8));
         if (!matches) throw invalid();
         return row;
+    }
+
+    private static String newId() {
+        return UUID.randomUUID().toString().replace("-", "");
     }
 
     private static UnauthorizedException invalid() {

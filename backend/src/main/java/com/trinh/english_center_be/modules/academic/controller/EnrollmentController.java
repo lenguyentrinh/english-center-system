@@ -31,6 +31,10 @@ public class EnrollmentController {
         return auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
     }
 
+    private static String actingUserId(Authentication auth) {
+        return auth.getPrincipal() instanceof AuthUserDetails u ? u.getId() : null;
+    }
+
     /** Admin, or the teacher who owns the course (checked in the service). */
     @GetMapping("/courses/{id}/students")
     @PreAuthorize("isAuthenticated()")
@@ -47,6 +51,22 @@ public class EnrollmentController {
     public ResponseEntity<ApiResponse<CourseStudentResponse>> enroll(@PathVariable String id, @Valid @RequestBody EnrollRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(201, "Student enrolled successfully", enrollmentService.enroll(id, request.userId(), request.forced())));
+    }
+
+    /** A student registers themselves; the user id always comes from the session, never from the request. */
+    @PostMapping("/courses/{id}/enroll")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<CourseStudentResponse>> enrollSelf(@PathVariable String id, Authentication auth) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(201, "Enrolled successfully", enrollmentService.enrollSelf(id, actingUserId(auth))));
+    }
+
+    /** A student cancels their own active enrollment (history is kept). */
+    @DeleteMapping("/courses/{id}/enroll")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<Void>> cancelSelf(@PathVariable String id, Authentication auth) {
+        enrollmentService.cancel(id, actingUserId(auth));
+        return ResponseEntity.ok(new ApiResponse<>(200, "Enrollment cancelled successfully", null));
     }
 
     @DeleteMapping("/courses/{id}/students/{userId}")

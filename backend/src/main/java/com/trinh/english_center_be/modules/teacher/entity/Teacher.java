@@ -1,5 +1,7 @@
 package com.trinh.english_center_be.modules.teacher.entity;
 
+import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 import com.trinh.english_center_be.modules.user.entity.User;
 import com.trinh.english_center_be.shared.BaseEntity;
 import java.math.BigDecimal;
@@ -11,12 +13,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "teachers")
+@Entity
+@Table(name = "teachers")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,16 +24,21 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Teacher extends BaseEntity {
 
     @Id
+    @UuidGenerator
+    @Column(length = 36)
     private String id;
 
-    @Indexed(unique = true)
-    @DBRef(lazy = true)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", unique = true)
     private User user;
 
-    /** Stored as a string by Spring Data (default BigDecimal mapping); exposed as a JSON number. */
+    @Column(precision = 15, scale = 2)
     private BigDecimal salary;
 
     /** Category ids this teacher can teach (admin-managed specialties). */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "teacher_categories", joinColumns = @JoinColumn(name = "teacher_id"))
+    @Column(name = "category_id", length = 36)
     @Builder.Default
     private List<String> categoryIds = new ArrayList<>();
 }

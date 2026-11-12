@@ -7,6 +7,7 @@ type ApiErrorPayload = {
   errors?: Record<string, string>;
 };
 
+
 /** Tên hiển thị (tiếng Việt) của các trường form mà backend có thể báo lỗi. */
 const FIELD_LABELS: Record<string, string> = {
   username: "Tên đăng nhập",
@@ -96,6 +97,7 @@ const RULES: Array<[RegExp, string | ((m: RegExpMatchArray) => string)]> = [
 
   // Lớp học / đăng ký
   [/^Course is closed for enrollment/i, "Lớp học đã đóng, không nhận thêm học viên."],
+  [/^Course is not open for enrollment/i, "Khoá học hiện không nhận đăng ký. Vui lòng liên hệ trung tâm."],
   [/^User is not a student/i, "Người này chưa phải là học viên."],
   [/^Student is already enrolled/i, "Học viên đã có trong lớp này rồi."],
   [/^Class is full/i, "Lớp đã đủ số học viên tối đa."],

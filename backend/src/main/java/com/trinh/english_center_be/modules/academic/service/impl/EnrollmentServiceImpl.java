@@ -75,6 +75,15 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
+    public CourseStudentResponse enrollSelf(String courseId, String userId) {
+        Course course = requireLive(courseId);
+        if (course.getStatus() != CourseStatus.OPEN) {
+            throw new BusinessException("Course is not open for enrollment", HttpStatus.CONFLICT);
+        }
+        return enroll(courseId, userId, false);
+    }
+
+    @Override
     public CourseStudentResponse enroll(String courseId, String userId, boolean force) {
         Course course = requireLive(courseId);
         if (course.getStatus() == CourseStatus.CLOSE) {

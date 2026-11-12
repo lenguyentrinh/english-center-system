@@ -2,8 +2,9 @@
 
 @theme {
   --font-sans:
-    "Quicksand", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Nunito Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-serif: "Merriweather", Georgia, "Times New Roman", serif;
 }
 
 :root {
@@ -18,6 +19,11 @@ body,
 }
 body {
   @apply bg-[#f3f6fb] font-sans text-slate-800 antialiased;
+}
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
 }
 
 /* Thin scrollbars that only show on hover (design v5). */

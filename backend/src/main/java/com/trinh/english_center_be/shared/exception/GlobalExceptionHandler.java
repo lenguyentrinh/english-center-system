@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.http.ResponseEntity;
@@ -60,13 +60,13 @@ public class GlobalExceptionHandler {
     }
 
     // =========================
-    // MongoDB (Spring Data) errors
+    // Database (Spring Data JPA) errors
     // =========================
 
-    /** Unique index violation (e.g. duplicate username/email/code, duplicate user-role link). */
-    @ExceptionHandler(DuplicateKeyException.class)
+    /** Unique constraint violation (e.g. duplicate username/email/code, duplicate user-role link). */
+    @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateKey(
-            DuplicateKeyException ex,
+            DataIntegrityViolationException ex,
             HttpServletRequest request
     ) {
         ErrorCode error = ErrorCode.ENTITY_EXISTS;
@@ -82,7 +82,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(error.getStatus()).body(response);
     }
 
-    /** Any other Spring Data / MongoDB access failure. */
+    /** Any other Spring Data / database access failure. */
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ErrorResponse> handleDataAccess(
             DataAccessException ex,

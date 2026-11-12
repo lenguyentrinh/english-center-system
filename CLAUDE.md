@@ -15,9 +15,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Backend
 - **Framework**: Spring Boot 3.5.7
 - **Language**: Java 24
-- **Database**: MongoDB 7+
+- **Database**: MySQL 8+
 - **Authentication**: JWT (jjwt)
-- **Data Access**: Spring Data MongoDB
+- **Data Access**: Spring Data JPA (Hibernate) with the MySQL connector
 - **API Documentation**: SpringDoc OpenAPI (Swagger UI)
 - **Validation**: Spring Validation
 - **Utilities**: Lombok for boilerplate reduction
@@ -41,15 +41,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Backend follows a **modular architecture** organized by domain. Each module under `backend/src/main/java/com/trinh/english_center_be/modules/` contains:
 - **controller/**: REST endpoints
 - **service/**: Business logic (interface + impl)
-- **repository/**: Spring Data MongoDB data access
-- **entity/**: MongoDB document models (`@Document`, String ObjectId ids)
+- **repository/**: Spring Data JPA data access
+- **entity/**: JPA entities (`@Entity`, String UUID ids via `@UuidGenerator`; relations are lazy `@ManyToOne`/`@OneToOne`)
 - **dto/**: Data transfer objects (Request/Response)
 - **mapper/**: Entity ↔ DTO conversion
 
 Current modules: `academic`, `attendance`, `auth`, `category`, `student`, `teacher`, `user`
 
 **Shared utilities** in `backend/src/main/java/com/trinh/english_center_be/shared/`:
-- `BaseEntity`: Abstract base for documents (createdAt, updateAt, active)
+- `BaseEntity`: `@MappedSuperclass` with audit fields (createdAt, updateAt, active)
 - `config/`: Spring configuration (security, OpenAPI/Swagger, etc.)
 - `exception/`: Custom exceptions and global error handling
 - `response/`: Standard API response wrappers
@@ -79,7 +79,7 @@ Current modules: `academic`, `attendance`, `auth`, `category`, `student`, `teach
 
 ### Authentication & Security
 - **Cookies only, no token in JSON**: `AUTH_TOKEN` (JWT access, 15 min, path `/`) and `REFRESH_TOKEN` (opaque `id.secret`, 7 days, path `<context-path>/auth`), both HttpOnly. `COOKIE_SECURE` / `COOKIE_SAMESITE` configurable.
-- **Refresh rotation** (`RefreshTokenServiceImpl`): each `POST /auth/refresh` revokes the old token and issues a new one via a conditional update (no Mongo transaction needed). Reusing a revoked token outside a 10 s grace window revokes every session of that user.
+- **Refresh rotation** (`RefreshTokenServiceImpl`): each `POST /auth/refresh` revokes the old token and issues a new one via a conditional update (single conditional `UPDATE`, no explicit transaction). Reusing a revoked token outside a 10 s grace window revokes every session of that user.
 - **Endpoints** (`/auth/*`): `signup`, `login` (username or email), `refresh`, `logout`, `me`, `change-password`, `forgot-password`, `verify-otp`, `reset-password`. Login errors share one message; `forgot-password` always answers the same.
 - **Password reset**: 6-digit code, HMAC-hashed, 5 min TTL, 5 attempts, 60 s resend cooldown; `verify-otp` does not consume it, `reset-password` re-checks and consumes it, then revokes all sessions. Without `spring.mail.host` the code is logged (dev only); prod refuses to start without SMTP.
 - **Email verification**: self-signup creates `emailVerified=false` and emails a code (`POST /auth/verify-email`, `/auth/resend-verification`, same OTP safeguards, separate collection). Login with a correct password but unverified email returns 401 with `origin: "email-not-verified"`. `User.emailVerified == null` (legacy) counts as verified; admin-created users and completed password resets are verified.
@@ -112,9 +112,9 @@ pnpm run preview                     # Preview production build locally
 ```
 
 ### Database
-Start MongoDB before running the backend. The database and collections are created automatically on first use:
+Start MySQL before running the backend. The database (`createDatabaseIfNotExist`) and tables (`spring.jpa.hibernate.ddl-auto=update`) are created automatically on first use:
 ```bash
-docker run -d --name english-center-mongo -p 27017:27017 mongo:7
+docker run -d --name english-center-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=english_center_db mysql:8.4
 ```
 
 ## Configuration
@@ -124,7 +124,8 @@ Both backend and frontend require `.env` files (see `.env.example` in each direc
 
 **Backend** (`.env` in `backend/`):
 - `SERVER_PORT`: API port (default: 8080)
-- `MONGODB_URI`: MongoDB connection string (default: mongodb://localhost:27017/english_center_db)
+- `MYSQL_URL` / `MYSQL_USER` / `MYSQL_PASSWORD`: JDBC URL and credentials (default: `jdbc:mysql://localhost:3306/english_center_db`, `root`/`root`)
+- `JPA_DDL_AUTO`: Hibernate schema mode (default `update`)
 - `JWT_SECRET`: JWT signing key (min 32 chars for HS256)
 - `JWT_EXPIRATION_MS`: Access token lifetime in ms (default: 900000 = 15 min)
 - `JWT_REFRESH_EXPIRATION_MS`: Refresh token lifetime in ms (default: 604800000 = 7 days)
@@ -136,7 +137,7 @@ Both backend and frontend require `.env` files (see `.env.example` in each direc
 
 ### Backend Configuration
 - Spring configuration in `backend/src/main/resources/application.yml`
-- MongoDB indexes are created automatically (`auto-index-creation: true`)
+- Tables and indexes are created/updated automatically by Hibernate (`ddl-auto: update`); expired OTP/refresh-token rows are purged hourly by `ExpiredAuthRowsCleaner` (no TTL index in MySQL)
 - SQL logging enabled in dev profile
 - CORS and security configured via Spring Security
 

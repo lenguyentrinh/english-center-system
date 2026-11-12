@@ -72,7 +72,7 @@ public class SessionServiceImpl implements SessionService {
     }
 
     /**
-     * Session -> Course is a DBRef, so the course is loaded first and the session is matched
+     * Session -> Course is a foreign key, so the course is loaded first and the session is matched
      * against that document. Both "course missing" and "session not in course" report the session as not found.
      */
     private CourseSession findSessionOfCourse(String courseId, String sessionId) {

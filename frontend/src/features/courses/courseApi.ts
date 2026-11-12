@@ -78,6 +78,17 @@ export const enrollStudent = async (courseId: string, userId: string, force = fa
   return data.data;
 };
 
+/** The signed-in student registers themselves (POST /courses/{id}/enroll). */
+export const enrollSelf = async (courseId: string): Promise<CourseStudent> => {
+  const { data } = await apiClient.post<ApiResponse<CourseStudent>>(`/courses/${courseId}/enroll`);
+  return data.data;
+};
+
+/** The signed-in student cancels their own active enrollment. */
+export const cancelSelfEnrollment = async (courseId: string): Promise<void> => {
+  await apiClient.delete(`/courses/${courseId}/enroll`);
+};
+
 export const cancelEnrollment = async (courseId: string, userId: string): Promise<void> => {
   await apiClient.delete(`/courses/${courseId}/students/${userId}`);
 };

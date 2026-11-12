@@ -1,5 +1,7 @@
 package com.trinh.english_center_be.modules.user.entity;
 
+import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 import com.trinh.english_center_be.shared.BaseEntity;
 import com.trinh.english_center_be.shared.enums.BusinessRoles;
 import lombok.AllArgsConstructor;
@@ -8,15 +10,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * The roles that belong to a business role are not stored here; they are looked up through
  * {@code RoleRepository.findByBusinessRole(...)} because {@link Role} holds the reference.
  */
-@Document(collection = "business_roles")
+@Entity
+@Table(name = "business_roles")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,9 +26,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class BusinessRole extends BaseEntity {
 
     @Id
+    @UuidGenerator
+    @Column(length = 36)
     private String id;
 
-    @Indexed(unique = true, sparse = true)
+    @Column(unique = true)
+    @Enumerated(EnumType.STRING)
     private BusinessRoles code;
 
     private String description;

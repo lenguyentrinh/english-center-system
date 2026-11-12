@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.trinh.english_center_be.modules.auth.entity.EmailVerificationOtp;
+import com.trinh.english_center_be.modules.auth.repository.EmailVerificationOtpRepository;
 import com.trinh.english_center_be.modules.auth.service.MailService;
 import com.trinh.english_center_be.modules.user.entity.User;
 import com.trinh.english_center_be.modules.user.service.UserService;
@@ -23,10 +24,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,7 +31,7 @@ class EmailVerificationServiceImplTest {
 
     @Mock UserService userService;
     @Mock MailService mailService;
-    @Mock MongoTemplate mongoTemplate;
+    @Mock EmailVerificationOtpRepository repository;
 
     EmailVerificationServiceImpl service;
     User user;
@@ -42,7 +39,7 @@ class EmailVerificationServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new EmailVerificationServiceImpl(userService, mailService, mongoTemplate);
+        service = new EmailVerificationServiceImpl(userService, mailService, repository);
         ReflectionTestUtils.setField(service, "ttlMinutes", 5L);
         ReflectionTestUtils.setField(service, "otpSecret", "unit-test-secret-unit-test-secret!!");
         user = User.builder().id("u1").email("a@b.com").fullName("A B").status(UserStatus.ACTIVE)
@@ -54,9 +51,9 @@ class EmailVerificationServiceImplTest {
         service.sendCode("a@b.com");
         ArgumentCaptor<String> otp = ArgumentCaptor.forClass(String.class);
         verify(mailService).sendEmailVerificationOtp(eq("a@b.com"), eq("A B"), otp.capture());
-        ArgumentCaptor<Update> update = ArgumentCaptor.forClass(Update.class);
-        verify(mongoTemplate).upsert(any(Query.class), update.capture(), eq(EmailVerificationOtp.class));
-        lastHash = (String) update.getValue().getUpdateObject().get("$set", org.bson.Document.class).get("otpHash");
+        ArgumentCaptor<EmailVerificationOtp> saved = ArgumentCaptor.forClass(EmailVerificationOtp.class);
+        verify(repository).save(saved.capture());
+        lastHash = saved.getValue().getOtpHash();
         return otp.getValue();
     }
 
@@ -66,8 +63,8 @@ class EmailVerificationServiceImplTest {
     }
 
     private void stubAttemptCounter(EmailVerificationOtp row) {
-        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class),
-                eq(EmailVerificationOtp.class))).thenReturn(row);
+        when(repository.incrementAttempts(anyString())).thenReturn(1);
+        when(repository.findByUserId(anyString())).thenReturn(Optional.of(row));
     }
 
     @Test
@@ -100,7 +97,7 @@ class EmailVerificationServiceImplTest {
         String otp = sendAndCapture();
         EmailVerificationOtp stored = row(1, Instant.now().plusSeconds(60));
         stubAttemptCounter(stored);
-        when(mongoTemplate.findAndRemove(any(Query.class), eq(EmailVerificationOtp.class))).thenReturn(stored);
+        when(repository.consume(anyString(), anyString())).thenReturn(1);
 
         service.verify("a@b.com", otp);
 
@@ -141,7 +138,7 @@ class EmailVerificationServiceImplTest {
     void concurrentRequestThatLostTheConsumeRaceIsRejected() {
         String otp = sendAndCapture();
         stubAttemptCounter(row(1, Instant.now().plusSeconds(60)));
-        when(mongoTemplate.findAndRemove(any(Query.class), eq(EmailVerificationOtp.class))).thenReturn(null);
+        when(repository.consume(anyString(), anyString())).thenReturn(0);
 
         assertThatThrownBy(() -> service.verify("a@b.com", otp)).isInstanceOf(BusinessException.class);
 

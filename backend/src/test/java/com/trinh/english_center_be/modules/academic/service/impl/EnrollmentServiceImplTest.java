@@ -127,6 +127,41 @@ class EnrollmentServiceImplTest {
     }
 
     @Test
+    void selfEnrollWorksOnAnOpenCourse() {
+        course.setStatus(CourseStatus.OPEN);
+
+        CourseStudentResponse res = service.enrollSelf("c1", "u1");
+
+        assertThat(res.enrollmentStatus()).isEqualTo(Enrollment.ACTIVE);
+        assertThat(res.userId()).isEqualTo("u1");
+    }
+
+    @Test
+    void selfEnrollIsRefusedOnceTheCourseIsRunningOrClosed() {
+        for (CourseStatus status : new CourseStatus[] {CourseStatus.ACTIVE, CourseStatus.CLOSE}) {
+            course.setStatus(status);
+            assertThatThrownBy(() -> service.enrollSelf("c1", "u1")).isInstanceOfSatisfying(BusinessException.class, e -> {
+                assertThat(e.getStatus()).isEqualTo(HttpStatus.CONFLICT);
+                assertThat(e.getMessage()).containsIgnoringCase("not open");
+            });
+        }
+        verify(enrollmentRepository, never()).save(any());
+    }
+
+    @Test
+    void selfEnrollStillRejectsDuplicatesAndFullClasses() {
+        course.setStatus(CourseStatus.OPEN);
+        when(enrollmentRepository.countByCourseAndStatus(course, Enrollment.ACTIVE)).thenReturn(2L);
+        assertThatThrownBy(() -> service.enrollSelf("c1", "u1")).isInstanceOfSatisfying(BusinessException.class,
+                e -> assertThat(e.getMessage()).containsIgnoringCase("full"));
+
+        when(enrollmentRepository.findByCourseAndStudentAndStatus(course, student, Enrollment.ACTIVE)).thenReturn(Optional.of(new Enrollment()));
+        assertThatThrownBy(() -> service.enrollSelf("c1", "u1")).isInstanceOfSatisfying(BusinessException.class,
+                e -> assertThat(e.getMessage()).containsIgnoringCase("already"));
+        verify(enrollmentRepository, never()).save(any());
+    }
+
+    @Test
     void lockedUserAndNonStudentAreRejected() {
         user.setStatus(UserStatus.LOCKED);
         assertRejected(HttpStatus.BAD_REQUEST, "not active");

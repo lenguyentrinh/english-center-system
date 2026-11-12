@@ -5,9 +5,9 @@ import com.trinh.english_center_be.modules.academic.entity.Enrollment;
 import com.trinh.english_center_be.modules.student.entity.Student;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface EnrollmentRepository extends MongoRepository<Enrollment, String> {
+public interface EnrollmentRepository extends JpaRepository<Enrollment, String> {
 
     long countByCourseAndStatus(Course course, String status);
 

@@ -11,10 +11,20 @@ spring:
       - optional:file:.env[.properties]
       - optional:file:backend/.env[.properties]
 
-  data:
-    mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/english_center_db}
-      auto-index-creation: true
+  datasource:
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/english_center_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&connectionTimeZone=Asia/Ho_Chi_Minh}
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
+
+  jpa:
+    # update: create/alter tables automatically (dev convenience). Use `validate` or `none` once you manage schema migrations.
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    open-in-view: true
+    properties:
+      hibernate:
+        # Instant columns are stored in UTC; LocalDate/LocalDateTime/LocalTime are stored as-is.
+        jdbc.time_zone: UTC
 
   mail:
     # No host here on purpose: an empty spring.mail.host would still create a (broken) sender.
@@ -47,6 +57,8 @@ auth:
 
 app:
   name: ${APP_NAME:English Center}
+  # Base URL of the SPA, used for the links in emails.
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
 
 # Sender address. With no spring.mail.host configured (dev), reset codes are printed to the log instead of emailed.
 mail:

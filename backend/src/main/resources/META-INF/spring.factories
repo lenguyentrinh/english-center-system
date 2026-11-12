@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=com.trinh.english_center_be.shared.startup.DatabaseConnectionCheck
+org.springframework.boot.diagnostics.FailureAnalyzer=com.trinh.english_center_be.shared.startup.DatabaseConnectionFailureAnalyzer
