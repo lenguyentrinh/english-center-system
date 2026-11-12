@@ -57,7 +57,7 @@ class CourseServiceImplTest {
     private CourseRequest request(String teacherId, String categoryId, List<Integer> days, String start, String end, Boolean force) {
         LocalDate from = LocalDate.now().plusDays(1);
         return new CourseRequest("IELTS70", "IELTS 7.0", from, from.plusMonths(3), 15, CourseStatus.OPEN, 16, "B1", false,
-                teacherId, null, categoryId, "P.201", days, start == null ? null : LocalTime.parse(start),
+                teacherId, categoryId, "P.201", days, start == null ? null : LocalTime.parse(start),
                 end == null ? null : LocalTime.parse(end), force);
     }
 
@@ -125,7 +125,7 @@ class CourseServiceImplTest {
     @Test
     void newCourseCannotStartInThePast() {
         CourseRequest past = new CourseRequest("X1", "X", LocalDate.now().minusDays(1), LocalDate.now().plusDays(5), 5,
-                CourseStatus.OPEN, 0, "A1", false, null, null, null, null, null, null, null, null);
+                CourseStatus.OPEN, 0, "A1", false, null, null, null, null, null, null, null);
 
         assertThatThrownBy(() -> service.create(past)).isInstanceOf(BusinessException.class);
     }
@@ -137,11 +137,11 @@ class CourseServiceImplTest {
         LocalDate startedLastMonth = LocalDate.now().minusMonths(1);
 
         CourseRequest ok = new CourseRequest("OLD", "Renamed", startedLastMonth, startedLastMonth.plusMonths(4), 15,
-                CourseStatus.ACTIVE, 16, "B1", false, null, null, null, null, null, null, null, null);
+                CourseStatus.ACTIVE, 16, "B1", false, null, null, null, null, null, null, null);
         assertThat(service.update("c-old", ok).name()).isEqualTo("Renamed");
 
         CourseRequest inverted = new CourseRequest("OLD", "Bad", startedLastMonth, startedLastMonth.minusDays(2), 15,
-                CourseStatus.ACTIVE, 16, "B1", false, null, null, null, null, null, null, null, null);
+                CourseStatus.ACTIVE, 16, "B1", false, null, null, null, null, null, null, null);
         assertThatThrownBy(() -> service.update("c-old", inverted)).isInstanceOf(BusinessException.class);
     }
 

@@ -31,8 +31,4 @@ public class Role extends BaseEntity {
     private Roles code;
 
     private String description;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "business_role_id")
-    private BusinessRole businessRole;
 }

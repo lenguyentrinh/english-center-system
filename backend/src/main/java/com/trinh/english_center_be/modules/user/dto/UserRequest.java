@@ -1,5 +1,6 @@
 package com.trinh.english_center_be.modules.user.dto;
 
+import com.trinh.english_center_be.shared.enums.Roles;
 import com.trinh.english_center_be.shared.enums.UserStatus;
 import com.trinh.english_center_be.shared.util.Constant;
 import com.trinh.english_center_be.shared.util.MessageConstant;
@@ -29,7 +30,11 @@ public record UserRequest(
         String phone,
 
         @NotNull(message = MessageConstant.USER_STATUS_NOT_NULL)
-        UserStatus status
+        UserStatus status,
+
+        /** The account's role (ADMIN, TEACHER or STUDENT). */
+        @NotNull(message = MessageConstant.CODE_NOT_NULL)
+        Roles role
 ) {
     /** Optional fields are normalised before validation: "0901 234 567" -> "0901234567", "" -> null. */
     public UserRequest {

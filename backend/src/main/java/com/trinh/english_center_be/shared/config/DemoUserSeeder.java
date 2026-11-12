@@ -6,10 +6,8 @@ import com.trinh.english_center_be.modules.teacher.entity.Teacher;
 import com.trinh.english_center_be.modules.teacher.repository.TeacherRepository;
 import com.trinh.english_center_be.modules.user.Repository.RoleRepository;
 import com.trinh.english_center_be.modules.user.Repository.UserRepository;
-import com.trinh.english_center_be.modules.user.Repository.UserRoleRepository;
 import com.trinh.english_center_be.modules.user.entity.Role;
 import com.trinh.english_center_be.modules.user.entity.User;
-import com.trinh.english_center_be.modules.user.entity.UserRole;
 import com.trinh.english_center_be.shared.enums.Roles;
 import com.trinh.english_center_be.shared.enums.UserStatus;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +36,6 @@ public class DemoUserSeeder implements ApplicationRunner {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
-    private final UserRoleRepository userRoleRepository;
     private final TeacherRepository teacherRepository;
     private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
@@ -66,8 +63,8 @@ public class DemoUserSeeder implements ApplicationRunner {
                 .password(passwordEncoder.encode(password))
                 .status(UserStatus.ACTIVE)
                 .emailVerified(true)
+                .role(role)
                 .build());
-        userRoleRepository.save(UserRole.builder().userId(user.getId()).roleId(role.getId()).build());
         if (roleCode == Roles.TEACHER) teacherRepository.save(Teacher.builder().user(user).build());
         if (roleCode == Roles.STUDENT) studentRepository.save(Student.builder().user(user).build());
         log.info("Seeded demo account '{}' ({})", username, roleCode);

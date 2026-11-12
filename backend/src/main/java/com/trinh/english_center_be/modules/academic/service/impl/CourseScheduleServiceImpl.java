@@ -47,7 +47,7 @@ public class CourseScheduleServiceImpl implements CourseScheduleService {
             if (wantedTeacher == null) return List.of();
         }
 
-        List<TeacherResponse> teachers = new ArrayList<>(teacherService.findTeachers(null));
+        List<TeacherResponse> teachers = new ArrayList<>(teacherService.findTeachers());
         if (wantedTeacher != null) {
             String id = wantedTeacher;
             teachers.removeIf(t -> !t.id().equals(id));

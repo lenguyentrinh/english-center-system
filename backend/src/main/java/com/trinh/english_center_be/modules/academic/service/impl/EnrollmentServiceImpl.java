@@ -11,8 +11,6 @@ import com.trinh.english_center_be.modules.academic.service.CourseService;
 import com.trinh.english_center_be.modules.academic.service.EnrollmentService;
 import com.trinh.english_center_be.modules.student.entity.Student;
 import com.trinh.english_center_be.modules.student.repository.StudentRepository;
-import com.trinh.english_center_be.modules.user.Repository.RoleRepository;
-import com.trinh.english_center_be.modules.user.Repository.UserRoleRepository;
 import com.trinh.english_center_be.modules.user.entity.User;
 import com.trinh.english_center_be.modules.user.service.UserService;
 import com.trinh.english_center_be.shared.enums.CourseStatus;
@@ -41,8 +39,6 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final UserService userService;
-    private final UserRoleRepository userRoleRepository;
-    private final RoleRepository roleRepository;
     private final CourseService courseService;
 
     @Override
@@ -94,7 +90,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         if (Boolean.FALSE.equals(user.getActive()) || user.getStatus() != UserStatus.ACTIVE) {
             throw new BusinessException("User account is not active", HttpStatus.BAD_REQUEST);
         }
-        if (!hasStudentRole(userId)) {
+        if (!hasStudentRole(user)) {
             throw new BusinessException("User is not a student", HttpStatus.BAD_REQUEST);
         }
 
@@ -171,10 +167,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.COURSE, id)));
     }
 
-    private boolean hasStudentRole(String userId) {
-        return roleRepository.findByCode(Roles.STUDENT)
-                .map(role -> userRoleRepository.existsByUserIdAndRoleId(userId, role.getId()))
-                .orElse(false);
+    private static boolean hasStudentRole(User user) {
+        return user.getRole() != null && user.getRole().getCode() == Roles.STUDENT;
     }
 
     /** Legacy students may have the role but no Student profile yet; an inactive profile is revived. */

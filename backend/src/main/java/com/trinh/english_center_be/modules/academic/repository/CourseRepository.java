@@ -2,13 +2,10 @@ package com.trinh.english_center_be.modules.academic.repository;
 
 import com.trinh.english_center_be.modules.academic.entity.Course;
 import com.trinh.english_center_be.modules.teacher.entity.Teacher;
-import com.trinh.english_center_be.shared.enums.Roles;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CourseRepository extends JpaRepository<Course, String> {
-
-    List<Course> findByAvailableRoleTeacherInAndTeacherIsNull(List<Roles> roles);
 
     List<Course> findByTeacher(Teacher teacher);
 
@@ -17,5 +14,4 @@ public interface CourseRepository extends JpaRepository<Course, String> {
     /** Live = active is not explicitly false (legacy rows carry no flag). */
     boolean existsByCategoryIdAndActiveNot(String categoryId, Boolean active);
 
-    List<Course> findByTeacherAndAvailableRoleTeacherIn(Teacher teacher, List<Roles> roles);
 }

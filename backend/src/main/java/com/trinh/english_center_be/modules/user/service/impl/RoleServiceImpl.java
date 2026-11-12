@@ -1,115 +1,32 @@
 package com.trinh.english_center_be.modules.user.service.impl;
 
 import com.trinh.english_center_be.modules.user.Repository.RoleRepository;
-import com.trinh.english_center_be.modules.user.dto.RoleRequest;
 import com.trinh.english_center_be.modules.user.dto.RoleResponse;
-import com.trinh.english_center_be.modules.user.entity.BusinessRole;
-import com.trinh.english_center_be.modules.user.mapper.RoleMapper;
 import com.trinh.english_center_be.modules.user.entity.Role;
-import com.trinh.english_center_be.modules.user.service.BRoleService;
+import com.trinh.english_center_be.modules.user.mapper.RoleMapper;
 import com.trinh.english_center_be.modules.user.service.RoleService;
 import com.trinh.english_center_be.shared.enums.Roles;
-import com.trinh.english_center_be.shared.exception.BusinessException;
 import com.trinh.english_center_be.shared.exception.ResourceNotFoundException;
 import com.trinh.english_center_be.shared.util.Constant;
 import com.trinh.english_center_be.shared.util.MessageConstant;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
-    private final BRoleService bRoleService;
 
     @Override
-    public Optional<Role> findRoleByRoleName(Roles role) {
-        return roleRepository.findByCode(role);
-    }
-
-    @Override
-    public void save(Role role) {
-        roleRepository.save(role);
+    public Role getByCode(Roles code) {
+        return roleRepository.findByCode(code).orElseThrow(() ->
+                new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.ROLE, code)));
     }
 
     @Override
     public List<RoleResponse> findAll() {
-        return roleRepository.findAll().stream().map(RoleMapper::toResponse).toList();
-    }
-
-    @Override
-    public RoleResponse findById(String id) {
-        Role role = roleRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.ROLE, id))
-        );
-        if (Boolean.FALSE.equals(role.getActive())) {
-            throw new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_DELETED_BY_ID, Constant.ROLE, id));
-        }
-        return RoleMapper.toResponse(role);
-    }
-
-    @Override
-    public RoleResponse create(RoleRequest roleRequest) {
-        if (roleRepository.existsByCode(roleRequest.code())) {
-            throw new BusinessException(
-                    String.format(MessageConstant.ENTITY_ALREADY_EXISTS, Constant.ROLE, Constant.CODE_FIELD),
-                    HttpStatus.CONFLICT
-            );
-        }
-
-        Role role = Role.builder()
-                .code(roleRequest.code())
-                .description(roleRequest.description())
-                .build();
-
-        if (roleRequest.businessRoleId() != null) {
-            role.setBusinessRole(resolveActiveBusinessRole(roleRequest.businessRoleId()));
-        }
-
-        return RoleMapper.toResponse(roleRepository.save(role));
-    }
-
-    @Override
-    public void softDeleteById(String id) {
-        Role role = roleRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.ROLE, id))
-        );
-
-        role.setActive(false);
-        roleRepository.save(role);
-    }
-
-    @Override
-    public RoleResponse updateById(String id, RoleRequest roleRequest) {
-        Role existing = roleRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(String.format(MessageConstant.NOT_FOUND_BY_ID, Constant.ROLE, id))
-        );
-
-        if (roleRepository.existsByCodeAndIdNot(roleRequest.code(), id)) {
-            throw new BusinessException(
-                    String.format(MessageConstant.ENTITY_ALREADY_EXISTS, Constant.ROLE, Constant.CODE_FIELD),
-                    HttpStatus.CONFLICT
-            );
-        }
-        existing.setCode(roleRequest.code());
-        existing.setDescription(roleRequest.description());
-
-        BusinessRole businessRole = resolveActiveBusinessRole(roleRequest.businessRoleId());
-        existing.setBusinessRole(businessRole);
-
-        return RoleMapper.toResponse(roleRepository.save(existing));
-    }
-
-    private BusinessRole resolveActiveBusinessRole(String businessRoleId) {
-        BusinessRole businessRole = bRoleService.findById(businessRoleId);
-        if (Boolean.FALSE.equals(businessRole.getActive())) {
-            throw new BusinessException(String.format(MessageConstant.OBJECT_INACTIVE, Constant.BUSINESS_ROLE), HttpStatus.BAD_REQUEST);
-        }
-        return businessRole;
+        return roleRepository.findByActiveTrue().stream().map(RoleMapper::toResponse).toList();
     }
 }

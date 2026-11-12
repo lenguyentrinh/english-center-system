@@ -1,7 +1,6 @@
 package com.trinh.english_center_be.modules.academic.dto;
 
 import com.trinh.english_center_be.shared.enums.CourseStatus;
-import com.trinh.english_center_be.shared.enums.Roles;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -45,9 +44,6 @@ public record CourseRequest(
         Boolean prerequisitesRequired,
 
         String teacherId,
-
-        /** Legacy field: optional now and not used for teacher qualification (see categoryId). */
-        Roles availableRoleTeacher,
 
         /** Optional admin-managed category; when set the assigned teacher must list it in their specialties. */
         String categoryId,

@@ -1,6 +1,7 @@
 package com.trinh.english_center_be.modules.user.controller;
 
 import com.trinh.english_center_be.modules.auth.security.AuthUserDetails;
+import com.trinh.english_center_be.modules.user.dto.ChangeRoleRequest;
 import com.trinh.english_center_be.modules.user.dto.UserRequest;
 import com.trinh.english_center_be.modules.user.dto.UserResponse;
 import com.trinh.english_center_be.modules.user.dto.UserUpdateRequest;
@@ -75,6 +76,18 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(201, String.format(MessageConstant.CREATED_SUCCESSFULLY, Constant.USER),
                         userService.create(request)));
+    }
+
+    /** Gives the user exactly one role, replacing the previous one. */
+    @PutMapping("/{id}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserResponse>> changeRole(@PathVariable String id,
+                                                                @Valid @RequestBody ChangeRoleRequest request,
+                                                                Authentication authentication) {
+        String actingUserId = authentication.getPrincipal() instanceof AuthUserDetails d ? d.getId() : null;
+        return ResponseEntity.ok(new ApiResponse<>(200,
+                String.format(MessageConstant.UPDATED_SUCCESSFULLY, Constant.USER, id),
+                userService.changeRole(id, request.role(), actingUserId)));
     }
 
     @PutMapping("/{id}")

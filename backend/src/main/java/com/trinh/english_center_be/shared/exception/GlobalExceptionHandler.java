@@ -69,6 +69,7 @@ public class GlobalExceptionHandler {
             DataIntegrityViolationException ex,
             HttpServletRequest request
     ) {
+        log.warn("Constraint violation on {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMostSpecificCause().getMessage());
         ErrorCode error = ErrorCode.ENTITY_EXISTS;
 
         ErrorResponse response = ErrorResponse.builder()
@@ -88,6 +89,7 @@ public class GlobalExceptionHandler {
             DataAccessException ex,
             HttpServletRequest request
     ) {
+        log.error("Database error on {} {}", request.getMethod(), request.getRequestURI(), ex);
         ErrorCode error = ErrorCode.DATABASE_ERROR;
 
         ErrorResponse response = ErrorResponse.builder()
@@ -124,6 +126,7 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
+        log.error("Unhandled error on {} {}", request.getMethod(), request.getRequestURI(), ex);
         ErrorCode error = ErrorCode.INTERNAL_SERVER_ERROR;
 
         ErrorResponse response = ErrorResponse.builder()

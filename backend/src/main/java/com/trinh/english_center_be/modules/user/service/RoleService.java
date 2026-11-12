@@ -1,19 +1,14 @@
 package com.trinh.english_center_be.modules.user.service;
 
-import com.trinh.english_center_be.modules.user.dto.RoleRequest;
 import com.trinh.english_center_be.modules.user.dto.RoleResponse;
 import com.trinh.english_center_be.modules.user.entity.Role;
 import com.trinh.english_center_be.shared.enums.Roles;
-
 import java.util.List;
-import java.util.Optional;
 
+/** Roles are defined by the system (see {@link Roles}); they can be listed and looked up, not created by users. */
 public interface RoleService {
-    Optional<Role> findRoleByRoleName(Roles role);
-    void save(Role role);
+    /** @throws com.trinh.english_center_be.shared.exception.ResourceNotFoundException if the role is not seeded */
+    Role getByCode(Roles code);
+
     List<RoleResponse> findAll();
-    RoleResponse findById(String id);
-    RoleResponse create(RoleRequest roleRequest);
-    RoleResponse updateById(String id, RoleRequest roleRequest);
-    void softDeleteById(String id);
 }

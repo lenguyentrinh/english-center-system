@@ -8,7 +8,6 @@ public class MessageConstant {
     public static final String CREATED_SUCCESSFULLY = "%s created successfully";
     public static final String DELETED_SUCCESSFULLY = "%s soft deleted successfully";
     public static final String ASSIGN_SUCCESSFULLY = "%s assigned to user successfully";
-    public static final String REMOVE_SUCCESSFULLY = "%s removed from user successfully";
 
     // business message
     public static final String ENTITY_NOT_FOUND_BY = "%s not found by %s: %s";
@@ -23,7 +22,6 @@ public class MessageConstant {
     public static final String ENTITY_INACTIVE_CAN_NOT_ASSIGN = "Cannot assign because %s is inactive.";
 
     public static final String USER_ACCOUNT_NOT_ACTIVE = "User account is not active";
-    public static final String STUDENT_ROLE_NOT_FOUND  = "Student role not found";
     public static final String NOT_FOUND_DELETED_BY_ID = "%s with  %s was deleted";
 
     //auth
@@ -70,9 +68,8 @@ public class MessageConstant {
     public static final String MINIMUM_AGE_NOT_NULL = "Minimum age must not be null";
     public static final String REQUIRED_ENTRY_LEVEL_NOT_BLANK = "Required entry level must not be blank";
     public static final String PREREQUISITES_REQUIRED_NOT_NULL = "Prerequisites required flag must not be null";
-    public static final String AVAILABLE_ROLE_TEACHER_NOT_NULL = "Available teacher role must not be null";
 
-    // brole & role
+    // role
     public static final String CODE_NOT_NULL = "Code must not be null";
     public static final String DESCRIPTION_MAX_LENGTH = "Description must be at most {max} characters";
     public static final String ACTIVE_NOT_NULL = "Active must not be null";

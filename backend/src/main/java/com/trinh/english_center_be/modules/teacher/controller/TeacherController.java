@@ -43,9 +43,8 @@ public class TeacherController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<TeacherResponse>>> getAll(@RequestParam(value = "role", required = false) String role,
-                                                                      Authentication auth) {
-        List<TeacherResponse> teachers = teacherService.findTeachers(role).stream().map(t -> view(t, auth)).toList();
+    public ResponseEntity<ApiResponse<List<TeacherResponse>>> getAll(Authentication auth) {
+        List<TeacherResponse> teachers = teacherService.findTeachers().stream().map(t -> view(t, auth)).toList();
         return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.LIST_SUCCESSFULLY, Constant.TEACHER), teachers));
     }
 
@@ -64,23 +63,8 @@ public class TeacherController {
     }
 
     @GetMapping("/by-user/{userId}/courses")
-    public ResponseEntity<ApiResponse<List<CourseResponse>>> getCoursesByUserId(@PathVariable String userId,
-                                                                                @RequestParam(value = "availableRoles", required = false) String availableRolesCsv) {
-        List<CourseResponse> courses;
-        if (availableRolesCsv == null || availableRolesCsv.isBlank()) {
-            courses = courseService.findByTeacherUserId(userId);
-        } else {
-            String[] tokens = availableRolesCsv.split(",");
-            List<Roles> roles = new ArrayList<>();
-            for (String t : tokens) {
-                try {
-                    roles.add(Roles.valueOf(t.trim()));
-                } catch (IllegalArgumentException ex) {
-                    // ignore unknown role code
-                }
-            }
-            courses = courseService.findByTeacherUserIdAndAvailableRoles(userId, roles);
-        }
+    public ResponseEntity<ApiResponse<List<CourseResponse>>> getCoursesByUserId(@PathVariable String userId) {
+        List<CourseResponse> courses = courseService.findByTeacherUserId(userId);
         return ResponseEntity.ok(new ApiResponse<>(200, String.format(MessageConstant.LIST_SUCCESSFULLY, Constant.COURSE), courses));
     }
 

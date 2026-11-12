@@ -1,7 +1,6 @@
 package com.trinh.english_center_be.modules.academic.dto;
 
 import com.trinh.english_center_be.shared.enums.CourseStatus;
-import com.trinh.english_center_be.shared.enums.Roles;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -20,7 +19,6 @@ public record CourseResponse(
         Boolean prerequisitesRequired,
         String teacherId,
         String teacherFullName,
-        Roles availableRoleTeacher,
         String categoryId,
         String categoryName,
         String categoryColor,

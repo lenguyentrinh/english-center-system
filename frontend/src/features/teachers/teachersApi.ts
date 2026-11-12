@@ -1,5 +1,4 @@
 import { apiClient } from "@/shared/api/client.ts";
-import { buildRolesQuery } from "@/shared/utils/role";
 import type { ApiResponse } from "@/shared/types/api-response.type";
 import type { CourseSummary } from "@/features/courses/types";
 
@@ -24,8 +23,8 @@ const mapTeacher = (t: ServerTeacher): TeacherItem => ({
   categoryIds: t.categoryIds ?? [],
 });
 
-export const getTeachers = async (role?: string): Promise<ApiResponse<TeacherItem[]>> => {
-  const url = role ? `/teachers?role=${encodeURIComponent(role)}` : "/teachers";
+export const getTeachers = async (): Promise<ApiResponse<TeacherItem[]>> => {
+  const url = "/teachers";
   const { data } = await apiClient.get<ApiResponse<ServerTeacher[]>>(url);
   const mapped = data.data?.map(mapTeacher) ?? [];
   return { ...data, data: mapped } as ApiResponse<TeacherItem[]>;
@@ -49,9 +48,8 @@ export const putTeacherByUserId = async (userId: string, payload: { salary?: num
   return data;
 };
 
-export const getCoursesByTeacherUserId = async (userId: string, roles?: string[]): Promise<ApiResponse<CourseSummary[]>> => {
-  const qs = buildRolesQuery(roles);
-  const { data } = await apiClient.get<ApiResponse<CourseSummary[]>>(`/teachers/by-user/${userId}/courses${qs}`);
+export const getCoursesByTeacherUserId = async (userId: string): Promise<ApiResponse<CourseSummary[]>> => {
+  const { data } = await apiClient.get<ApiResponse<CourseSummary[]>>(`/teachers/by-user/${userId}/courses`);
   return data;
 };
 

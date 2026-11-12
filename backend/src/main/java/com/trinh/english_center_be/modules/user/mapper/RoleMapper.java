@@ -8,13 +8,6 @@ public final class RoleMapper {
 
     public static RoleResponse toResponse(Role r) {
         if (r == null) return null;
-        return new RoleResponse(
-                r.getId(),
-                r.getCode(),
-                r.getDescription(),
-                r.getActive(),
-                r.getBusinessRole() != null ? r.getBusinessRole().getId() : null,
-                r.getBusinessRole() != null ? r.getBusinessRole().getCode() : null
-        );
+        return new RoleResponse(r.getId(), r.getCode(), r.getDescription(), r.getActive());
     }
 }

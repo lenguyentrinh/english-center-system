@@ -11,8 +11,8 @@ import com.trinh.english_center_be.modules.auth.service.EmailVerificationService
 import com.trinh.english_center_be.modules.auth.service.RefreshTokenService;
 import com.trinh.english_center_be.modules.user.entity.Role;
 import com.trinh.english_center_be.modules.user.entity.User;
+import com.trinh.english_center_be.modules.user.service.RoleProfileService;
 import com.trinh.english_center_be.modules.user.service.RoleService;
-import com.trinh.english_center_be.modules.user.service.UserRoleAssignmentService;
 import com.trinh.english_center_be.modules.user.service.UserService;
 import com.trinh.english_center_be.shared.config.JwtTokenProvider;
 import com.trinh.english_center_be.shared.enums.Roles;
@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final RoleService roleService;
-    private final UserRoleAssignmentService userRoleAssignmentService;
+    private final RoleProfileService roleProfileService;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
 
@@ -128,12 +128,12 @@ public class AuthServiceImpl implements AuthService {
                     Constant.USER, Constant.EMAIL_FIELD));
         }
 
-        Role roleDefault = roleService.findRoleByRoleName(Roles.STUDENT).orElseThrow(
-                ()-> new ResourceNotFoundException(MessageConstant.STUDENT_ROLE_NOT_FOUND ));
+        Role roleDefault = roleService.getByCode(Roles.STUDENT);
 
         String encodePassword = passwordEncoder.encode(request.password());
 
         User user = User.builder()
+                .role(roleDefault)
                 .email(request.email().trim().toLowerCase())
                 .phone(request.phone())
                 .status(UserStatus.ACTIVE)
@@ -144,7 +144,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         userService.save(user);
-        userRoleAssignmentService.assignRole(user.getId(), roleDefault.getId());
+        roleProfileService.onAssigned(user, Roles.STUDENT);
         emailVerificationService.sendCode(user.getEmail());
     }
 

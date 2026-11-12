@@ -4,6 +4,7 @@ import com.trinh.english_center_be.modules.user.dto.UserRequest;
 import com.trinh.english_center_be.modules.user.dto.UserResponse;
 import com.trinh.english_center_be.modules.user.dto.UserUpdateRequest;
 import com.trinh.english_center_be.modules.user.entity.User;
+import com.trinh.english_center_be.shared.enums.Roles;
 import com.trinh.english_center_be.shared.enums.UserStatus;
 import com.trinh.english_center_be.shared.response.PageResponse;
 
@@ -16,8 +17,7 @@ public interface UserService {
     UserResponse findByIdResponse(String id);
 
     /**
-     * Searches live users, newest first. {@code role}: ADMIN, STUDENT, TEACHER (any TEACHER_* code) or an exact
-     * role code. All filters are optional. {@code page} is 1-based; {@code size} is capped at 100.
+     * Searches live users, newest first. {@code role}: ADMIN, STUDENT, TEACHER or any role code. All filters are optional. {@code page} is 1-based; {@code size} is capped at 100.
      */
     PageResponse<UserResponse> search(String q, String role, UserStatus status, int page, int size);
 
@@ -33,6 +33,12 @@ public interface UserService {
     default UserResponse update(String id, UserUpdateRequest request, boolean admin) {
         return update(id, request, admin, null);
     }
+
+    /**
+     * Gives the user exactly one role (replacing the old one), keeping the Teacher/Student profile in step and
+     * ending the user's sessions. Refuses to take the admin role from yourself or from the last active admin.
+     */
+    UserResponse changeRole(String id, Roles newRole, String actingUserId);
 
     void softDeleteById(String id, String actingUserId);
 

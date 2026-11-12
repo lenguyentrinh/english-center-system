@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TeacherService {
-    List<TeacherResponse> findTeachers(String role);
+    List<TeacherResponse> findTeachers();
 
     Optional<TeacherResponse> findById(String id);
 

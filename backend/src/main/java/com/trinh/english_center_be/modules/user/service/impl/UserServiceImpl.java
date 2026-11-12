@@ -3,15 +3,14 @@ package com.trinh.english_center_be.modules.user.service.impl;
 import com.trinh.english_center_be.modules.auth.service.EmailVerificationService;
 import com.trinh.english_center_be.modules.auth.service.PasswordResetService;
 import com.trinh.english_center_be.modules.auth.service.RefreshTokenService;
-import com.trinh.english_center_be.modules.user.Repository.RoleRepository;
 import com.trinh.english_center_be.modules.user.Repository.UserRepository;
-import com.trinh.english_center_be.modules.user.Repository.UserRoleRepository;
 import com.trinh.english_center_be.modules.user.dto.UserRequest;
 import com.trinh.english_center_be.modules.user.dto.UserResponse;
 import com.trinh.english_center_be.modules.user.dto.UserUpdateRequest;
 import com.trinh.english_center_be.modules.user.entity.Role;
 import com.trinh.english_center_be.modules.user.entity.User;
-import com.trinh.english_center_be.modules.user.entity.UserRole;
+import com.trinh.english_center_be.modules.user.service.RoleProfileService;
+import com.trinh.english_center_be.modules.user.service.RoleService;
 import com.trinh.english_center_be.modules.user.mapper.UserMapper;
 import com.trinh.english_center_be.modules.user.service.UserService;
 import com.trinh.english_center_be.shared.enums.Roles;
@@ -45,8 +44,8 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserRoleRepository userRoleRepository;
-    private final RoleRepository roleRepository;
+    private final RoleService roleService;
+    private final RoleProfileService roleProfiles;
     // The auth services depend on UserService themselves, so they are injected lazily to avoid a cycle.
     private final RefreshTokenService refreshTokenService;
     private final EmailVerificationService emailVerificationService;
@@ -54,15 +53,15 @@ public class UserServiceImpl implements UserService {
 
     public UserServiceImpl(UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
-                           UserRoleRepository userRoleRepository,
-                           RoleRepository roleRepository,
+                           RoleService roleService,
+                           RoleProfileService roleProfiles,
                            @Lazy RefreshTokenService refreshTokenService,
                            @Lazy EmailVerificationService emailVerificationService,
                            @Lazy PasswordResetService passwordResetService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.userRoleRepository = userRoleRepository;
-        this.roleRepository = roleRepository;
+        this.roleService = roleService;
+        this.roleProfiles = roleProfiles;
         this.refreshTokenService = refreshTokenService;
         this.emailVerificationService = emailVerificationService;
         this.passwordResetService = passwordResetService;
@@ -76,8 +75,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserResponse> findAll() {
         List<User> live = userRepository.findAll().stream().filter(UserServiceImpl::isLive).toList();
-        Map<String, List<String>> roles = rolesByUserId(live);
-        return live.stream().map(u -> UserMapper.toResponse(u, roles.getOrDefault(u.getId(), List.of()))).toList();
+        return live.stream().map(u -> UserMapper.toResponse(u, rolesOf(u))).toList();
     }
 
     @Override
@@ -88,15 +86,13 @@ public class UserServiceImpl implements UserService {
         String wantedRole = role == null || role.isBlank() ? null : role.trim().toUpperCase(Locale.ROOT);
 
         List<User> live = userRepository.findAll().stream().filter(UserServiceImpl::isLive).toList();
-        Map<String, List<String>> roles = rolesByUserId(live);
 
         List<UserResponse> matches = live.stream()
                 .filter(u -> status == null || u.getStatus() == status)
                 .filter(u -> needle.isEmpty() || contains(u.getFullName(), needle) || contains(u.getUsername(), needle) || contains(u.getEmail(), needle))
-                .filter(u -> wantedRole == null || roles.getOrDefault(u.getId(), List.of()).stream()
-                        .anyMatch(r -> r.equals(wantedRole) || (wantedRole.equals("TEACHER") && r.startsWith("TEACHER"))))
+                .filter(u -> wantedRole == null || rolesOf(u).contains(wantedRole))
                 .sorted(Comparator.comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.<LocalDateTime>reverseOrder())))
-                .map(u -> UserMapper.toResponse(u, roles.getOrDefault(u.getId(), List.of())))
+                .map(u -> UserMapper.toResponse(u, rolesOf(u)))
                 .toList();
 
         int from = Math.min((pageNo - 1) * pageSize, matches.size());
@@ -111,7 +107,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse findByIdResponse(String id) {
         User user = findById(id);
-        return UserMapper.toResponse(user, rolesByUserId(List.of(user)).getOrDefault(user.getId(), List.of()));
+        return UserMapper.toResponse(user, rolesOf(user));
     }
 
     @Override
@@ -128,7 +124,9 @@ public class UserServiceImpl implements UserService {
             );
         }
 
+        Role role = roleService.getByCode(request.role());
         User user = User.builder()
+                .role(role)
                 .username(request.username())
                 .password(passwordEncoder.encode(request.password()))
                 .email(request.email().trim().toLowerCase())
@@ -140,8 +138,9 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         User savedUser = userRepository.save(user);
+        roleProfiles.onAssigned(savedUser, request.role());
         sendInvite(savedUser);
-        return UserMapper.toResponse(savedUser);
+        return UserMapper.toResponse(savedUser, rolesOf(savedUser));
     }
 
     /**
@@ -199,7 +198,7 @@ public class UserServiceImpl implements UserService {
         if (deactivating) refreshTokenService.revokeAllForUser(saved.getId());
         if (emailChanged) emailVerificationService.sendCode(saved.getEmail());
 
-        return UserMapper.toResponse(saved, rolesByUserId(List.of(saved)).getOrDefault(saved.getId(), List.of()));
+        return UserMapper.toResponse(saved, rolesOf(saved));
     }
 
     @Override
@@ -221,15 +220,8 @@ public class UserServiceImpl implements UserService {
         if (actingUserId != null && actingUserId.equals(target.getId())) {
             throw new BusinessException("You cannot " + action + " your own account", HttpStatus.BAD_REQUEST);
         }
-        Optional<Role> adminRole = roleRepository.findByCode(Roles.ADMIN);
-        if (adminRole.isEmpty() || !userRoleRepository.existsByUserIdAndRoleId(target.getId(), adminRole.get().getId())) {
-            return;
-        }
-        long activeAdmins = userRoleRepository.findByRoleId(adminRole.get().getId()).stream()
-                .map(UserRole::getUserId)
-                .distinct()
-                .map(userRepository::findById)
-                .flatMap(Optional::stream)
+        if (!isAdmin(target)) return;
+        long activeAdmins = userRepository.findByRole(target.getRole()).stream()
                 .filter(u -> isLive(u) && isActiveStatus(u.getStatus()))
                 .count();
         if (activeAdmins <= 1) {
@@ -237,24 +229,34 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    /** One user_roles query plus one roles query for the whole batch (no per-user lookups). */
-    private Map<String, List<String>> rolesByUserId(Collection<User> users) {
-        List<String> userIds = users.stream().map(User::getId).filter(Objects::nonNull).toList();
-        if (userIds.isEmpty()) return Map.of();
+    private static boolean isAdmin(User user) {
+        return user.getRole() != null && user.getRole().getCode() == Roles.ADMIN;
+    }
 
-        List<UserRole> links = userRoleRepository.findByUserIdIn(userIds);
-        List<String> roleIds = links.stream().map(UserRole::getRoleId).distinct().toList();
-        Map<String, String> codeByRoleId = new HashMap<>();
-        if (!roleIds.isEmpty()) {
-            roleRepository.findAllById(roleIds).forEach(r -> {
-                if (r.getCode() != null) codeByRoleId.put(r.getId(), r.getCode().name());
-            });
+    /** The user's role codes (one today; a list so the API keeps its shape if users ever get several roles). */
+    private static List<String> rolesOf(User user) {
+        Role role = user.getRole();
+        return role == null || role.getCode() == null ? List.of() : List.of(role.getCode().name());
+    }
+
+    @Override
+    public UserResponse changeRole(String id, Roles newRole, String actingUserId) {
+        User user = findById(id);
+        Role current = user.getRole();
+        if (current != null && current.getCode() == newRole) {
+            return UserMapper.toResponse(user, rolesOf(user));
         }
-        return links.stream()
-                .filter(l -> codeByRoleId.containsKey(l.getRoleId()))
-                .collect(Collectors.groupingBy(UserRole::getUserId,
-                        Collectors.mapping(l -> codeByRoleId.get(l.getRoleId()), Collectors.collectingAndThen(Collectors.toSet(),
-                                set -> set.stream().sorted().toList()))));
+        // Moving someone out of ADMIN is as dangerous as locking them out.
+        if (isAdmin(user)) refuseSelfOrLastAdmin(user, actingUserId, "remove the admin role from");
+
+        Roles previous = current == null ? null : current.getCode();
+        user.setRole(roleService.getByCode(newRole));
+        User saved = userRepository.save(user);
+        if (previous != null) roleProfiles.onRemoved(saved, previous);
+        roleProfiles.onAssigned(saved, newRole);
+        // A fresh login makes the new role explicit for the user.
+        refreshTokenService.revokeAllForUser(saved.getId());
+        return UserMapper.toResponse(saved, rolesOf(saved));
     }
 
     // Existing methods

@@ -14,7 +14,7 @@ import com.trinh.english_center_be.modules.auth.service.RefreshTokenService;
 import com.trinh.english_center_be.modules.user.entity.Role;
 import com.trinh.english_center_be.modules.user.entity.User;
 import com.trinh.english_center_be.modules.user.service.RoleService;
-import com.trinh.english_center_be.modules.user.service.UserRoleAssignmentService;
+import com.trinh.english_center_be.modules.user.service.RoleProfileService;
 import com.trinh.english_center_be.modules.user.service.UserService;
 import com.trinh.english_center_be.shared.config.JwtTokenProvider;
 import com.trinh.english_center_be.shared.enums.Roles;
@@ -39,7 +39,7 @@ class AuthServiceImplLoginTest {
     @Mock JwtTokenProvider jwtTokenProvider;
     @Mock RefreshTokenService refreshTokenService;
     @Mock RoleService roleService;
-    @Mock UserRoleAssignmentService userRoleAssignmentService;
+    @Mock RoleProfileService roleProfileService;
     @Mock PasswordEncoder passwordEncoder;
     @Mock EmailVerificationService emailVerificationService;
 
@@ -49,7 +49,7 @@ class AuthServiceImplLoginTest {
     @BeforeEach
     void setUp() {
         service = new AuthServiceImpl(userService, userDetailsService, jwtTokenProvider, refreshTokenService,
-                roleService, userRoleAssignmentService, passwordEncoder, emailVerificationService);
+                roleService, roleProfileService, passwordEncoder, emailVerificationService);
         user = User.builder().id("u1").username("alice").email("a@b.com").password("hash")
                 .status(UserStatus.ACTIVE).emailVerified(false).build();
     }
@@ -81,7 +81,7 @@ class AuthServiceImplLoginTest {
     void signupCreatesAnUnverifiedAccountAndSendsACode() {
         when(userService.existByUserName("newuser")).thenReturn(false);
         when(userService.findByEmail("N@X.com")).thenReturn(Optional.empty());
-        when(roleService.findRoleByRoleName(Roles.STUDENT)).thenReturn(Optional.of(Role.builder().id("r1").build()));
+        when(roleService.getByCode(Roles.STUDENT)).thenReturn(Role.builder().id("r1").code(Roles.STUDENT).build());
         when(passwordEncoder.encode("pass1234")).thenReturn("hash");
 
         service.signup(new SignupRequest("newuser", "pass1234", "N@X.com", "New User", null));
@@ -89,6 +89,7 @@ class AuthServiceImplLoginTest {
         ArgumentCaptor<User> saved = ArgumentCaptor.forClass(User.class);
         verify(userService).save(saved.capture());
         assertThat(saved.getValue().isEmailVerified()).isFalse();
+        assertThat(saved.getValue().getRole().getCode()).isEqualTo(Roles.STUDENT);
         assertThat(saved.getValue().getEmail()).isEqualTo("n@x.com");
         verify(emailVerificationService).sendCode("n@x.com");
     }

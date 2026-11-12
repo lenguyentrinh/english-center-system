@@ -17,8 +17,6 @@ import com.trinh.english_center_be.modules.academic.service.CourseService;
 import com.trinh.english_center_be.modules.student.entity.Student;
 import com.trinh.english_center_be.modules.student.repository.StudentRepository;
 import com.trinh.english_center_be.modules.teacher.entity.Teacher;
-import com.trinh.english_center_be.modules.user.Repository.RoleRepository;
-import com.trinh.english_center_be.modules.user.Repository.UserRoleRepository;
 import com.trinh.english_center_be.modules.user.entity.Role;
 import com.trinh.english_center_be.modules.user.entity.User;
 import com.trinh.english_center_be.modules.user.service.UserService;
@@ -45,8 +43,6 @@ class EnrollmentServiceImplTest {
     @Mock EnrollmentRepository enrollmentRepository;
     @Mock StudentRepository studentRepository;
     @Mock UserService userService;
-    @Mock UserRoleRepository userRoleRepository;
-    @Mock RoleRepository roleRepository;
     @Mock CourseService courseService;
 
     EnrollmentServiceImpl service;
@@ -57,16 +53,14 @@ class EnrollmentServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new EnrollmentServiceImpl(courseRepository, enrollmentRepository, studentRepository, userService,
-                userRoleRepository, roleRepository, courseService);
+                courseService);
         course = Course.builder().id("c1").code("C1").status(CourseStatus.ACTIVE).maxStudent(2).build();
-        user = User.builder().id("u1").username("student1").fullName("An Student").status(UserStatus.ACTIVE).build();
+        user = User.builder().id("u1").username("student1").fullName("An Student").status(UserStatus.ACTIVE)
+                .role(Role.builder().id("r-student").code(Roles.STUDENT).build()).build();
         student = Student.builder().id("s1").user(user).build();
 
         lenient().when(courseRepository.findById("c1")).thenReturn(Optional.of(course));
         lenient().when(userService.findById("u1")).thenReturn(user);
-        Role studentRole = Role.builder().id("r-student").code(Roles.STUDENT).build();
-        lenient().when(roleRepository.findByCode(Roles.STUDENT)).thenReturn(Optional.of(studentRole));
-        lenient().when(userRoleRepository.existsByUserIdAndRoleId("u1", "r-student")).thenReturn(true);
         lenient().when(studentRepository.findByUser(user)).thenReturn(Optional.of(student));
         lenient().when(enrollmentRepository.findByCourseAndStudentAndStatus(course, student, Enrollment.ACTIVE)).thenReturn(Optional.empty());
         lenient().when(enrollmentRepository.countByCourseAndStatus(course, Enrollment.ACTIVE)).thenReturn(0L);
@@ -167,7 +161,7 @@ class EnrollmentServiceImplTest {
         assertRejected(HttpStatus.BAD_REQUEST, "not active");
 
         user.setStatus(UserStatus.ACTIVE);
-        when(userRoleRepository.existsByUserIdAndRoleId("u1", "r-student")).thenReturn(false);
+        user.setRole(Role.builder().id("r-teacher").code(Roles.TEACHER).build());
         assertRejected(HttpStatus.BAD_REQUEST, "not a student");
     }
 

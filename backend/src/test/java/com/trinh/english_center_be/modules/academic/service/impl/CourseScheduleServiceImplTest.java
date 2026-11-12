@@ -39,7 +39,7 @@ class CourseScheduleServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new CourseScheduleServiceImpl(courseRepository, teacherService);
-        org.mockito.Mockito.lenient().when(teacherService.findTeachers(null)).thenReturn(List.of(ha, minh));
+        org.mockito.Mockito.lenient().when(teacherService.findTeachers()).thenReturn(List.of(ha, minh));
     }
 
     private Course course(String code, String teacherId, List<Integer> days, String start, String end) {

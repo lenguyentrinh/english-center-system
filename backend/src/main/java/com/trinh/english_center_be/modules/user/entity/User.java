@@ -46,6 +46,14 @@ public class User extends BaseEntity {
      */
     private Boolean emailVerified;
 
+    /**
+     * The user's single system role. Kept as a relation to the roles table (not a plain enum column) so a
+     * future "many roles per user" change only needs this field turned into a collection.
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
+    private Role role;
+
     public boolean isEmailVerified() {
         return emailVerified == null || emailVerified;
     }

@@ -8,7 +8,7 @@ import { BackLink, fieldClass, fieldErrClass, labelClass, outlineBtn, primaryBtn
 import { Tag } from "@/shared/components/ui/Tag.tsx";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
 import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage.ts";
-import { assignRoleToUser, getRoles, getUserById, getUserEffectiveRoles, getUsers, removeRoleFromUser, updateUser } from "@/features/admin/adminApi.ts";
+import { changeUserRole, getUserById, getUsers, updateUser } from "@/features/admin/adminApi.ts";
 import { getCoursesByTeacherUserId, getTeacherByUserId, setTeacherCategories } from "@/features/teachers/teachersApi.ts";
 import { getUserEnrollments } from "@/features/courses/courseApi.ts";
 import { STATUS_TAG, fmtDate } from "@/features/courses/classUi.ts";
@@ -46,8 +46,8 @@ export default function UserDetailPage() {
   const { data, isLoading, error: queryError } = useQuery({
     queryKey: ["user-detail", id],
     queryFn: async () => {
-      const [user, roles] = await Promise.all([getUserById(id), getUserEffectiveRoles(id)]);
-      return { user: user.data, roles: [...new Set(roles.data.effectiveRoles.map((r) => r.code as string))] };
+      const user = await getUserById(id);
+      return { user: user.data, roles: [...new Set(user.data.roles ?? [])] };
     },
     enabled: id.length > 0,
   });
@@ -56,7 +56,7 @@ export default function UserDetailPage() {
 
   const user = data?.user ?? null;
   const roles = data?.roles ?? [];
-  const isTeacher = roles.some((r) => r.startsWith("TEACHER"));
+  const isTeacher = roles.includes("TEACHER");
   const isStudentOnly = roles.includes("STUDENT") && !isTeacher;
 
   const { data: classesRes } = useQuery({
@@ -70,12 +70,7 @@ export default function UserDetailPage() {
   const isSelf = me?.id === id;
 
   const roleMutation = useMutation({
-    mutationFn: async ({ code, add }: { code: string; add: boolean }) => {
-      const all = (await getRoles()).data;
-      const role = all.find((r) => r.code === code);
-      if (!role) throw new Error(`Chưa có vai trò ${code} trên hệ thống`);
-      return add ? assignRoleToUser(id, role.id) : removeRoleFromUser(id, role.id);
-    },
+    mutationFn: (code: string) => changeUserRole(id, code),
     onSuccess: () => {
       toast.success("Đã cập nhật vai trò");
       void queryClient.invalidateQueries({ queryKey: ["user-detail", id] });
@@ -311,7 +306,7 @@ export default function UserDetailPage() {
 
           <section className={`${surfaceClass} p-[22px]`}>
             <h2 className="mb-1 text-[17px] font-black tracking-tight">Vai trò</h2>
-            <p className="mb-3 text-[13px] text-slate-500">Chỉ có 3 vai trò hệ thống. Chuyên môn của giáo viên được gán bằng danh mục bên dưới.</p>
+            <p className="mb-3 text-[13px] text-slate-500">Mỗi tài khoản có đúng một vai trò. Chuyên môn của giáo viên được gán bằng danh mục bên dưới.</p>
             <div className="flex flex-wrap gap-2">
               {SYSTEM_ROLES.map((code) => {
                 const on = roles.includes(code);
@@ -320,27 +315,17 @@ export default function UserDetailPage() {
                   <button
                     key={code}
                     type="button"
-                    disabled={roleMutation.isPending || (isSelf && code === "ADMIN" && on)}
-                    title={isSelf && code === "ADMIN" && on ? "Không thể tự gỡ vai trò Admin của mình" : undefined}
-                    onClick={() => roleMutation.mutate({ code, add: !on })}
+                    disabled={roleMutation.isPending || on || (isSelf && roles.includes("ADMIN"))}
+                    title={isSelf && roles.includes("ADMIN") ? "Không thể tự đổi vai trò Admin của mình" : undefined}
+                    onClick={() => roleMutation.mutate(code)}
                     style={on ? { background: c.bg, color: c.fg } : undefined}
                     className={`rounded-full px-4 py-1.5 text-[13px] font-extrabold disabled:opacity-50 ${on ? "" : "border border-slate-300 bg-white text-slate-600 hover:bg-slate-100"}`}
                   >
-                    {on ? "✓ " : "+ "}
+                    {on ? "✓ " : ""}
                     {roleLabel(code)}
                   </button>
                 );
               })}
-              {roles
-                .filter((r) => !SYSTEM_ROLES.includes(r))
-                .map((r) => {
-                  const c = roleTagStyle(r);
-                  return (
-                    <Tag key={r} bg={c.bg} fg={c.fg} title={`${r} (vai trò cũ)`} className="!px-3">
-                      {roleLabel(r)}
-                    </Tag>
-                  );
-                })}
             </div>
           </section>
 

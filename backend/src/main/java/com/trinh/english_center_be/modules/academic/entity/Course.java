@@ -5,7 +5,6 @@ import org.hibernate.annotations.UuidGenerator;
 import com.trinh.english_center_be.modules.teacher.entity.Teacher;
 import com.trinh.english_center_be.shared.BaseEntity;
 import com.trinh.english_center_be.shared.enums.CourseStatus;
-import com.trinh.english_center_be.shared.enums.Roles;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -54,9 +53,6 @@ public class Course extends BaseEntity {
     @JoinColumn(name = "teacher_id")
     private Teacher teacher;
 
-    /** Legacy teacher-role gate, kept so old data loads; qualification now uses categoryId and Teacher.categoryIds. */
-    @Enumerated(EnumType.STRING)
-    private Roles availableRoleTeacher;
 
     /** Optional admin-managed Category id (program/tag). */
     private String categoryId;

@@ -13,7 +13,6 @@ export function mapServerCourseToClient(server: ServerCourse): Course {
     maxStudent: server.maxStudent,
     status: server.status,
     teacher: server.teacherId ? { id: server.teacherId, fullName: server.teacherFullName ?? undefined } : null,
-    availableRoleTeacher: server.availableRoleTeacher ?? null,
     minimumAge: server.minimumAge ?? null,
     requiredEntryLevel: server.requiredEntryLevel ?? null,
     prerequisitesRequired: server.prerequisitesRequired ?? null,

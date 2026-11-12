@@ -13,7 +13,7 @@ import { usePaged } from "@/shared/hooks/usePaged.ts";
 import { useQueryErrorMessage } from "@/shared/hooks/useQueryErrorMessage.ts";
 import { getApiErrorMessage } from "@/shared/api/error.ts";
 import { useAuth } from "@/features/auth/useAuth.ts";
-import { assignRoleToUser, createUser, getRoles, getUsers, updateUser } from "@/features/admin/adminApi.ts";
+import { createUser, getUsers, updateUser } from "@/features/admin/adminApi.ts";
 import type { RoleCode, UserStatus, UserSummaryResponse } from "@/features/admin/types.ts";
 import {
   AVATAR,
@@ -283,22 +283,12 @@ function CreateUserDrawer({ existing, onClose }: { existing: UserSummaryResponse
         fullName: form.name.trim(),
         phone: normalizePhone(form.phone) || undefined,
         status: "ACTIVE",
+        role: form.role,
       });
-      const roles = await getRoles();
-      const role = roles.data?.find((r) => r.code === form.role);
-      let roleAssigned = Boolean(role);
-      if (role) {
-        try {
-          await assignRoleToUser(created.data.id, role.id);
-        } catch {
-          roleAssigned = false;
-        }
-      }
-      return { created, roleAssigned };
+      return { created };
     },
-    onSuccess: ({ roleAssigned }) => {
+    onSuccess: () => {
       toast.success(`Đã tạo tài khoản cho ${form.name.trim()}. Đã gửi mã đặt mật khẩu tới ${form.email.trim()}.`);
-      if (!roleAssigned) toast.warning("Chưa gán được vai trò, hãy gán ở trang Quản lý vai trò.");
       void queryClient.invalidateQueries({ queryKey: ["users"] });
       onClose();
     },

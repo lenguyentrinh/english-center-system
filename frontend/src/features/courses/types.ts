@@ -22,16 +22,6 @@ export type Course = {
   startTime?: string | null;
   endTime?: string | null;
   enrolledCount?: number | null;
-  /** Legacy, no longer used to qualify teachers. */
-  availableRoleTeacher?:
-    | "TEACHER"
-    | "TEACHER_IELTS_6"
-    | "TEACHER_IELTS_7"
-    | "TEACHER_IELTS_8"
-    | "TEACHER_TOEIC_650"
-    | "TEACHER_TOEIC_750"
-    | "TEACHER_TOEIC_850"
-    | null;
 };
 
 export type UpsertCoursePayload = {
@@ -42,7 +32,6 @@ export type UpsertCoursePayload = {
   maxStudent: number;
   status: CourseStatus;
   teacherId?: string | null;
-  availableRoleTeacher?: string | null;
   categoryId?: string | null;
   room?: string | null;
   daysOfWeek?: number[] | null;
@@ -69,7 +58,6 @@ export type CourseSummary = {
   id: string;
   code: string;
   name: string;
-  availableRoleTeacher?: string | null;
 };
 
 export type ServerCourse = {
@@ -82,7 +70,6 @@ export type ServerCourse = {
   status: CourseStatus;
   teacherId?: string | null;
   teacherFullName?: string | null;
-  availableRoleTeacher?: Course["availableRoleTeacher"];
   categoryId?: string | null;
   categoryName?: string | null;
   categoryColor?: string | null;

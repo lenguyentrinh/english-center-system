@@ -4,7 +4,6 @@ public class Constant {
     //name
     public static final String ROLE="Role";
     public static final String USER="User";
-    public static final String BUSINESS_ROLE="Business role";
     public static final String COURSE="Course";
     public static final String TEACHER="Teacher";
     public static final String SESSION="Session";
@@ -32,6 +31,6 @@ public class Constant {
     public static final int NAME_MAX_LENGTH = 255;
     public static final int MIN_STUDENT = 1;
 
-    //brole & role
+    //role
     public static final int DESCRIPTION_MAX_LENGTH = 500;
 }

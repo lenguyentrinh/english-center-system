@@ -118,17 +118,6 @@ public class CourseServiceImpl implements CourseService {
                 .orElse(List.of());
     }
 
-    @Override
-    public List<CourseResponse> findByTeacherUserIdAndAvailableRoles(String userId, List<Roles> roles) {
-        if (roles == null || roles.isEmpty()) return List.of();
-        return findTeacherByUserId(userId)
-                .map(teacher -> courseRepository.findByTeacherAndAvailableRoleTeacherIn(teacher, roles).stream()
-                        .filter(CourseServiceImpl::isLive)
-                        .map(this::toResponse)
-                        .toList())
-                .orElse(List.of());
-    }
-
     // ---- internals -------------------------------------------------------------------------------------------
 
     private Course requireLive(String id) {
@@ -173,7 +162,6 @@ public class CourseServiceImpl implements CourseService {
         course.setMinimumAge(request.minimumAge());
         course.setRequiredEntryLevel(request.requiredEntryLevel());
         course.setPrerequisitesRequired(request.prerequisitesRequired());
-        course.setAvailableRoleTeacher(request.availableRoleTeacher());
         course.setCategoryId(request.categoryId());
         course.setRoom(request.room());
         course.setDaysOfWeek(request.daysOfWeek() == null || request.daysOfWeek().isEmpty() ? null : request.daysOfWeek().stream().distinct().sorted().toList());
@@ -203,7 +191,7 @@ public class CourseServiceImpl implements CourseService {
 
     /**
      * Category-based qualification: a course with a category needs a teacher whose specialties include it;
-     * a course without a category accepts any teacher. (Roles.availableRoleTeacher is legacy and ignored.)
+     * a course without a category accepts any teacher.
      */
     private Teacher findQualifiedTeacher(String teacherId, String categoryId) {
         Teacher teacher = teacherRepository.findById(teacherId)
